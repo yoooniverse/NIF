@@ -123,3 +123,53 @@
     @apply max-w-7xl mx-auto pt-16 px-4;
   }
 }
+
+/* 랜딩 페이지 애니메이션 */
+
+/* 지구 회전 애니메이션 */
+@keyframes rotate-earth {
+  from {
+    transform: rotateX(15deg) rotateY(0deg);
+  }
+  to {
+    transform: rotateX(15deg) rotateY(360deg);
+  }
+}
+
+/* 별 애니메이션 제거됨 (깔끔한 우주 배경 사용) */
+
+/* 텍스트 페이드인 애니메이션 */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 플로팅 애니메이션 (부유하는 느낌) */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+/* 성능 최적화 */
+.earth-globe {
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* 모바일 최적화 - 지구 크기 조정 */
+@media (max-width: 768px) {
+  .earth-globe {
+    width: min(500px, 95vw) !important;
+    height: min(500px, 95vw) !important;
+  }
+}

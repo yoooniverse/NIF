@@ -18,8 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SaaS 템플릿",
-  description: "Next.js + Clerk + Supabase 보일러플레이트",
+  title: "News In Flight - 경제 뉴스 AI 해석 서비스",
+  description: "경제 뉴스는 정보가 아니라 생존입니다. AI가 당신의 눈높이에 맞춰 경제 뉴스를 해석해드립니다.",
 };
 
 export default function RootLayout({

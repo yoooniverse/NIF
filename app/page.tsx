@@ -1,41 +1,79 @@
+"use client";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { RiSupabaseFill } from "react-icons/ri";
+import { SpaceBackground } from "@/components/landing/space-background";
+import { InFlightEarth } from "@/components/landing/in-flight-earth";
+import { ArrowRight } from "lucide-react";
 
-export default function Home() {
+export default function LandingPage() {
+  console.log("🌍 랜딩 페이지 로드됨 - InFlightEarth 적용");
+
   return (
-    <main className="min-h-[calc(100vh-80px)] flex items-center px-8 py-16 lg:py-24">
-      <section className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-start lg:items-center">
-        {/* 좌측: 환영 메시지 */}
-        <div className="flex flex-col gap-8">
-          <h1 className="text-5xl lg:text-7xl font-bold leading-tight">
-            SaaS 앱 템플릿에 오신 것을 환영합니다
-          </h1>
-          <p className="text-xl lg:text-2xl text-gray-600 dark:text-gray-400 leading-relaxed">
-            Next.js, Shadcn, Clerk, Supabase, TailwindCSS로 구동되는 완전한
-            기능의 템플릿으로 다음 프로젝트를 시작하세요.
-          </p>
+    <div className="h-screen overflow-hidden">
+      {/* Hero Section - In-Flight Entertainment 스타일 3D 지구 */}
+      <section className="relative h-screen overflow-hidden">
+        {/* 우주 배경 */}
+        <SpaceBackground />
+
+        {/* 새로운 3D 지구 컴포넌트 - In-Flight Entertainment 스타일 */}
+        <div className="absolute inset-0 w-full h-screen">
+          <InFlightEarth className="w-full h-full" />
         </div>
 
-        {/* 우측: 버튼 두 개 세로 정렬 */}
-        <div className="flex flex-col gap-6">
-          <Link href="/storage-test" className="w-full">
-            <Button className="w-full h-28 flex items-center justify-center gap-4 text-xl shadow-lg hover:shadow-xl transition-shadow">
-              <RiSupabaseFill className="w-8 h-8" />
-              <span>Storage 파일 업로드 테스트</span>
-            </Button>
-          </Link>
-          <Link href="/auth-test" className="w-full">
-            <Button
-              className="w-full h-28 flex items-center justify-center gap-4 text-xl shadow-lg hover:shadow-xl transition-shadow"
-              variant="outline"
-            >
-              <RiSupabaseFill className="w-8 h-8" />
-              <span>Clerk + Supabase 인증 연동</span>
-            </Button>
-          </Link>
+        {/* 메인 카피 (화면 중앙에 부유) */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center z-10 px-4 pointer-events-none">
+          <div 
+            className="text-center space-y-8 pointer-events-auto"
+            style={{
+              animation: "fade-in-up 1s ease-out 0.3s both",
+            }}
+          >
+            {/* 메인 카피 */}
+            <h1 className="text-[55px] md:text-[55px] lg:text-[55px] font-bold text-white leading-tight drop-shadow-2xl">
+              경제 뉴스는 정보가 아니라
+              <br />
+              <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                생존입니다
+              </span>
+            </h1>
+
+            {/* 서브 카피 */}
+            <p className="text-base md:text-xl lg:text-2xl text-white/90 max-w-2xl mx-auto drop-shadow-lg">
+              AI가 당신의 눈높이에 맞춰 경제 뉴스를 해석해드립니다
+            </p>
+
+            {/* CTA 버튼 */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
+              <Link href="/signup">
+                <Button 
+                  size="lg" 
+                  className="text-lg px-8 py-6 shadow-2xl hover:shadow-blue-500/50 transition-all duration-300 group"
+                >
+                  30일 무료로 시작하기
+                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
+              <Link href="/about">
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  className="text-lg px-8 py-6 bg-black/80 backdrop-blur-md border-black/40 text-white hover:bg-black transition-all duration-300"
+                >
+                  자세히 알아보기
+                </Button>
+              </Link>
+            </div>
+
+            {/* 무료 체험 안내 */}
+            <p className="text-sm text-white/60 pt-4">
+              💳 신용카드 등록 없이 30일 무료 체험
+            </p>
+          </div>
         </div>
+
       </section>
-    </main>
+
+    </div>
   );
 }
