@@ -1,6 +1,6 @@
 "use client";
 
-import { Users, TrendingUp, Heart, Activity, Zap, Award } from "lucide-react";
+import { Users, TrendingUp, Heart, Award } from "lucide-react";
 
 export function SocialProofSection() {
   console.log("📊 SocialProofSection 렌더링 - 계기판 스타일");
@@ -180,7 +180,7 @@ export function SocialProofSection() {
 
                   {/* 후기 내용 */}
                   <p className="text-gray-700 leading-relaxed text-sm">
-                    "{testimonial.quote}"
+                    &ldquo;{testimonial.quote}&rdquo;
                   </p>
 
                   {/* 하단 라인 */}

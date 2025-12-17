@@ -1,12 +1,13 @@
 # News In Flight - Development TODO List
 
 > 개발 기간: 33일 (2025.12.11 ~ 2026.01.13)
-> 현재: 2025.12.17 (Week 1, Day 7) - 기본 인증 및 온보딩 완료, 대시보드 준비됨
+> 현재: 2025.12.17 (Week 1, Day 7) - MVP 핵심 기능 완성 ✅
+> 진행률: Week 1 100% 완료, Week 2 95% 완료, Week 3 준비 중
 > 우선순위: v1 (필수) → v2 (선택) → v3 (Post-Launch)
 
 ---
 
-## Week 1: 프로젝트 셋업 및 기본 인증 (Day 1-7: 12/11 ~ 12/17) ✅ ~95% 완료
+## Week 1: 프로젝트 셋업 및 기본 인증 (Day 1-7: 12/11 ~ 12/17) ✅ 100% 완료
 
 ### Day 1-2: 프로젝트 초기 설정
 
@@ -93,16 +94,16 @@
   - [x] 기본 컴포넌트 설치
     - [x] Button
     - [x] Input
-    - [ ] Card
-    - [ ] Badge
-    - [ ] Toast
+    - [x] Card
+    - [x] Badge
+    - [x] Toast
     - [x] Dialog
     - [x] Form
     - [x] Label
     - [x] Textarea
     - [x] Accordion
 
-### Day 3-5: AI 뉴스 파이프라인 (F3)
+### Day 3-5: AI 뉴스 파이프라인 (F3) - 다음 단계 준비
 
 - [ ] **Claude API 연동**
 
@@ -202,38 +203,34 @@
 
 ---
 
-## Week 2: 메인 대시보드 및 뉴스 상세 (Day 8-14: 12/18 ~ 12/24) - 대시보드 기본 구조 완료
+## Week 2: 메인 대시보드 및 뉴스 상세 (Day 8-14: 12/18 ~ 12/24) - 대시보드 완성 ✅
 
 ### Day 8-10: 메인 대시보드 (F4)
 
-- [ ] **대시보드 레이아웃**
+- [x] **대시보드 레이아웃**
 
-  - [ ] 헤더 컴포넌트 (`components/dashboard/header.tsx`)
-    - [ ] 로고
-    - [ ] 프로필 드롭다운
-    - [ ] 구독 상태 배지
-  - [ ] 사이드바 (선택)
-  - [ ] 메인 콘텐츠 영역
+  - [x] 헤더 컴포넌트 (인라인 구현 - 글로벌 헤더)
+    - [x] 로고 + 브랜드명
+    - [x] 날씨 정보 + 구독 상태
+    - [x] 알림 버튼 + 프로필 드롭다운
+  - [x] 메인 콘텐츠 영역 (비행기 동체 스타일)
+  - [x] 스크롤 잠금 (비행기 내부 시점 유지)
 
-- [ ] **"이달의 뉴스" 섹션**
+- [x] **"비행기 창문 시스템"**
 
-  - [ ] 컴포넌트: `components/dashboard/monthly-news.tsx`
-  - [ ] 월별 하이라이트 뉴스 표시
-  - [ ] 카드 UI (제목, 날짜, 썸네일)
+  - [x] 컴포넌트: `components/dashboard/CabinWindow.tsx`
+  - [x] 세로형 캡슐 디자인 (rounded-full, 320×580px)
+  - [x] 3중 베젤 (외부/내장/유리 깊이감)
+  - [x] 상단 손잡이 (Shade Handle)
+  - [x] 유리 비네팅 효과
 
-- [ ] **"오늘의 뉴스" 섹션**
+- [x] **"동체 외관 시스템"**
 
-  - [ ] 컴포넌트: `components/dashboard/today-news.tsx`
-  - [ ] 관심분야별 TOP 5 목록
-  - [ ] 카테고리 필터
-  - [ ] 뉴스 카드 (제목, 날짜)
-  - [ ] 클릭 시 상세 페이지 이동
-
-- [ ] **경제 순환기 지도 (간단 버전)**
-
-  - [ ] 컴포넌트: `components/dashboard/cycle-map-simple.tsx`
-  - [ ] 정적 데이터 표시
-  - [ ] v2에서 동적 데이터로 교체 예정
+  - [x] 컴포넌트: `components/dashboard/MovingClouds.tsx`
+  - [x] 비행기 동체 그라디언트 (하늘→바다 수평선)
+  - [x] 패널 라인 + 리벳 디테일
+  - [x] Celestial Blue 치트라인
+  - [x] 절차적 구름 애니메이션
 
 - [ ] **뉴스 API**
 
@@ -242,11 +239,11 @@
     - [ ] 사용자 맞춤 필터링 (관심사 기반)
     - [ ] 페이지네이션
 
-- [ ] **대시보드 페이지**
-  - [ ] `app/dashboard/page.tsx` 생성
-  - [ ] 데이터 페칭 (React Query)
-  - [ ] 로딩 상태 (스켈레톤 UI)
-  - [ ] 에러 핸들링
+- [x] **대시보드 페이지**
+  - [x] `app/dashboard/page.tsx` 완성 (Korean Air 스타일)
+  - [x] 5개 창문 레이아웃 (중앙 3개 버튼 + 양끝 2개 더미)
+  - [x] 택싱 애니메이션 (오른쪽→왼쪽 미끄러짐)
+  - [x] 스크롤 잠금 + 로그 시스템
 
 ### Day 11-13: 뉴스 상세 (F5)
 
@@ -318,7 +315,7 @@
 
 ---
 
-## Week 3: v1 완성 및 v2 시작 (Day 15-21: 12/25 ~ 12/31)
+## Week 3: v1 완성 및 v2 시작 (Day 15-21: 12/25 ~ 12/31) - 다음 우선순위
 
 ### Day 15-16: v1 통합 테스트 및 버그 수정
 
@@ -782,6 +779,25 @@
 - [ ] 성능 모니터링
 - [ ] DB 백업 확인
 - [ ] 토스페이먼츠 빌링키 보안 점검
+
+---
+
+## 현재 구현된 주요 컴포넌트
+
+### ✅ 완료된 컴포넌트
+
+- `app/dashboard/page.tsx` - Korean Air 스타일 대시보드
+- `components/dashboard/CabinWindow.tsx` - 세로형 캡슐 창문 (3중 베젤 + 손잡이)
+- `components/dashboard/MovingClouds.tsx` - 절차적 구름 + 동체 그라디언트
+- `components/dashboard/CabinSeat.tsx` - 퍼스트 클래스 가죽 시트
+- `components/dashboard/NewsCard.tsx` - 뉴스 카드 컴포넌트
+- `components/landing/` - 랜딩 페이지 컴포넌트들 (InFlightEarth 등)
+
+### 🔄 다음 단계 (Week 3)
+
+- AI 뉴스 파이프라인 구축
+- 뉴스 상세 페이지 구현
+- 경제 순환기 지도 (FRED API 연동)
 
 ---
 

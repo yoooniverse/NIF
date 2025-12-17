@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Mail, Plane, MapPin, Radio, Shield, FileText, Settings, Home } from "lucide-react";
+import { Mail, MapPin, Radio } from "lucide-react";
 
 export function Footer() {
   console.log("📱 Footer 렌더링 - Apple 스타일");
