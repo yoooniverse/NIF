@@ -136,8 +136,6 @@
   }
 }
 
-/* 별 애니메이션 제거됨 (깔끔한 우주 배경 사용) */
-
 /* 텍스트 페이드인 애니메이션 */
 @keyframes fade-in-up {
   from {
@@ -160,16 +158,382 @@
   }
 }
 
+/* 펄스 애니메이션 (인디케이터용) */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+  }
+  
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+  }
+  
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+/* 느린 회전 애니메이션 (경제 순환기용) */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 12s linear infinite;
+}
+
 /* 성능 최적화 */
 .earth-globe {
   will-change: transform;
   backface-visibility: hidden;
 }
 
-/* 모바일 최적화 - 지구 크기 조정 */
+/* 스크롤 부드럽게 */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Apple 디자인 스타일 - 상세 페이지 전용 */
+.apple-design {
+  background: white !important;
+  color: #1d1d1f !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+}
+
+/* Apple 디자인 섹션들 */
+.apple-design section {
+  background: white !important;
+}
+
+/* Apple 스타일 카드 */
+.apple-design .bg-card {
+  background: white !important;
+  border: 1px solid #e5e5e7 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06) !important;
+}
+
+.apple-design .bg-card:hover {
+  background: white !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.05) !important;
+  transform: translateY(-2px) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Apple 스타일 텍스트 */
+.apple-design h1, .apple-design h2, .apple-design h3, .apple-design h4 {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+  font-weight: 600 !important;
+  color: #1d1d1f !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1.1 !important;
+}
+
+.apple-design p, .apple-design span {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+  color: #424245 !important;
+  line-height: 1.6 !important;
+  font-weight: 400 !important;
+}
+
+/* Apple 스타일 버튼 */
+.apple-design .bg-primary {
+  background: #0071e3 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 8px rgba(0, 113, 227, 0.3) !important;
+}
+
+.apple-design .bg-primary:hover {
+  background: #0077ed !important;
+  box-shadow: 0 4px 16px rgba(0, 113, 227, 0.4) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Apple 스타일 그라데이션 텍스트 제거 */
+.apple-design .bg-gradient-to-r {
+  background: none !important;
+  background-image: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  color: #0071e3 !important;
+}
+
+/* Apple 스타일 아이콘 배경 */
+.apple-design .bg-gradient-to-br {
+  background: #f2f2f3 !important;
+  border-radius: 12px !important;
+}
+
+/* Apple 스타일 통계 카드 */
+.apple-design .text-5xl,
+.apple-design .text-6xl {
+  color: #1d1d1f !important;
+  font-weight: 700 !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+}
+
+/* Apple 스타일 텍스트 색상 오버라이드 */
+.apple-design .text-white {
+  color: #1d1d1f !important;
+}
+
+.apple-design .text-slate-300 {
+  color: #424245 !important;
+}
+
+.apple-design .text-green-400 {
+  color: #0071e3 !important;
+}
+
+.apple-design .text-muted-foreground {
+  color: #86868b !important;
+}
+
+/* Apple 스타일 인디케이터 제거 */
+.apple-design .animate-pulse {
+  display: none !important;
+}
+
+.apple-design .font-mono {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+  letter-spacing: normal !important;
+  font-weight: 400 !important;
+}
+
+/* Apple 스타일 배경 패턴 제거 */
+.apple-design svg {
+  display: none !important;
+}
+
+/* Apple 스타일 백드롭 제거 */
+.apple-design .backdrop-blur-md,
+.apple-design .backdrop-blur-xl {
+  backdrop-filter: none !important;
+  background: white !important;
+}
+
+/* Apple 스타일 테두리 */
+.apple-design .border {
+  border-color: #e5e5e7 !important;
+}
+
+/* Apple 스타일 섹션 패딩 */
+.apple-design .py-24 {
+  padding-top: 120px !important;
+  padding-bottom: 120px !important;
+}
+
+.apple-design .px-4 {
+  padding-left: 32px !important;
+  padding-right: 32px !important;
+}
+
+/* Apple 스타일 그리드 간격 */
+.apple-design .gap-8 {
+  gap: 2rem !important;
+}
+
+.apple-design .gap-6 {
+  gap: 1.5rem !important;
+}
+
+/* Apple 스타일 마진 조정 */
+.apple-design .mb-16 {
+  margin-bottom: 4rem !important;
+}
+
+.apple-design .mb-12 {
+  margin-bottom: 3rem !important;
+}
+
+.apple-design .mb-8 {
+  margin-bottom: 2rem !important;
+}
+
+.apple-design .mb-6 {
+  margin-bottom: 1.5rem !important;
+}
+
+.apple-design .mb-4 {
+  margin-bottom: 1rem !important;
+}
+
+/* Apple 스타일 텍스트 크기 */
+.apple-design .text-xl {
+  font-size: 1.25rem !important;
+  line-height: 1.6 !important;
+}
+
+.apple-design .text-lg {
+  font-size: 1.125rem !important;
+  line-height: 1.6 !important;
+}
+
+.apple-design .text-base {
+  font-size: 1rem !important;
+  line-height: 1.6 !important;
+}
+
+/* Apple 스타일 반응형 텍스트 */
+.apple-design .text-4xl {
+  font-size: 2.5rem !important;
+  line-height: 1.1 !important;
+}
+
+.apple-design .text-3xl {
+  font-size: 1.875rem !important;
+  line-height: 1.2 !important;
+}
+
+.apple-design .text-2xl {
+  font-size: 1.5rem !important;
+  line-height: 1.3 !important;
+}
+
+/* 모바일 최적화 */
 @media (max-width: 768px) {
   .earth-globe {
     width: min(500px, 95vw) !important;
     height: min(500px, 95vw) !important;
   }
+
+  /* 모바일에서 Hero 섹션 패딩 조정 */
+  section {
+    scroll-margin-top: 60px;
+  }
+
+  /* 모바일에서 큰 텍스트 조정 */
+  h1 {
+    line-height: 1.2;
+  }
+
+  /* 모바일에서 카드 간격 줄이기 */
+  .grid {
+    gap: 1rem;
+  }
+
+  /* Apple 디자인 모바일 조정 */
+  .apple-design .py-24 {
+    padding-top: 60px !important;
+    padding-bottom: 60px !important;
+  }
+
+  .apple-design .px-4 {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+}
+
+/* 태블릿 최적화 */
+@media (min-width: 768px) and (max-width: 1024px) {
+  /* 태블릿에서 그리드 간격 조정 */
+  .grid.md\:grid-cols-3 {
+    gap: 1.5rem;
+  }
+
+  /* 태블릿에서 패딩 조정 */
+  section {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* 데스크톱 최적화 */
+@media (min-width: 1024px) {
+  /* 큰 화면에서 최대 너비 제한 */
+  .max-w-7xl {
+    max-width: 80rem;
+  }
+
+  /* 호버 효과 개선 */
+  .group:hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* In-Flight 스타일 추가 (히어로 섹션용) */
+.flight-card {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.9) 100%);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.flight-card:hover {
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.2);
+}
+
+/* 계기판 스타일 */
+.gauge-display {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Courier New', monospace;
+  letter-spacing: 0.05em;
+}
+
+/* 비행 경로 라인 애니메이션 */
+@keyframes flight-path-dash {
+  from {
+    stroke-dashoffset: 20;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.flight-path-line {
+  animation: flight-path-dash 1s linear infinite;
+}
+
+/* 프린트 스타일 (인쇄 시) */
+@media print {
+  .no-print {
+    display: none;
+  }
+
+  body {
+    background: white;
+    color: black;
+  }
+}
+
+/* 다크모드 개선 */
+@media (prefers-color-scheme: dark) {
+  /* 다크모드에서 In-Flight 스타일 강화 */
+  .flight-card {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%);
+  }
+}
+
+/* 접근성 개선 - 키보드 포커스 */
+*:focus-visible {
+  outline: 2px solid rgb(59, 130, 246);
+  outline-offset: 2px;
+}
+
+/* 로딩 스켈레톤 */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.05) 4%,
+    rgba(255, 255, 255, 0.1) 25%,
+    rgba(255, 255, 255, 0.05) 36%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
 }

@@ -7,7 +7,7 @@ import { InFlightEarth } from "@/components/landing/in-flight-earth";
 import { ArrowRight } from "lucide-react";
 
 export default function LandingPage() {
-  console.log("🌍 랜딩 페이지 로드됨 - InFlightEarth 적용");
+  console.log("🌍 랜딩 페이지 로드됨 - Hero Section Only");
 
   return (
     <div className="h-screen overflow-hidden">
@@ -16,7 +16,7 @@ export default function LandingPage() {
         {/* 우주 배경 */}
         <SpaceBackground />
 
-        {/* 새로운 3D 지구 컴포넌트 - In-Flight Entertainment 스타일 */}
+        {/* 3D 지구 컴포넌트 - In-Flight Entertainment 스타일 */}
         <div className="absolute inset-0 w-full h-screen">
           <InFlightEarth className="w-full h-full" />
         </div>
@@ -24,13 +24,19 @@ export default function LandingPage() {
         {/* 메인 카피 (화면 중앙에 부유) */}
         <div className="absolute inset-0 flex flex-col items-center justify-center z-10 px-4 pointer-events-none">
           <div 
-            className="text-center space-y-8 pointer-events-auto"
+            className="text-center space-y-6 md:space-y-8 pointer-events-auto max-w-4xl"
             style={{
               animation: "fade-in-up 1s ease-out 0.3s both",
             }}
           >
+            {/* 상단 인디케이터 */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/20 border border-blue-500/30 backdrop-blur-md">
+              <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></div>
+              <span className="text-xs md:text-sm font-mono text-blue-300">BOARDING NOW</span>
+            </div>
+
             {/* 메인 카피 */}
-            <h1 className="text-[55px] md:text-[55px] lg:text-[55px] font-bold text-white leading-tight drop-shadow-2xl">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight drop-shadow-2xl px-4">
               경제 뉴스는 정보가 아니라
               <br />
               <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent">
@@ -39,16 +45,16 @@ export default function LandingPage() {
             </h1>
 
             {/* 서브 카피 */}
-            <p className="text-base md:text-xl lg:text-2xl text-white/90 max-w-2xl mx-auto drop-shadow-lg">
+            <p className="text-base md:text-xl lg:text-2xl text-white/90 max-w-2xl mx-auto drop-shadow-lg px-4">
               AI가 당신의 눈높이에 맞춰 경제 뉴스를 해석해드립니다
             </p>
 
             {/* CTA 버튼 */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4 px-4">
               <Link href="/signup">
                 <Button 
                   size="lg" 
-                  className="text-lg px-8 py-6 shadow-2xl hover:shadow-blue-500/50 transition-all duration-300 group"
+                  className="w-full sm:w-auto text-base md:text-lg px-6 md:px-8 py-5 md:py-6 shadow-2xl hover:shadow-blue-500/50 transition-all duration-300 group"
                 >
                   30일 무료로 시작하기
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -58,7 +64,7 @@ export default function LandingPage() {
                 <Button 
                   size="lg" 
                   variant="outline"
-                  className="text-lg px-8 py-6 bg-black/80 backdrop-blur-md border-black/40 text-white hover:bg-black transition-all duration-300"
+                  className="w-full sm:w-auto text-base md:text-lg px-6 md:px-8 py-5 md:py-6 bg-black/80 backdrop-blur-md border-white/20 text-white hover:bg-black hover:border-white/40 transition-all duration-300"
                 >
                   자세히 알아보기
                 </Button>
@@ -66,14 +72,13 @@ export default function LandingPage() {
             </div>
 
             {/* 무료 체험 안내 */}
-            <p className="text-sm text-white/60 pt-4">
+            <p className="text-xs md:text-sm text-white/60 pt-4 px-4">
               💳 신용카드 등록 없이 30일 무료 체험
             </p>
           </div>
         </div>
 
       </section>
-
     </div>
   );
 }
