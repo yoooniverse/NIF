@@ -2,11 +2,18 @@
 
 import { useUser, UserButton } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Bell, CalendarDays, CloudSun, Map, Newspaper } from "lucide-react";
+import { Bell, CalendarDays, Map, Newspaper } from "lucide-react";
+import NewsFeed from "@/components/dashboard/NewsFeed";
 
-type ActivePanel = "monthly" | "today" | "map";
+const PANEL_TYPES = {
+  MONTHLY: "monthly",
+  TODAY: "today",
+  MAP: "map",
+} as const;
+
+type ActivePanel = typeof PANEL_TYPES[keyof typeof PANEL_TYPES];
 
 function FuselageBackground() {
   return (
@@ -202,7 +209,9 @@ function WindowCapsule({
 export default function DashboardPage() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
-  const [activePanel, setActivePanel] = useState<ActivePanel>("today");
+  // 초기 진입 시에는 "창문(메인 대시보드)"가 먼저 보이도록 TODAY가 아닌 값으로 시작
+  const [activePanel, setActivePanel] = useState<ActivePanel>(PANEL_TYPES.MONTHLY);
+  const initialOverflowRef = useRef<{ html: string; body: string } | null>(null);
 
   useEffect(() => {
     console.log("[DASHBOARD] 대시보드 페이지 로드");
@@ -216,7 +225,7 @@ export default function DashboardPage() {
     // 온보딩을 완료하지 않은 사용자는 온보딩 페이지로 리다이렉트
     if (isLoaded && user && !user.unsafeMetadata?.onboardingCompleted) {
       console.log("[DASHBOARD] 온보딩 미완료 - 온보딩 페이지로 이동");
-      router.push('/onboarding/interests');
+      router.push("/onboarding/interests");
     }
   }, [user, isLoaded, router]);
 
@@ -230,20 +239,45 @@ export default function DashboardPage() {
     const html = document.documentElement;
     const body = document.body;
 
-    const prevHtmlOverflow = html.style.overflow;
-    const prevBodyOverflow = body.style.overflow;
+    if (!initialOverflowRef.current) {
+      initialOverflowRef.current = {
+        html: html.style.overflow,
+        body: body.style.overflow,
+      };
+    }
+
+    return () => {
+      // 페이지 언마운트 시 원복
+      const prev = initialOverflowRef.current;
+      if (prev) {
+        html.style.overflow = prev.html;
+        body.style.overflow = prev.body;
+      }
+      console.info("[DASHBOARD] scroll restored (unmount)");
+    };
+  }, []);
+
+  // 타입 안전성을 위한 헬퍼 함수
+  const isPanelActive = (panel: ActivePanel, target: ActivePanel): boolean => {
+    return panel === target;
+  };
+
+  useEffect(() => {
+    // today(새 페이지 느낌)에서는 스크롤을 열어준다. 그 외에는 스크롤 잠금 유지.
+    const html = document.documentElement;
+    const body = document.body;
+
+    if (isPanelActive(activePanel, PANEL_TYPES.TODAY)) {
+      html.style.overflow = "auto";
+      body.style.overflow = "auto";
+      console.info("[DASHBOARD] scroll unlocked for NewsFeed");
+      return;
+    }
 
     html.style.overflow = "hidden";
     body.style.overflow = "hidden";
-
-    console.info("[DASHBOARD] scroll locked");
-
-    return () => {
-      html.style.overflow = prevHtmlOverflow;
-      body.style.overflow = prevBodyOverflow;
-      console.info("[DASHBOARD] scroll unlocked");
-    };
-  }, []);
+    console.info("[DASHBOARD] scroll locked (dashboard)");
+  }, [activePanel]);
 
   if (!isLoaded || !user) {
     return (
@@ -264,44 +298,45 @@ export default function DashboardPage() {
       {/* Header: 오버헤드 패널 느낌의 미니멀 글래스 바 */}
       <header className="sticky top-0 z-50">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-4">
-          <div className="
+          <div
+            className="
             rounded-2xl
-            border border-white/60
+            border border-yellow-400/60
             bg-white/55 backdrop-blur-xl
             shadow-[0_18px_60px_-35px_rgba(2,6,23,0.8)]
-          ">
+          "
+          >
             <div className="flex items-center justify-between px-4 py-3 sm:px-6">
               <div className="flex items-center gap-3">
-                <div className="
+                <div
+                  className="
                   h-10 w-10 rounded-xl
                   bg-gradient-to-br from-slate-900 to-slate-700
                   shadow-[0_10px_30px_-18px_rgba(2,6,23,0.9)]
                   flex items-center justify-center
-                ">
+                "
+                >
                   <span className="text-white text-sm font-semibold">NIF</span>
                 </div>
                 <div className="leading-tight">
                   <div className="text-sm font-semibold tracking-tight text-slate-900">
                     News In Flight
                   </div>
-                  <div className="text-xs text-slate-600">
-                    First Class Insight
-                  </div>
+                  <div className="text-xs text-slate-600">First Class Insight</div>
                 </div>
               </div>
 
-              <div className="hidden sm:flex items-center gap-3 text-xs text-slate-600">
-                <div className="flex items-center gap-2 rounded-xl border border-white/50 bg-white/40 px-3 py-2">
-                  <CloudSun className="h-4 w-4 text-slate-700" />
-                  <span>서울 · 맑음 · 18°C</span>
-                </div>
-                <div className="flex items-center gap-2 rounded-xl border border-white/50 bg-white/40 px-3 py-2">
-                  <CalendarDays className="h-4 w-4 text-slate-700" />
-                  <span>무료 체험</span>
-                </div>
+              <div className="flex-1 text-center">
+                <h1 className="text-lg font-semibold text-slate-900 tracking-tight">
+                  Welcome aboard!
+                </h1>
               </div>
 
               <div className="flex items-center gap-3">
+                <div className="hidden sm:flex items-center gap-2 rounded-xl border border-white/50 bg-white/40 px-3 py-2 text-xs text-slate-600">
+                  <CalendarDays className="h-4 w-4 text-slate-700" />
+                  <span>무료 체험</span>
+                </div>
                 <button
                   type="button"
                   onClick={() => console.info("[DASHBOARD] click: notifications")}
@@ -328,6 +363,7 @@ export default function DashboardPage() {
 
       {/* 메인 콘텐츠 */}
       <main className="relative z-20 w-full px-4 sm:px-6 lg:px-10">
+        {/* 기본 대시보드 뷰 (창문 5개) */}
         <section className="h-[calc(100vh-108px)] flex items-center justify-center">
           {/* 3) The Window Line */}
           <motion.div
@@ -346,30 +382,30 @@ export default function DashboardPage() {
                 label="이달의 뉴스"
                 Icon={CalendarDays}
                 variant="main"
-                isActive={activePanel === "monthly"}
+                isActive={isPanelActive(activePanel, PANEL_TYPES.MONTHLY)}
                 onClick={() => {
                   console.info("[DASHBOARD] click window: monthly");
-                  setActivePanel("monthly");
+                  setActivePanel(PANEL_TYPES.MONTHLY);
                 }}
               />
               <WindowCapsule
                 label="오늘의 뉴스"
                 Icon={Newspaper}
                 variant="main"
-                isActive={activePanel === "today"}
+                isActive={isPanelActive(activePanel, PANEL_TYPES.TODAY)}
                 onClick={() => {
                   console.info("[DASHBOARD] click window: today");
-                  setActivePanel("today");
+                  setActivePanel(PANEL_TYPES.TODAY);
                 }}
               />
               <WindowCapsule
                 label={"경제\n순환기 지도"}
                 Icon={Map}
                 variant="main"
-                isActive={activePanel === "map"}
+                isActive={isPanelActive(activePanel, PANEL_TYPES.MAP)}
                 onClick={() => {
                   console.info("[DASHBOARD] click window: map");
-                  setActivePanel("map");
+                  setActivePanel(PANEL_TYPES.MAP);
                 }}
               />
 
@@ -378,6 +414,18 @@ export default function DashboardPage() {
           </motion.div>
         </section>
       </main>
+
+      {/* 오늘의 뉴스: 새 페이지처럼 전체 화면 오버레이 */}
+      {isPanelActive(activePanel, PANEL_TYPES.TODAY) && (
+        <div className="fixed inset-0 z-[100]">
+          <NewsFeed
+            onBack={() => {
+              console.info("[DASHBOARD] back from NewsFeed -> dashboard");
+              setActivePanel(PANEL_TYPES.MONTHLY);
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }

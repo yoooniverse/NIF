@@ -180,7 +180,7 @@ export function SocialProofSection() {
 
                   {/* 후기 내용 */}
                   <p className="text-gray-700 leading-relaxed text-sm">
-                    &ldquo;{testimonial.quote}&rdquo;
+                    『{testimonial.quote}』
                   </p>
 
                   {/* 하단 라인 */}
