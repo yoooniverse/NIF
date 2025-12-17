@@ -5,9 +5,7 @@ import { Sphere } from "@react-three/drei";
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 
-interface EarthGlobe3DProps {
-  autoRotate?: boolean;
-}
+// No props currently needed for EarthGlobe3D
 
 // 비행기 컴포넌트 (움직이는 애니메이션)
 function Airplane() {
@@ -185,7 +183,7 @@ function Earth() {
   );
 }
 
-export function EarthGlobe3D({ autoRotate = false }: EarthGlobe3DProps) {
+export function EarthGlobe3D() {
   useEffect(() => {
     console.log("🌌 3D Canvas 초기화 - 레퍼런스 스타일 적용");
   }, []);

@@ -24,7 +24,7 @@ export default function TermsPage() {
               제1조 (목적)
             </h2>
             <p className="text-gray-700">
-              본 약관은 News In Flight(이하 "회사")가 제공하는 뉴스 분석 서비스(이하 "서비스")의 이용과 관련하여
+              본 약관은 News In Flight(이하 &ldquo;회사&rdquo;)가 제공하는 뉴스 분석 서비스(이하 &ldquo;서비스&rdquo;)의 이용과 관련하여
               회사와 이용자 간의 권리, 의무 및 책임사항 등을 규정함을 목적으로 합니다.
             </p>
           </section>
@@ -34,9 +34,9 @@ export default function TermsPage() {
               제2조 (용어의 정의)
             </h2>
             <ul className="list-disc pl-6 space-y-2 text-gray-700">
-              <li>"서비스"란 회사가 제공하는 AI 기반 경제 뉴스 분석 서비스를 의미합니다.</li>
-              <li>"이용자"란 본 약관에 따라 서비스를 이용하는 회원을 의미합니다.</li>
-              <li>"회원"이란 회사에 개인정보를 제공하여 회원등록을 한 자로서, 서비스를 계속적으로 이용할 수 있는 자를 의미합니다.</li>
+              <li>&ldquo;서비스&rdquo;란 회사가 제공하는 AI 기반 경제 뉴스 분석 서비스를 의미합니다.</li>
+              <li>&ldquo;이용자&rdquo;란 본 약관에 따라 서비스를 이용하는 회원을 의미합니다.</li>
+              <li>&ldquo;회원&rdquo;이란 회사에 개인정보를 제공하여 회원등록을 한 자로서, 서비스를 계속적으로 이용할 수 있는 자를 의미합니다.</li>
             </ul>
           </section>
 
