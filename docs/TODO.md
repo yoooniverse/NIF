@@ -1,12 +1,12 @@
 # News In Flight - Development TODO List
 
 > 개발 기간: 33일 (2025.12.11 ~ 2026.01.13)
-> 현재: 2025.12.17 (Week 1, Day 7) - 프로젝트 구조 70% 완료
+> 현재: 2025.12.17 (Week 1, Day 7) - 기본 인증 및 온보딩 완료, 대시보드 준비됨
 > 우선순위: v1 (필수) → v2 (선택) → v3 (Post-Launch)
 
 ---
 
-## Week 1: 프로젝트 셋업 및 기본 인증 (Day 1-7: 12/11 ~ 12/17) ✅ ~70% 완료
+## Week 1: 프로젝트 셋업 및 기본 인증 (Day 1-7: 12/11 ~ 12/17) ✅ ~95% 완료
 
 ### Day 1-2: 프로젝트 초기 설정
 
@@ -155,11 +155,15 @@
     - [x] 문의하기
   - [x] 반응형 디자인 (모바일 최적화)
 
-- [ ] **인증 페이지**
+- [x] **인증 페이지 (F1)**
 
-  - [ ] 로그인 페이지 (`app/login/page.tsx`)
-  - [ ] 회원가입 페이지 (`app/signup/page.tsx`)
-  - [ ] Clerk UI 커스터마이징
+  - [x] 로그인 페이지 (`app/login/[[...sign-in]]/page.tsx`)
+  - [x] 회원가입 페이지 (`app/signup/[[...sign-up]]/page.tsx`)
+  - [x] Clerk UI 커스터마이징 (공항 체크인 데스크 디자인)
+  - [x] 소셜 로그인 (구글, 카카오) - Clerk 기본 제공
+  - [x] 로그인/회원가입 후 적절한 페이지로 리다이렉트
+    - [x] 신규 사용자: `/onboarding/interests`
+    - [x] 기존 사용자: `/dashboard` (온보딩 상태 확인 후 리다이렉트)
 
 - [x] **사용자 동기화**
 
@@ -168,31 +172,37 @@
   - [x] `app/api/sync-user/route.ts` 생성
   - [x] Clerk → Supabase `users` 테이블 자동 동기화
 
-- [ ] **온보딩 플로우**
+- [x] **온보딩 플로우 (F2)**
 
-  - [ ] 온보딩 레이아웃 (`app/onboarding/layout.tsx`)
-  - [ ] Step 1: 관심 자산 선택 (`app/onboarding/interests/page.tsx`)
-    - [ ] 멀티 선택 UI (부동산, 가상화폐, ETF, 주식, 환율)
-    - [ ] 최소 1개 선택 유효성 검사
-  - [ ] Step 2: 나의 상황 선택 (`app/onboarding/contexts/page.tsx`)
-    - [ ] 멀티 선택 UI (대출보유, 예적금만함, 달러보유, 사업가, 직장인, 해외여행)
-    - [ ] 최소 1개 선택 유효성 검사
-  - [ ] Step 3: AI 레벨 선택 (`app/onboarding/level/page.tsx`)
-    - [ ] 라디오 버튼 UI (Lv.1, Lv.2, Lv.3)
-    - [ ] 각 레벨 설명 표시
-  - [ ] 온보딩 완료 처리
-    - [ ] API: `app/api/onboarding/complete/route.ts`
-    - [ ] `user_profiles`, `user_interests`, `user_contexts`, `subscriptions` 테이블 저장
-    - [ ] 무료 구독 시작 (30일)
-    - [ ] 대시보드로 리다이렉트
+  - [x] Step 1: 관심 자산 선택 (`app/onboarding/interests/page.tsx`)
+    - [x] 멀티 선택 UI (부동산, 가상화폐, ETF, 주식, 환율)
+    - [x] 최소 1개 선택 유효성 검사
+    - [x] 로컬 스토리지 임시 저장
+    - [x] 진행 상황 표시 (1/3)
+  - [x] Step 2: 나의 상황 선택 (`app/onboarding/contexts/page.tsx`)
+    - [x] 멀티 선택 UI (대출보유, 예적금만함, 달러보유, 사업가, 직장인, 해외여행)
+    - [x] 최소 1개 선택 유효성 검사
+    - [x] 로컬 스토리지 임시 저장
+    - [x] 진행 상황 표시 (2/3)
+  - [x] Step 3: AI 레벨 선택 (`app/onboarding/level/page.tsx`)
+    - [x] 라디오 버튼 UI (Lv.1, Lv.2, Lv.3)
+    - [x] 각 레벨 설명 표시 (초보자/일반/전문가)
+    - [x] 진행 상황 표시 (3/3)
+  - [x] 온보딩 완료 처리
+    - [x] Clerk 메타데이터에 모든 정보 저장 (userProfiles, interests, contexts, level)
+    - [x] 로컬 스토리지 클리어
+    - [x] 무료 구독 시작 (30일) - Clerk 메타데이터에 저장
+    - [x] 대시보드로 리다이렉트
+  - [x] 단계별 네비게이션 (이전/다음 버튼)
+  - [x] 반응형 디자인
 
 - [ ] **마스터 데이터 API**
-  - [ ] GET `/api/interests` (관심사 목록)
-  - [ ] GET `/api/contexts` (상황 목록)
+  - [ ] GET `/api/interests` (관심사 목록 - 현재 하드코딩)
+  - [ ] GET `/api/contexts` (상황 목록 - 현재 하드코딩)
 
 ---
 
-## Week 2: 메인 대시보드 및 뉴스 상세 (Day 8-14: 12/18 ~ 12/24)
+## Week 2: 메인 대시보드 및 뉴스 상세 (Day 8-14: 12/18 ~ 12/24) - 대시보드 기본 구조 완료
 
 ### Day 8-10: 메인 대시보드 (F4)
 

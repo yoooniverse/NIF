@@ -112,18 +112,6 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-  main {
-    @apply max-w-7xl mx-auto pt-16 px-4;
-  }
-}
-
 /* 랜딩 페이지 애니메이션 */
 
 /* 지구 회전 애니메이션 */

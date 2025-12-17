@@ -46,7 +46,8 @@ export default function LoginPage() {
             path="/login"
             routing="path"
             signUpUrl="/signup"
-            fallbackRedirectUrl="/onboarding"
+            forceRedirectUrl="/dashboard"
+            signUpForceRedirectUrl="/onboarding/interests"
             appearance={{
               elements: {
                 formButtonPrimary: 'bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-all duration-200 shadow-sm hover:shadow-md',
