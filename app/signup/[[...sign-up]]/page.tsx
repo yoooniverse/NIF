@@ -46,7 +46,6 @@ export default function SignupPage() {
           <SignUp
             path="/signup"
             routing="path"
-            signInUrl="/login"
             forceRedirectUrl="/onboarding/interests"
             signInForceRedirectUrl="/dashboard"
             appearance={{
