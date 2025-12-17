@@ -217,3 +217,5 @@ export function EarthGlobe3D({ autoRotate = false }: EarthGlobe3DProps) {
     </div>
   );
 }
+
+
