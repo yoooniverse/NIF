@@ -22,34 +22,6 @@ function clampLevel(level: unknown): 1 | 2 | 3 {
   return 2;
 }
 
-function parseMonthOrNow(monthParam: string | null): { startIso: string; endIso: string; monthKey: string } {
-  const now = new Date();
-  const fallbackYear = now.getUTCFullYear();
-  const fallbackMonth = now.getUTCMonth() + 1;
-
-  let year = fallbackYear;
-  let month = fallbackMonth;
-
-  if (monthParam) {
-    const match = /^([0-9]{4})-([0-9]{2})$/.exec(monthParam);
-    if (match) {
-      year = Number(match[1]);
-      month = Number(match[2]);
-    }
-  }
-
-  if (!Number.isFinite(year) || !Number.isFinite(month) || month < 1 || month > 12) {
-    year = fallbackYear;
-    month = fallbackMonth;
-  }
-
-  const start = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0));
-  const end = new Date(Date.UTC(year, month, 1, 0, 0, 0));
-
-  const monthKey = `${year}-${String(month).padStart(2, "0")}`;
-  return { startIso: start.toISOString(), endIso: end.toISOString(), monthKey };
-}
-
 export async function GET(req: Request) {
   try {
     const { userId } = await auth();
@@ -58,18 +30,25 @@ export async function GET(req: Request) {
     }
 
     const url = new URL(req.url);
-    const monthParam = url.searchParams.get("month");
-    const categoryParam = url.searchParams.get("category"); // 'all' 또는 slug
+    const dateParam = url.searchParams.get("date");
+    const categoryParam = url.searchParams.get("category"); // slug 또는 null
     const limitParam = url.searchParams.get("limit");
 
-    const { startIso, endIso, monthKey } = parseMonthOrNow(monthParam);
+    // 날짜 파싱 (기본값: 오늘)
+    const targetDate = dateParam ? new Date(dateParam) : new Date();
+    if (isNaN(targetDate.getTime())) {
+      return NextResponse.json({ error: "Invalid date format" }, { status: 400 });
+    }
 
-    const rawLimit = Number(limitParam ?? 50);
-    const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(rawLimit, 1), 200) : 50;
+    const startIso = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 0, 0, 0).toISOString();
+    const endIso = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate() + 1, 0, 0, 0).toISOString();
 
-    console.info("[API][NEWS_MONTHLY] request", {
+    const rawLimit = Number(limitParam ?? 5);
+    const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(rawLimit, 1), 20) : 5;
+
+    console.info("[API][NEWS] request", {
       clerkUserId: userId,
-      month: monthKey,
+      date: targetDate.toISOString().split('T')[0],
       category: categoryParam ?? "(none)",
       limit,
     });
@@ -84,25 +63,43 @@ export async function GET(req: Request) {
       : [];
 
     const useMock = shouldUseMockNews();
-    console.info("[API][NEWS_MONTHLY] mode", { useMock });
+    console.info("[API][NEWS] mode", { useMock });
 
     // ✅ 스텁 API 모드: DB 없이도 UI가 항상 동작해야 함
+    // - Supabase 환경변수/테이블 유무와 무관하게 목데이터로 응답
     if (useMock) {
-      const normalizedCategory = categoryParam && categoryParam !== "all" ? categoryParam : null;
-      const allowedCategories = normalizedCategory
-        ? clerkInterestSlugs.filter((s) => s === normalizedCategory)
+      const allowedCategories = categoryParam
+        ? clerkInterestSlugs.filter((s) => s === categoryParam)
         : clerkInterestSlugs;
 
+      // 온보딩(관심사) 미완료면 빈 결과
       if (allowedCategories.length === 0) {
-        console.info("[API][NEWS_MONTHLY][MOCK] no allowed categories -> empty");
+        console.info("[API][NEWS][MOCK] no allowed categories -> empty");
         return NextResponse.json({
-          month: monthKey,
           news: [],
+          subscription: { active: true, days_remaining: 0 },
           hint: "온보딩 관심사가 없어서(또는 선택한 카테고리가 관심사에 없어서) 뉴스가 비어있어요.",
         });
       }
 
-      // 월 범위 + 관심사(+선택카테고리) 필터
+      const startIso = new Date(
+        targetDate.getFullYear(),
+        targetDate.getMonth(),
+        targetDate.getDate(),
+        0,
+        0,
+        0
+      ).toISOString();
+      const endIso = new Date(
+        targetDate.getFullYear(),
+        targetDate.getMonth(),
+        targetDate.getDate() + 1,
+        0,
+        0,
+        0
+      ).toISOString();
+
+      // 날짜 + 관심사(+선택카테고리) 필터
       let items = mockNewsData
         .filter((n) => n.published_at >= startIso && n.published_at < endIso)
         .filter((n) => allowedCategories.includes(n.category));
@@ -113,21 +110,18 @@ export async function GET(req: Request) {
 
       items = items.slice(0, limit);
 
-      console.info("[API][NEWS_MONTHLY][MOCK] response", {
-        month: monthKey,
+      console.info("[API][NEWS][MOCK] response", {
         count: items.length,
         level,
         categories: allowedCategories,
       });
 
       return NextResponse.json({
-        month: monthKey,
         news: items.map((n) => ({
           id: n.id,
           title: n.title,
-          url: n.url,
-          published_at: n.published_at,
           category: n.category,
+          published_at: n.published_at,
           source: n.source,
           analysis: {
             level: n.analysis.level,
@@ -138,6 +132,10 @@ export async function GET(req: Request) {
             should_blur: n.analysis.should_blur,
           },
         })),
+        subscription: {
+          active: true,
+          days_remaining: items[0]?.subscription?.days_remaining ?? 0,
+        },
       });
     }
 
@@ -151,7 +149,7 @@ export async function GET(req: Request) {
       .single();
 
     if (dbUserError || !dbUser?.id) {
-      console.warn("[API][NEWS_MONTHLY] users row not found. Did you call /api/sync-user?", {
+      console.warn("[API][NEWS] users row not found. Did you call /api/sync-user?", {
         clerkUserId: userId,
         error: dbUserError?.message,
       });
@@ -164,28 +162,55 @@ export async function GET(req: Request) {
       );
     }
 
+    // 관심사가 없으면 빈 배열 반환
     // ✅ 중요: 현재 온보딩 데이터는 Clerk unsafeMetadata에 저장됨.
-    // Supabase의 user_interests 테이블이 아직 없거나(스키마 미적용) 비어 있어도
-    // 이달의 뉴스 UI가 깨지지 않도록 Clerk 메타데이터를 기준으로 필터링한다.
+    // Supabase user_interests 테이블이 없어도(스키마 미적용) 오늘의 뉴스가 깨지지 않도록
+    // Clerk 메타데이터 기반으로 필터링한다.
     if (clerkInterestSlugs.length === 0) {
-      console.info("[API][NEWS_MONTHLY] no interests -> empty result", {
+      console.info("[API][NEWS] no interests -> empty result", {
         userId: dbUser.id,
       });
-      return NextResponse.json({ month: monthKey, news: [] });
+      return NextResponse.json({ news: [] });
     }
 
     // categoryParam이 있으면 관심사+category 교집합으로 줄임
-    const normalizedCategory = categoryParam && categoryParam !== "all" ? categoryParam : null;
-    const allowedCategories = normalizedCategory
-      ? clerkInterestSlugs.filter((s) => s === normalizedCategory)
+    const allowedCategories = categoryParam
+      ? clerkInterestSlugs.filter((s) => s === categoryParam)
       : clerkInterestSlugs;
 
     if (allowedCategories.length === 0) {
-      console.info("[API][NEWS_MONTHLY] category not in user interests -> empty result", {
+      console.info("[API][NEWS] category not in user interests -> empty result", {
         userId: dbUser.id,
-        category: normalizedCategory,
+        category: categoryParam,
       });
-      return NextResponse.json({ month: monthKey, news: [] });
+      return NextResponse.json({ news: [] });
+    }
+
+    // 구독 상태 확인 (Paywall 로직용)
+    let isActive = true;
+    let daysRemaining = 0;
+    try {
+      const { data: subscription, error: subError } = await supabase
+        .from("subscriptions")
+        .select("active, started_at, ends_at")
+        .eq("user_id", dbUser.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (subError) {
+        // subscriptions 테이블이 아직 없을 수 있으므로(개발 초기) 조용히 폴백
+        console.warn("[API][NEWS] subscription lookup failed (fallback)", { error: subError.message });
+      } else {
+        const now = new Date();
+        isActive = Boolean(subscription?.active) && new Date(subscription.ends_at) > now;
+        daysRemaining =
+          isActive && subscription
+            ? Math.ceil((new Date(subscription.ends_at).getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+            : 0;
+      }
+    } catch (e: any) {
+      console.warn("[API][NEWS] subscription lookup exception (fallback)", { message: e?.message });
     }
 
     // 뉴스 + 레벨별 분석 조인
@@ -210,18 +235,18 @@ export async function GET(req: Request) {
       .limit(limit);
 
     if (error) {
-      console.error("[API][NEWS_MONTHLY] query error", { error: error.message });
+      console.error("[API][NEWS] query error", { error: error.message });
 
       // DB 스키마가 아직 적용되지 않은 개발 초기에는 500 대신 "빈 결과 + 힌트"로 폴백
       if (isSchemaCacheMissingTable(error.message)) {
         return NextResponse.json({
-          month: monthKey,
           news: [],
+          subscription: { active: isActive, days_remaining: daysRemaining },
           hint: "Supabase에 news 관련 테이블이 아직 적용되지 않았습니다. 마이그레이션/스키마를 적용해주세요.",
         });
       }
 
-      return NextResponse.json({ error: "Failed to load monthly news" }, { status: 500 });
+      return NextResponse.json({ error: "Failed to load news" }, { status: 500 });
     }
 
     const news = (rows ?? []).map((r: any) => {
@@ -231,9 +256,8 @@ export async function GET(req: Request) {
       return {
         id: r.id,
         title: r.title,
-        url: r.url,
-        published_at: r.published_at,
         category,
+        published_at: r.published_at,
         source: r?.sources?.source_id ?? "Unknown",
         analysis: {
           level: analysis?.level ?? level,
@@ -246,15 +270,23 @@ export async function GET(req: Request) {
       };
     });
 
-    console.info("[API][NEWS_MONTHLY] response", {
-      month: monthKey,
+    console.info("[API][NEWS] response", {
+      date: targetDate.toISOString().split('T')[0],
       count: news.length,
       level,
+      isActive,
+      daysRemaining,
     });
 
-    return NextResponse.json({ month: monthKey, news });
+    return NextResponse.json({
+      news,
+      subscription: {
+        active: isActive,
+        days_remaining: daysRemaining,
+      },
+    });
   } catch (e: any) {
-    console.error("[API][NEWS_MONTHLY] unexpected error", { message: e?.message });
+    console.error("[API][NEWS] unexpected error", { message: e?.message });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

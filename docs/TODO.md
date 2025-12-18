@@ -1,8 +1,8 @@
 # News In Flight - Development TODO List
 
 > 개발 기간: 33일 (2025.12.11 ~ 2026.01.13)
-> 현재: 2025.12.17 (Week 1, Day 7) - MVP 핵심 기능 완성 ✅
-> 진행률: Week 1 100% 완료, Week 2 95% 완료, Week 3 준비 중
+> 현재: 2025.12.18 (Week 2, Day 1) - 메인 대시보드 및 뉴스 상세 시작
+> 진행률: Week 1 100% 완료, Week 2 0% 진행 중, Week 3 준비 중
 > 우선순위: v1 (필수) → v2 (선택) → v3 (Post-Launch)
 
 ---
@@ -203,7 +203,7 @@
 
 ---
 
-## Week 2: 메인 대시보드 및 뉴스 상세 (Day 8-14: 12/18 ~ 12/24) - 대시보드 완성 ✅
+## Week 2: 메인 대시보드 및 뉴스 상세 (Day 8-14: 12/18 ~ 12/24) - 진행 중
 
 ### Day 8-10: 메인 대시보드 (F4)
 
@@ -226,9 +226,21 @@
 
 - [x] **"동체 외관 시스템"**
 
-  - [x] 컴포넌트: `components/dashboard/MovingClouds.tsx`
   - [x] 패널 라인 + 리벳 디테일
   - [x] Celestial Blue 치트라인
+
+- [ ] **"이달의 뉴스" 섹션**
+
+  - [ ] 월간 뉴스 모음 기능
+    - [ ] 사용자가 선택한 관심자산의 당월 뉴스 필터링
+    - [ ] 월별 그룹화 (현재 월 우선 표시)
+    - [ ] 뉴스 카드 리스트 형태로 표시
+    - [ ] 관심사별 카테고리 필터 (부동산, 가상화폐, ETF, 주식, 환율)
+  - [ ] UI 컴포넌트 구현
+    - [ ] 월간 뉴스 리스트 컴포넌트
+    - [ ] 관심사 필터 탭
+    - [ ] 무한 스크롤 또는 페이지네이션
+    - [ ] 뉴스 클릭 시 상세 페이지 이동
 
 - [ ] **뉴스 API**
 
@@ -236,6 +248,10 @@
     - [ ] Query: user_id, date, category, limit
     - [ ] 사용자 맞춤 필터링 (관심사 기반)
     - [ ] 페이지네이션
+  - [ ] GET `/api/news/monthly` (월간 뉴스)
+    - [ ] Query: user_id, month, interests
+    - [ ] 관심사 기반 월간 뉴스 필터링
+    - [ ] 정렬: 최신순
 
 - [x] **대시보드 페이지**
   - [x] `app/dashboard/page.tsx` 완성 (Korean Air 스타일)
@@ -243,39 +259,39 @@
   - [x] 택싱 애니메이션 (오른쪽→왼쪽 미끄러짐)
   - [x] 스크롤 잠금 + 로그 시스템
 
-### Day 11-13: 뉴스 상세 (F5)
+### Day 11-13: 뉴스 상세 (F5) ✅ 프론트엔드 완성
 
-- [ ] **뉴스 상세 페이지**
+- [x] **뉴스 상세 페이지**
 
-  - [ ] `app/news/[id]/page.tsx` 생성
-  - [ ] 동적 라우트 파라미터 처리 (Next.js 15)
+  - [x] `app/news/[id]/page.tsx` 생성
+  - [x] 동적 라우트 파라미터 처리 (Next.js 15)
 
-- [ ] **Block 1: AI 뉴스 해설**
+- [x] **Block 1: AI 뉴스 해설**
 
-  - [ ] 컴포넌트: `components/news/news-summary.tsx`
-  - [ ] 쉬운 제목 (`easy_title`)
-  - [ ] 요약 (`summary`, 10줄 이내)
-  - [ ] 읽기 편한 레이아웃
+  - [x] 컴포넌트: `components/news/news-summary.tsx`
+  - [x] 쉬운 제목 (`easy_title`)
+  - [x] 요약 (`summary`, 10줄 이내)
+  - [x] 읽기 편한 레이아웃
 
-- [ ] **Block 2: 최악의 시나리오**
+- [x] **Block 2: 최악의 시나리오**
 
-  - [ ] 컴포넌트: `components/news/worst-scenario.tsx`
+  - [x] 컴포넌트: `components/news/worst-scenario.tsx`
   - [ ] 사용자 상황 기반 개인화 (`worst_scenario`)
-  - [ ] 경고 아이콘 및 스타일링
+  - [x] 경고 아이콘 및 스타일링
 
-- [ ] **Block 3: 행동 가이드**
+- [x] **Block 3: 행동 가이드**
 
-  - [ ] 컴포넌트: `components/news/action-item.tsx`
+  - [x] 컴포넌트: `components/news/action-item.tsx`
   - [ ] `user_action_tip` 표시
-  - [ ] 조건부 블러 처리
-    - [ ] 무료 체험 중(30일): 전체 공개
-    - [ ] 31일차 이후: 블러 + Paywall 클릭
+  - [x] 조건부 블러 처리
+    - [x] 무료 체험 중(30일): 전체 공개
+    - [x] 31일차 이후: 블러 + Paywall 클릭
 
-- [ ] **출처 및 원문 링크**
+- [x] **출처 및 원문 링크**
 
-  - [ ] 컴포넌트: `components/news/news-footer.tsx`
-  - [ ] 출처 표시
-  - [ ] 원문 링크 버튼
+  - [x] 컴포넌트: `components/news/news-footer.tsx`
+  - [x] 출처 표시
+  - [x] 원문 링크 버튼
 
 - [ ] **뉴스 상세 API**
 
@@ -284,11 +300,11 @@
     - [ ] 구독 상태 확인 (`should_blur` 계산)
     - [ ] 원문 404 에러 핸들링
 
-- [ ] **Paywall 컴포넌트**
-  - [ ] 컴포넌트: `components/paywall/blur-overlay.tsx`
-  - [ ] 블러 효과
-  - [ ] "구독하고 전체 보기" CTA
-  - [ ] Paywall 페이지 이동
+- [x] **Paywall 컴포넌트**
+  - [x] 컴포넌트: `components/paywall/blur-overlay.tsx`
+  - [x] 블러 효과
+  - [x] "구독하고 전체 보기" CTA
+  - [x] Paywall 페이지 이동
 
 ### Day 14: v1 중간 테스트
 
@@ -786,8 +802,6 @@
 
 - `app/dashboard/page.tsx` - Korean Air 스타일 대시보드
 - `components/dashboard/CabinWindow.tsx` - 세로형 캡슐 창문 (3중 베젤 + 손잡이)
-- `components/dashboard/MovingClouds.tsx` - 절차적 구름 + 동체 그라디언트
-- `components/dashboard/CabinSeat.tsx` - 퍼스트 클래스 가죽 시트
 - `components/dashboard/NewsCard.tsx` - 뉴스 카드 컴포넌트
 - `components/landing/` - 랜딩 페이지 컴포넌트들 (InFlightEarth 등)
 

@@ -3,14 +3,21 @@
 export default function NewsFooter({
   source,
   url,
+  variant = "default",
 }: {
   source: string;
   url: string;
+  variant?: "default" | "pearl";
 }) {
   console.info("[NEWS_DETAIL] render: footer");
 
   return (
-    <footer className="rounded-3xl border border-amber-200/60 bg-white/35 backdrop-blur px-7 py-6">
+    <footer
+      className={
+        "rounded-3xl border px-7 py-6 " +
+        (variant === "pearl" ? "border-slate-200/80 bg-white" : "border-amber-200/60 bg-white/35 backdrop-blur")
+      }
+    >
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="text-amber-900/75">
           <span className="font-semibold text-amber-950">출처</span>: {source}

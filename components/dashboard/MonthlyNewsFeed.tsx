@@ -35,6 +35,8 @@ type MonthlyNewsApiResponse = {
   hint?: string;
 };
 
+type MonthlyNewsVariant = "default" | "pearl";
+
 function formatKoreanDate(iso: string) {
   const d = new Date(iso);
   const yyyy = d.getFullYear();
@@ -77,8 +79,15 @@ function mapCategoryToNewsCategory(category: MonthlyNewsCategory): NewsItem["cat
   return category;
 }
 
-export default function MonthlyNewsFeed({ onBack }: { onBack?: () => void }) {
+export default function MonthlyNewsFeed({
+  onBack,
+  variant = "default",
+}: {
+  onBack?: () => void;
+  variant?: MonthlyNewsVariant;
+}) {
   console.info("[MONTHLY_NEWS] 이달의 뉴스 화면 로드됨 - News In Flight");
+  const isPearl = variant === "pearl";
 
   const [selectedCategory, setSelectedCategory] = useState<MonthlyNewsCategory>("all");
   const [selectedNewsId, setSelectedNewsId] = useState<string | null>(null);
@@ -208,15 +217,51 @@ export default function MonthlyNewsFeed({ onBack }: { onBack?: () => void }) {
   }, [items, selectedNewsId]);
 
   return (
-    <div className="h-full w-full bg-gradient-to-br from-sky-50 via-white to-blue-50">
+    <div
+      className={
+        isPearl
+          ? "h-full w-full bg-[#D7DCE3]"
+          : "h-full w-full bg-gradient-to-br from-sky-50 via-white to-blue-50"
+      }
+    >
       {/* 얇은 라인 패턴 (오늘의 뉴스와 동일한 구성) */}
-      <div className="pointer-events-none absolute inset-0 opacity-[0.14]">
-        <div className="absolute left-0 top-24 h-px w-full bg-gradient-to-r from-transparent via-sky-400/60 to-transparent" />
-        <div className="absolute left-0 top-56 h-px w-full bg-gradient-to-r from-transparent via-sky-300/55 to-transparent" />
-        <div className="absolute left-0 bottom-40 h-px w-full bg-gradient-to-r from-transparent via-sky-400/55 to-transparent" />
-        <div className="absolute left-12 top-0 h-full w-px bg-gradient-to-b from-transparent via-sky-400/45 to-transparent" />
-        <div className="absolute right-24 top-0 h-full w-px bg-gradient-to-b from-transparent via-sky-300/45 to-transparent" />
-      </div>
+      {!isPearl && <div className="pointer-events-none absolute inset-0 opacity-[0.14]">
+        <div
+          className={
+            "absolute left-0 top-24 h-px w-full bg-gradient-to-r from-transparent " +
+            (isPearl ? "via-slate-500/35" : "via-sky-400/60") +
+            " to-transparent"
+          }
+        />
+        <div
+          className={
+            "absolute left-0 top-56 h-px w-full bg-gradient-to-r from-transparent " +
+            (isPearl ? "via-slate-400/30" : "via-sky-300/55") +
+            " to-transparent"
+          }
+        />
+        <div
+          className={
+            "absolute left-0 bottom-40 h-px w-full bg-gradient-to-r from-transparent " +
+            (isPearl ? "via-slate-500/30" : "via-sky-400/55") +
+            " to-transparent"
+          }
+        />
+        <div
+          className={
+            "absolute left-12 top-0 h-full w-px bg-gradient-to-b from-transparent " +
+            (isPearl ? "via-slate-500/25" : "via-sky-400/45") +
+            " to-transparent"
+          }
+        />
+        <div
+          className={
+            "absolute right-24 top-0 h-full w-px bg-gradient-to-b from-transparent " +
+            (isPearl ? "via-slate-400/22" : "via-sky-300/45") +
+            " to-transparent"
+          }
+        />
+      </div>}
 
       {/* 스크롤 컨테이너 */}
       <div className="relative z-10 h-full overflow-y-auto">
@@ -235,16 +280,12 @@ export default function MonthlyNewsFeed({ onBack }: { onBack?: () => void }) {
                 console.info("[MONTHLY_NEWS] click: back (list -> dashboard)");
                 onBack?.();
               }}
-              className="
-                h-12 w-12
-                rounded-2xl
-                border border-sky-200/80
-                bg-white/55 backdrop-blur
-                shadow-sm
-                flex items-center justify-center
-                hover:bg-white/70
-                transition
-              "
+              className={
+                "h-12 w-12 rounded-2xl border shadow-sm flex items-center justify-center transition " +
+                (isPearl
+                  ? "border-slate-200 bg-white hover:bg-slate-50"
+                  : "border-sky-200/80 bg-white/55 backdrop-blur hover:bg-white/70")
+              }
               aria-label="뒤로가기"
             >
               <ArrowLeft className="h-5 w-5 text-slate-900" />
@@ -270,17 +311,24 @@ export default function MonthlyNewsFeed({ onBack }: { onBack?: () => void }) {
                     setActiveMonth(nextMonth);
                   }}
                   className={
-                    "h-10 w-10 rounded-2xl border bg-white/55 backdrop-blur flex items-center justify-center transition " +
+                    "h-10 w-10 rounded-2xl border flex items-center justify-center transition " +
                     (canGoPrev
-                      ? "border-sky-200/80 hover:bg-white/70"
-                      : "border-slate-200/60 opacity-40 cursor-not-allowed")
+                      ? isPearl
+                        ? "border-slate-200 bg-white hover:bg-slate-50"
+                        : "border-sky-200/80 bg-white/55 backdrop-blur hover:bg-white/70"
+                      : "border-slate-200/60 bg-white opacity-40 cursor-not-allowed")
                   }
                   aria-label="이전 달"
                 >
                   <ChevronLeft className="h-5 w-5" />
                 </button>
 
-                <div className="px-4 py-2 rounded-2xl border border-sky-200/80 bg-white/55 backdrop-blur text-sm font-semibold text-slate-900">
+                <div
+                  className={
+                    "px-4 py-2 rounded-2xl border text-sm font-semibold text-slate-900 " +
+                    (isPearl ? "border-slate-200 bg-white" : "border-sky-200/80 bg-white/55 backdrop-blur")
+                  }
+                >
                   {monthLabel(activeMonth)}
                 </div>
 
@@ -296,10 +344,12 @@ export default function MonthlyNewsFeed({ onBack }: { onBack?: () => void }) {
                     setActiveMonth(prevMonth);
                   }}
                   className={
-                    "h-10 w-10 rounded-2xl border bg-white/55 backdrop-blur flex items-center justify-center transition " +
+                    "h-10 w-10 rounded-2xl border flex items-center justify-center transition " +
                     (canGoNext
-                      ? "border-sky-200/80 hover:bg-white/70"
-                      : "border-slate-200/60 opacity-40 cursor-not-allowed")
+                      ? isPearl
+                        ? "border-slate-200 bg-white hover:bg-slate-50"
+                        : "border-sky-200/80 bg-white/55 backdrop-blur hover:bg-white/70"
+                      : "border-slate-200/60 bg-white opacity-40 cursor-not-allowed")
                   }
                   aria-label="다음 달"
                 >
@@ -312,7 +362,12 @@ export default function MonthlyNewsFeed({ onBack }: { onBack?: () => void }) {
           {/* 상세 화면 */}
           {selectedNews ? (
             <div className="mt-10 space-y-6">
-              <div className="rounded-3xl border border-sky-200/60 bg-white/45 backdrop-blur px-7 py-6">
+              <div
+                className={
+                  "rounded-3xl border px-7 py-6 " +
+                  (isPearl ? "border-slate-200/80 bg-white" : "border-sky-200/60 bg-white/45 backdrop-blur")
+                }
+              >
                 <div className="text-sm text-slate-600">
                   {formatKoreanDate(selectedNews.published_at)} · {selectedNews.source}
                 </div>
@@ -341,8 +396,12 @@ export default function MonthlyNewsFeed({ onBack }: { onBack?: () => void }) {
                       className={
                         "h-11 px-6 rounded-2xl border text-sm font-semibold transition " +
                         (isSelected
-                          ? "border-sky-500 bg-sky-50/80 text-slate-900 shadow-[0_0_0_3px_rgba(14,165,233,0.16)]"
-                          : "border-sky-200/70 bg-white/40 text-slate-700 hover:bg-white/60")
+                          ? isPearl
+                            ? "border-slate-400 bg-white text-slate-900 shadow-[0_0_0_3px_rgba(100,116,139,0.16)]"
+                            : "border-sky-500 bg-sky-50/80 text-slate-900 shadow-[0_0_0_3px_rgba(14,165,233,0.16)]"
+                          : isPearl
+                            ? "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                            : "border-sky-200/70 bg-white/40 text-slate-700 hover:bg-white/60")
                       }
                     >
                       {categoryLabel(c)}
@@ -354,13 +413,23 @@ export default function MonthlyNewsFeed({ onBack }: { onBack?: () => void }) {
               {/* 카드 리스트 */}
               <div className="mt-10 space-y-6">
                 {isLoading && (
-                  <div className="rounded-3xl border border-sky-200/60 bg-white/45 px-8 py-8 text-slate-700">
+                  <div
+                    className={
+                      "rounded-3xl border px-8 py-8 text-slate-700 " +
+                      (isPearl ? "border-slate-200/80 bg-white" : "border-sky-200/60 bg-white/45")
+                    }
+                  >
                     불러오는 중...
                   </div>
                 )}
 
                 {loadError && (
-                  <div className="rounded-3xl border border-red-200/60 bg-white/45 px-8 py-8 text-slate-700">
+                  <div
+                    className={
+                      "rounded-3xl border px-8 py-8 text-slate-700 " +
+                      (isPearl ? "border-rose-200 bg-white" : "border-red-200/60 bg-white/45")
+                    }
+                  >
                     {loadError}
                   </div>
                 )}
@@ -378,16 +447,12 @@ export default function MonthlyNewsFeed({ onBack }: { onBack?: () => void }) {
                         });
                         setSelectedNewsId(news.id);
                       }}
-                      className="
-                        w-full text-left
-                        rounded-3xl
-                        border border-sky-200/60
-                        bg-white/45 backdrop-blur
-                        px-8 py-7
-                        shadow-[0_18px_50px_-40px_rgba(2,6,23,0.35)]
-                        hover:bg-white/55
-                        transition
-                      "
+                      className={
+                        "w-full text-left rounded-3xl border px-8 py-7 shadow-[0_18px_50px_-40px_rgba(2,6,23,0.35)] transition " +
+                        (isPearl
+                          ? "border-slate-200/80 bg-white hover:bg-slate-50"
+                          : "border-sky-200/60 bg-white/45 backdrop-blur hover:bg-white/55")
+                      }
                     >
                       <div className="flex items-start justify-between gap-6">
                         <div className="min-w-0 flex-1">
@@ -413,7 +478,12 @@ export default function MonthlyNewsFeed({ onBack }: { onBack?: () => void }) {
                 })}
 
                 {items.length === 0 && !isLoading && (
-                  <div className="rounded-3xl border border-sky-200/60 bg-white/45 px-8 py-10 text-slate-700">
+                  <div
+                    className={
+                      "rounded-3xl border px-8 py-10 text-slate-700 " +
+                      (isPearl ? "border-slate-200/80 bg-white" : "border-sky-200/60 bg-white/45")
+                    }
+                  >
                     이 달에는 선택한 관심 자산에 해당하는 뉴스가 아직 없어요.
                   </div>
                 )}

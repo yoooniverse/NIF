@@ -2,7 +2,6 @@
 
 import { motion } from 'framer-motion';
 import { ReactNode } from 'react';
-import MovingClouds from './MovingClouds';
 
 interface CabinWindowProps {
   title: string;
@@ -92,7 +91,7 @@ export default function CabinWindow({
       >
         {/* Window view: 하늘/구름은 "유리 안쪽"에서만 보임 */}
         <div className="absolute inset-0">
-          <MovingClouds variant="window" />
+          {/* NOTE: MovingClouds 컴포넌트 삭제됨. (필요 시 대체 효과 추가 가능) */}
         </div>
 
         {/* Glass tint */}

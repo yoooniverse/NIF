@@ -1,17 +1,20 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Ticket } from "lucide-react";
+import { useState } from "react";
 import NewsSummary from "@/components/news/news-summary";
 import WorstScenario from "@/components/news/worst-scenario";
 import ActionItem from "@/components/news/action-item";
 import NewsFooter from "@/components/news/news-footer";
+import BoardingPassModal from "@/components/news/BoardingPassModal";
 import { getMockNewsById } from "@/lib/mock/news";
 
 export default function NewsDetailPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const id = params?.id;
+  const [isBoardingPassOpen, setIsBoardingPassOpen] = useState(false);
 
   const news = typeof id === "string" ? getMockNewsById(id) : null;
 
@@ -65,7 +68,7 @@ export default function NewsDetailPage() {
             <ArrowLeft className="h-5 w-5 text-amber-900" />
           </button>
 
-          <div className="pt-1">
+          <div className="pt-1 flex-1">
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-amber-950">
               오늘의 뉴스
             </h1>
@@ -73,6 +76,28 @@ export default function NewsDetailPage() {
               뉴스 해설을 확인해보세요
             </p>
           </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              console.info("[NEWS_DETAIL] click: boarding pass");
+              setIsBoardingPassOpen(true);
+            }}
+            className="
+              h-12 px-4
+              rounded-2xl
+              border border-amber-200/80
+              bg-white/50 backdrop-blur
+              shadow-sm
+              flex items-center gap-2
+              hover:bg-white/65
+              transition
+              text-amber-900
+            "
+          >
+            <Ticket className="h-5 w-5" />
+            <span className="text-sm font-medium">Boarding Pass</span>
+          </button>
         </div>
 
         <div className="mt-10 space-y-6">
@@ -89,6 +114,14 @@ export default function NewsDetailPage() {
           <NewsFooter source={news.source} url={news.url} />
         </div>
       </div>
+
+      {/* Boarding Pass Modal */}
+      <BoardingPassModal
+        isOpen={isBoardingPassOpen}
+        onClose={() => setIsBoardingPassOpen(false)}
+        newsTitle={news.title}
+        economicIndex="NASDAQ 100"
+      />
     </div>
   );
 }

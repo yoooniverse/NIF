@@ -9,8 +9,8 @@ import { Button } from "@/components/ui/button";
 const Navbar = () => {
   const pathname = usePathname();
   
-  // 랜딩 페이지에서는 Navbar를 숨김
-  if (pathname === "/") {
+  // 랜딩 페이지 + 대시보드 v2에서는 Navbar를 숨김
+  if (pathname === "/" || pathname.startsWith("/dashboard-v2")) {
     return null;
   }
 

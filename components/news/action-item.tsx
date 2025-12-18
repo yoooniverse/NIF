@@ -5,14 +5,21 @@ import BlurOverlay from "@/components/paywall/blur-overlay";
 export default function ActionItem({
   text,
   shouldBlur,
+  variant = "default",
 }: {
   text: string;
   shouldBlur: boolean;
+  variant?: "default" | "pearl";
 }) {
   console.info("[NEWS_DETAIL] render: action item block", { shouldBlur });
 
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-amber-200/60 bg-white/35 backdrop-blur px-7 py-6">
+    <section
+      className={
+        "relative overflow-hidden rounded-3xl border px-7 py-6 " +
+        (variant === "pearl" ? "border-slate-200/80 bg-white" : "border-amber-200/60 bg-white/35 backdrop-blur")
+      }
+    >
       <div className="text-sm font-semibold text-amber-900/70">Block 3</div>
       <div className="mt-2 text-lg font-bold text-amber-950">행동 가이드</div>
 
