@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Bell, CalendarDays, Map, Newspaper } from "lucide-react";
 import NewsFeed from "@/components/dashboard/NewsFeed";
+import MonthlyNewsFeed from "@/components/dashboard/MonthlyNewsFeed";
 
 const PANEL_TYPES = {
   MONTHLY: "monthly",
@@ -211,6 +212,7 @@ export default function DashboardPage() {
   const router = useRouter();
   // 초기 진입 시에는 "창문(메인 대시보드)"가 먼저 보이도록 TODAY가 아닌 값으로 시작
   const [activePanel, setActivePanel] = useState<ActivePanel>(PANEL_TYPES.MONTHLY);
+  const [isMonthlyOpen, setIsMonthlyOpen] = useState(false);
   const initialOverflowRef = useRef<{ html: string; body: string } | null>(null);
 
   useEffect(() => {
@@ -386,6 +388,7 @@ export default function DashboardPage() {
                 onClick={() => {
                   console.info("[DASHBOARD] click window: monthly");
                   setActivePanel(PANEL_TYPES.MONTHLY);
+                  setIsMonthlyOpen(true);
                 }}
               />
               <WindowCapsule
@@ -395,6 +398,7 @@ export default function DashboardPage() {
                 isActive={isPanelActive(activePanel, PANEL_TYPES.TODAY)}
                 onClick={() => {
                   console.info("[DASHBOARD] click window: today");
+                  setIsMonthlyOpen(false);
                   setActivePanel(PANEL_TYPES.TODAY);
                 }}
               />
@@ -405,6 +409,7 @@ export default function DashboardPage() {
                 isActive={isPanelActive(activePanel, PANEL_TYPES.MAP)}
                 onClick={() => {
                   console.info("[DASHBOARD] click window: map");
+                  setIsMonthlyOpen(false);
                   setActivePanel(PANEL_TYPES.MAP);
                 }}
               />
@@ -422,6 +427,19 @@ export default function DashboardPage() {
             onBack={() => {
               console.info("[DASHBOARD] back from NewsFeed -> dashboard");
               setActivePanel(PANEL_TYPES.MONTHLY);
+              setIsMonthlyOpen(false);
+            }}
+          />
+        </div>
+      )}
+
+      {/* 이달의 뉴스: 전체 화면 오버레이 (초기 진입에서는 열지 않음) */}
+      {isPanelActive(activePanel, PANEL_TYPES.MONTHLY) && isMonthlyOpen && (
+        <div className="fixed inset-0 z-[100]">
+          <MonthlyNewsFeed
+            onBack={() => {
+              console.info("[DASHBOARD] back from MonthlyNewsFeed -> dashboard");
+              setIsMonthlyOpen(false);
             }}
           />
         </div>
