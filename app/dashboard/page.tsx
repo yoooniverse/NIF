@@ -80,7 +80,15 @@ export default function DashboardV2Page() {
       return;
     }
 
-    // 경제 순환기 지도는 모달로 유지
+    // 경제 순환기 지도는 별도 페이지로 이동
+    if (key === 'cycle') {
+      console.log('Navigating to /cycle - 경제 순환기 지도 페이지');
+      setActivePanel(null); // 모달 닫기
+      router.push('/cycle');
+      return;
+    }
+
+    // 다른 패널들은 모달로 유지
     console.log('Opening modal for:', key);
     setActivePanel(key);
   };
