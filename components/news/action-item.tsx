@@ -1,39 +1,35 @@
-"use client";
+'use client';
 
-import BlurOverlay from "@/components/paywall/blur-overlay";
+import BlurOverlay from '@/components/paywall/blur-overlay';
+import { Navigation } from 'lucide-react';
 
 export default function ActionItem({
   text,
   shouldBlur,
-  variant = "default",
 }: {
   text: string;
   shouldBlur: boolean;
-  variant?: "default" | "pearl";
 }) {
-  console.info("[NEWS_DETAIL] render: action item block", { shouldBlur });
-
   return (
-    <section
-      className={
-        "relative overflow-hidden rounded-3xl border px-7 py-6 " +
-        (variant === "pearl" ? "border-slate-200/80 bg-white" : "border-amber-200/60 bg-white/35 backdrop-blur")
-      }
-    >
-      <div className="text-sm font-semibold text-amber-900/70">Block 3</div>
-      <div className="mt-2 text-lg font-bold text-amber-950">행동 가이드</div>
+    <section className="relative overflow-hidden rounded-3xl border border-gray-200 bg-white px-7 py-6 shadow-sm">
+      <div className="flex items-center gap-2 text-gray-900">
+        <Navigation className="h-5 w-5" />
+        <h2 className="text-base font-semibold">행동 가이드</h2>
+      </div>
 
-      <p className={`mt-3 text-amber-900/75 leading-relaxed ${shouldBlur ? "blur-sm select-none" : ""}`}>
-        {text}
-      </p>
+      <div className={shouldBlur ? 'mt-4 blur-sm select-none pointer-events-none' : 'mt-4'}>
+        <p className="whitespace-pre-line text-gray-600 leading-relaxed">{text}</p>
+      </div>
 
       {shouldBlur && (
-        <BlurOverlay
-          title="구독하고 행동 가이드 보기"
-          description="31일차 이후에는 행동 가이드가 블러 처리돼요. 구독하면 전체 내용을 볼 수 있어요."
-        />
+        <div
+          className="absolute inset-0"
+          onClick={() => console.info('[ACTION_ITEM] blocked: show paywall overlay')}
+          role="presentation"
+        >
+          <BlurOverlay />
+        </div>
       )}
     </section>
   );
 }
-

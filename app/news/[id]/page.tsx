@@ -1,24 +1,44 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Ticket } from "lucide-react";
 import { useState } from "react";
-import NewsSummary from "@/components/news/news-summary";
-import WorstScenario from "@/components/news/worst-scenario";
-import ActionItem from "@/components/news/action-item";
-import NewsFooter from "@/components/news/news-footer";
-import BoardingPassModal from "@/components/news/BoardingPassModal";
-import { getMockNewsById } from "@/lib/mock/news";
+import NewsSummary from "../../../components/news/news-summary";
+import WorstScenario from "../../../components/news/worst-scenario";
+import ActionItem from "../../../components/news/action-item";
+import NewsFooter from "../../../components/news/news-footer";
+import BoardingPassModal from "../../../components/news/BoardingPassModal";
+import { getMockNewsById } from "../../../lib/mock/news";
 
 export default function NewsDetailPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
   const id = params?.id;
   const [isBoardingPassOpen, setIsBoardingPassOpen] = useState(false);
 
+  // URL 파라미터에서 정보 가져오기
+  const fromPage = searchParams.get('from') as 'today' | 'monthly' | null;
+  const category = searchParams.get('category');
+
+  // 동적 제목 생성
+  const getPageTitle = () => {
+    if (category) {
+      return `${category} 뉴스`;
+    }
+    return '오늘의 뉴스';
+  };
+
+  const getPageSubtitle = () => {
+    if (category) {
+      return '카테고리 뉴스 해설을 확인해보세요';
+    }
+    return '뉴스 해설을 확인해보세요';
+  };
+
   const news = typeof id === "string" ? getMockNewsById(id) : null;
 
-  console.info("[NEWS_DETAIL] page load", { id, found: Boolean(news) });
+  console.info("[NEWS_DETAIL] page load", { id, found: Boolean(news), fromPage, category });
 
   if (!news) {
     return (
@@ -44,7 +64,7 @@ export default function NewsDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50">
+    <div className="min-h-screen bg-[#050814] text-white">
       <div className="mx-auto w-full max-w-[1100px] px-6 pt-8 pb-16">
         <div className="flex items-start gap-4">
           <button
@@ -56,24 +76,24 @@ export default function NewsDetailPage() {
             className="
               h-12 w-12
               rounded-2xl
-              border border-amber-200/80
-              bg-white/50 backdrop-blur
+              border border-white/20
+              bg-white/10 backdrop-blur
               shadow-sm
               flex items-center justify-center
-              hover:bg-white/65
+              hover:bg-white/20
               transition
             "
             aria-label="뒤로가기"
           >
-            <ArrowLeft className="h-5 w-5 text-amber-900" />
+            <ArrowLeft className="h-5 w-5 text-white" />
           </button>
 
           <div className="pt-1 flex-1">
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-amber-950">
-              오늘의 뉴스
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
+              {getPageTitle()}
             </h1>
-            <p className="mt-1 text-amber-800/80 text-base sm:text-lg">
-              뉴스 해설을 확인해보세요
+            <p className="mt-1 text-white/70 text-base sm:text-lg">
+              {getPageSubtitle()}
             </p>
           </div>
 
@@ -86,13 +106,13 @@ export default function NewsDetailPage() {
             className="
               h-12 px-4
               rounded-2xl
-              border border-amber-200/80
-              bg-white/50 backdrop-blur
+              border border-white/20
+              bg-white/10 backdrop-blur
               shadow-sm
               flex items-center gap-2
-              hover:bg-white/65
+              hover:bg-white/20
               transition
-              text-amber-900
+              text-white
             "
           >
             <Ticket className="h-5 w-5" />
@@ -101,9 +121,9 @@ export default function NewsDetailPage() {
         </div>
 
         <div className="mt-10 space-y-6">
-          <div className="rounded-3xl border border-amber-200/60 bg-white/35 backdrop-blur px-7 py-6">
-            <div className="text-sm text-amber-900/70">{news.source}</div>
-            <div className="mt-3 text-2xl sm:text-3xl font-bold text-amber-950">
+          <div className="rounded-3xl border border-gray-200 bg-white px-7 py-6">
+            <div className="text-sm text-gray-600">{news.source}</div>
+            <div className="mt-3 text-2xl sm:text-3xl font-bold text-gray-900">
               {news.title}
             </div>
           </div>

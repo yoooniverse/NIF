@@ -1,449 +1,323 @@
 'use client';
 
-import { useUser, UserButton } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
-import { Bell, CalendarDays, Map, Newspaper } from "lucide-react";
-import NewsFeed from "@/components/dashboard/NewsFeed";
-import MonthlyNewsFeed from "@/components/dashboard/MonthlyNewsFeed";
+import { useUser, UserButton } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import {
+  CalendarDays,
+  LineChart,
+  Newspaper,
+  X,
+} from 'lucide-react';
+import GlobeCanvas from '@/components/dashboard/GlobeCanvas';
 
-const PANEL_TYPES = {
-  MONTHLY: "monthly",
-  TODAY: "today",
-  MAP: "map",
+type PanelKey = 'today' | 'monthly' | 'cycle';
+
+// ✅ Mock Data (API 준비 전까지)
+const MOCK_DATA = {
+  todayNews: [
+    '미 연준, 금리 동결 시사 — 시장은 “인하 시점” 주목',
+    '비트코인 변동성 확대… 현물 ETF 자금 유입/유출 혼조',
+    '원/달러 환율 1,3xx원대 등락… 수출주 영향',
+    'AI 반도체 공급망 재편… 대형주 중심 랠리 지속',
+    '중국 경기 부양책 기대감… 원자재 가격 반등',
+  ],
+  monthlyBriefing: {
+    summary:
+      '이번 달은 “리스크 온/오프”가 빠르게 교차했습니다. 금리/환율/유가의 동시 변동이 커져 포트폴리오 분산이 중요합니다.',
+    highlights: [
+      '미국: 인플레이션 둔화 속 소비 지표 견조',
+      '한국: 수출 회복 + 반도체 사이클 기대',
+      '일본: 엔화 약세 지속, 수출주 강세',
+      '유럽: 성장 둔화 우려, 에너지 가격 변수',
+    ],
+  },
+  economicCycle: {
+    phase: 'Recovery → Expansion (Mock)',
+    indicators: [
+      { name: 'PMI', value: 52.4, delta: +0.7 },
+      { name: 'CPI YoY', value: 2.9, delta: -0.2 },
+      { name: 'Unemployment', value: 3.9, delta: +0.1 },
+      { name: '10Y Yield', value: 4.12, delta: +0.06 },
+      { name: 'Oil (WTI)', value: 79.3, delta: +1.4 },
+    ],
+    note:
+      '실제 데이터 연동 시 FRED/WorldBank 등으로 대체 가능합니다. 지금은 UI/UX 검증용 더미입니다.',
+  },
 } as const;
 
-type ActivePanel = typeof PANEL_TYPES[keyof typeof PANEL_TYPES];
 
-function FuselageBackground() {
-  return (
-    <div className="pointer-events-none fixed inset-0 z-0">
-      {/* 1) The Fuselage Skin (3D cylindrical) */}
-      <div
-        className="
-          absolute inset-0
-          bg-gradient-to-b from-white via-slate-50 to-slate-200
-        "
-      />
-
-      {/* Curvature + vignette to feel like a cylinder */}
-      <div
-        className="
-          absolute inset-0
-          bg-[radial-gradient(1200px_700px_at_50%_18%,rgba(255,255,255,0.95),rgba(255,255,255,0.35),rgba(2,6,23,0.10))]
-          opacity-70
-        "
-      />
-      <div
-        className="
-          absolute inset-0
-          bg-[radial-gradient(900px_700px_at_50%_55%,rgba(255,255,255,0.55),rgba(255,255,255,0),rgba(2,6,23,0.10))]
-          opacity-60
-        "
-      />
-
-      {/* 1-Details) Panel lines */}
-      <div className="absolute left-0 right-0 top-[18%] h-px bg-slate-300/55" />
-      <div className="absolute left-0 right-0 top-[19%] h-px bg-white/70" />
-      <div className="absolute left-0 right-0 top-[78%] h-px bg-slate-300/40" />
-
-      {/* 1-Details) Rivets pattern along panel lines */}
-      <div
-        className="absolute left-0 right-0 top-[17.4%] h-6 opacity-55"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle, rgba(148,163,184,0.55) 1px, rgba(148,163,184,0) 2px)",
-          backgroundSize: "26px 10px",
-          backgroundPosition: "0 50%",
-        }}
-      />
-      <div
-        className="absolute left-0 right-0 top-[77.4%] h-6 opacity-45"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle, rgba(148,163,184,0.45) 1px, rgba(148,163,184,0) 2px)",
-          backgroundSize: "28px 10px",
-          backgroundPosition: "10px 50%",
-        }}
-      />
-
-      {/* 2) Celestial Blue Cheatline */}
-      <div className="absolute inset-x-0 top-[56%]">
-        {/* 끊기지 않는 전체 폭 스트라이프 */}
-        <div
-          className="
-            relative h-10
-            bg-gradient-to-r from-sky-300 via-sky-300 to-blue-400
-            border-y border-white/60
-            shadow-[0_18px_50px_-40px_rgba(2,6,23,0.65)]
-            overflow-hidden
-          "
-        >
-          {/* subtle sheen */}
-          <div className="absolute inset-0 bg-[linear-gradient(100deg,rgba(255,255,255,0)_0%,rgba(255,255,255,0.25)_45%,rgba(255,255,255,0)_70%)] opacity-50" />
-          {/* thin silver edges */}
-          <div className="absolute inset-x-0 top-0 h-px bg-slate-200/80" />
-          <div className="absolute inset-x-0 bottom-0 h-px bg-slate-200/70" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function WindowCapsule({
-  label,
-  Icon,
-  variant,
-  isActive,
-  onClick,
-}: {
-  label: string;
-  Icon: React.ComponentType<{ className?: string }>;
-  variant: "main" | "dummy";
-  isActive?: boolean;
-  onClick?: () => void;
-}) {
-  const commonShell = `
-    relative
-    w-[clamp(150px,16vw,220px)]
-    aspect-[11/18]
-    rounded-full
-  `;
-
-  if (variant === "dummy") {
-    return (
-      <div
-        aria-hidden="true"
-        className={`
-          ${commonShell}
-          overflow-hidden
-          border-[10px] border-slate-200
-          bg-gradient-to-b from-white via-slate-50 to-slate-200
-          shadow-[0_12px_24px_-18px_rgba(2,6,23,0.35)]
-          opacity-95
-        `}
-      >
-        {/* Inner wall (depth) */}
-        <div className="absolute inset-0 rounded-full shadow-[inset_0_14px_26px_rgba(2,6,23,0.30)]" />
-
-        {/* Inner bezel */}
-        <div className="absolute inset-[10px] rounded-full border-[10px] border-slate-100 shadow-[inset_0_10px_20px_rgba(2,6,23,0.20)]" />
-
-        {/* Window shade (closed) */}
-        <div className="absolute inset-[28px] rounded-full bg-gradient-to-b from-slate-200 via-slate-200 to-slate-300 shadow-[inset_0_18px_34px_rgba(2,6,23,0.22)]" />
-
-        {/* Shade slats */}
-        <div
-          className="absolute inset-[28px] rounded-full opacity-55"
-          style={{
-            backgroundImage:
-              "repeating-linear-gradient(to_bottom, rgba(255,255,255,0.18) 0px, rgba(255,255,255,0.18) 2px, rgba(2,6,23,0.00) 10px, rgba(2,6,23,0.00) 16px)",
-          }}
-        />
-
-        {/* Subtle inner edge */}
-        <div className="absolute inset-[28px] rounded-full border border-white/35" />
-      </div>
-    );
-  }
-
-  return (
-    <motion.button
-      type="button"
-      onClick={onClick}
-      className={`
-        ${commonShell}
-        cursor-pointer
-        overflow-hidden
-        border-[10px] border-slate-200
-        shadow-[0_14px_28px_-20px_rgba(2,6,23,0.45)]
-        focus:outline-none
-        ${isActive ? "ring-2 ring-sky-300/80" : "ring-1 ring-slate-300/50"}
-      `}
-      whileHover={{ scale: 1.035, y: -8 }}
-      whileTap={{ scale: 0.99 }}
-      transition={{ type: "spring", stiffness: 280, damping: 18 }}
-    >
-      {/* Outer rim molding */}
-      <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white via-slate-50 to-slate-200" />
-
-      {/* Inner wall (strong depth) */}
-      <div className="absolute inset-0 rounded-full shadow-[inset_0_16px_30px_rgba(0,0,0,0.32),inset_0_-14px_26px_rgba(0,0,0,0.18)]" />
-
-      {/* Inner bezel layer */}
-      <div className="absolute inset-[10px] rounded-full border-[10px] border-slate-100 shadow-[inset_0_10px_20px_rgba(0,0,0,0.22)]" />
-
-      {/* Glass (vignette + reflection) */}
-      <div className="absolute inset-[28px] rounded-full overflow-hidden">
-        {/* base tint */}
-        <div className="absolute inset-0 bg-[#0F172A]" />
-
-        {/* top reflection */}
-        <div className="absolute inset-0 bg-gradient-to-b from-sky-200/20 via-transparent to-white/5" />
-        <div className="absolute -top-10 left-8 right-8 h-44 rotate-[-12deg] bg-white/16 blur-2xl" />
-
-        {/* vignette (edges darker) */}
-        <div className="absolute inset-0 bg-[radial-gradient(120%_120%_at_50%_40%,rgba(255,255,255,0.10)_0%,rgba(255,255,255,0.02)_45%,rgba(2,6,23,0.75)_100%)]" />
-
-        {/* depth shadow */}
-        <div className="absolute inset-0 shadow-[inset_0_24px_70px_rgba(2,6,23,0.60)]" />
-      </div>
-
-      {/* Shade handle (top center) */}
-      <div className="absolute top-[34px] left-1/2 -translate-x-1/2 z-20 h-[6px] w-20 rounded-full bg-slate-400/45 shadow-[inset_0_1px_1px_rgba(255,255,255,0.35)]" />
-
-      {/* content */}
-      <div className="relative z-10 flex h-full flex-col items-center justify-center px-5 text-center">
-        <div className="grid place-items-center rounded-3xl border border-white/15 bg-white/5 px-5 py-5 backdrop-blur-sm">
-          <Icon className="h-12 w-12 text-white" />
-        </div>
-        <div className="mt-6 max-w-[14rem] text-[clamp(14px,1.25vw,20px)] font-semibold leading-tight tracking-tight text-white whitespace-pre-line break-keep">
-          {label}
-        </div>
-        <div className="mt-2 text-xs text-white/70">열기</div>
-      </div>
-    </motion.button>
-  );
-}
-
-export default function DashboardPage() {
+/**
+ * Dashboard V2
+ * - 기존 `/dashboard`는 그대로 두고, 새 디자인은 `/dashboard-v2`에서 개발하기 위한 페이지
+ * - 핵심 흐름(인증/온보딩 리다이렉트)은 기존 대시보드와 동일하게 유지
+ */
+export default function DashboardV2Page() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
-  // 초기 진입 시에는 "창문(메인 대시보드)"가 먼저 보이도록 TODAY가 아닌 값으로 시작
-  const [activePanel, setActivePanel] = useState<ActivePanel>(PANEL_TYPES.MONTHLY);
-  const [isMonthlyOpen, setIsMonthlyOpen] = useState(false);
-  const initialOverflowRef = useRef<{ html: string; body: string } | null>(null);
 
-  useEffect(() => {
-    console.log("[DASHBOARD] 대시보드 페이지 로드");
-    console.log("[DASHBOARD] 사용자 정보:", {
-      userId: user?.id,
-      email: user?.emailAddresses[0]?.emailAddress,
-      onboardingCompleted: user?.unsafeMetadata?.onboardingCompleted,
-      level: user?.unsafeMetadata?.level,
-    });
+  const [activePanel, setActivePanel] = useState<PanelKey | null>(null);
 
-    // 온보딩을 완료하지 않은 사용자는 온보딩 페이지로 리다이렉트
-    if (isLoaded && user && !user.unsafeMetadata?.onboardingCompleted) {
-      console.log("[DASHBOARD] 온보딩 미완료 - 온보딩 페이지로 이동");
-      router.push("/onboarding/interests");
-    }
-  }, [user, isLoaded, router]);
 
-  useEffect(() => {
-    // 핵심 기능 로그: 창문 네비 선택(탭 전환)
-    console.info("[DASHBOARD] activePanel changed:", activePanel);
-  }, [activePanel]);
+  const openPanel = (key: PanelKey) => {
+    // 핵심 기능 로그: 대시보드 버튼 클릭 → 페이지 이동
+    console.info('[DASHBOARD] openPanel:', key);
 
-  useEffect(() => {
-    // 핵심 UX: 대시보드에서는 스크롤을 완전히 잠금(비행기 동체 화면 고정)
-    const html = document.documentElement;
-    const body = document.body;
-
-    if (!initialOverflowRef.current) {
-      initialOverflowRef.current = {
-        html: html.style.overflow,
-        body: body.style.overflow,
-      };
-    }
-
-    return () => {
-      // 페이지 언마운트 시 원복
-      const prev = initialOverflowRef.current;
-      if (prev) {
-        html.style.overflow = prev.html;
-        body.style.overflow = prev.body;
-      }
-      console.info("[DASHBOARD] scroll restored (unmount)");
-    };
-  }, []);
-
-  // 타입 안전성을 위한 헬퍼 함수
-  const isPanelActive = (panel: ActivePanel, target: ActivePanel): boolean => {
-    return panel === target;
-  };
-
-  useEffect(() => {
-    // today(새 페이지 느낌)에서는 스크롤을 열어준다. 그 외에는 스크롤 잠금 유지.
-    const html = document.documentElement;
-    const body = document.body;
-
-    if (isPanelActive(activePanel, PANEL_TYPES.TODAY)) {
-      html.style.overflow = "auto";
-      body.style.overflow = "auto";
-      console.info("[DASHBOARD] scroll unlocked for NewsFeed");
+    // PRD F4 요구사항: 오늘의 뉴스 클릭 시 관심분야별 TOP 5 목록 표시 (새 페이지)
+    if (key === 'today') {
+      console.log('Navigating to /news/today - 관심분야별 뉴스 목록 페이지');
+      setActivePanel(null); // 모달 닫기
+      router.push('/news/today');
       return;
     }
 
-    html.style.overflow = "hidden";
-    body.style.overflow = "hidden";
-    console.info("[DASHBOARD] scroll locked (dashboard)");
-  }, [activePanel]);
+    // TODO: 이달의 뉴스도 새로운 페이지로 이동 (현재 미구현)
+    if (key === 'monthly') {
+      console.log('Navigating to /news/monthly - 월간 뉴스 브리핑 페이지');
+      setActivePanel(null); // 모달 닫기
+      router.push('/news/monthly');
+      return;
+    }
+
+    // 경제 순환기 지도는 모달로 유지
+    console.log('Opening modal for:', key);
+    setActivePanel(key);
+  };
+
+  const closePanel = () => {
+    // 핵심 UX 로그: 모달 닫기
+    console.info('[DASHBOARD] closePanel');
+    setActivePanel(null);
+  };
+
+  useEffect(() => {
+    console.info('[DASHBOARD] page loaded');
+  }, []);
+
+
+  useEffect(() => {
+    // 핵심 기능 로그: 온보딩 상태에 따른 리다이렉트
+    if (!isLoaded) return;
+    if (!user) return;
+
+    const onboardingCompleted = Boolean(user.unsafeMetadata?.onboardingCompleted);
+    const isNewUser = user.createdAt && (Date.now() - new Date(user.createdAt).getTime()) < 5 * 60 * 1000; // 5분 이내 가입한 사용자
+
+    console.info('[DASHBOARD] user state', {
+      userId: user.id,
+      onboardingCompleted,
+      level: user.unsafeMetadata?.level,
+      isNewUser,
+      createdAt: user.createdAt,
+    });
+
+    // 신규 사용자(5분 이내 가입)만 온보딩을 강제함
+    // 이미 로그인된 기존 사용자는 온보딩을 건너뜀
+    if (!onboardingCompleted && isNewUser) {
+      console.info('[DASHBOARD] onboarding incomplete (new user) -> redirect to /onboarding/interests');
+      router.push('/onboarding/interests');
+    }
+  }, [isLoaded, user, router]);
+
 
   if (!isLoaded || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-50 via-white to-blue-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">로딩 중...</p>
+          <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-slate-900 border-t-transparent" />
+          <p className="text-slate-700">로딩 중...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen relative text-slate-900 overflow-hidden">
-      {/* Korean Air vibe: Fuselage Exterior */}
-      <FuselageBackground />
+    <div className="relative h-screen w-screen overflow-hidden bg-[#050814] text-white">
+      {/* 3D Canvas Layer */}
+      <GlobeCanvas />
 
-      {/* Header: 오버헤드 패널 느낌의 미니멀 글래스 바 */}
-      <header className="sticky top-0 z-50">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-4">
-          <div
-            className="
-            rounded-2xl
-            border border-yellow-400/60
-            bg-white/55 backdrop-blur-xl
-            shadow-[0_18px_60px_-35px_rgba(2,6,23,0.8)]
-          "
-          >
-            <div className="flex items-center justify-between px-4 py-3 sm:px-6">
-              <div className="flex items-center gap-3">
-                <div
-                  className="
-                  h-10 w-10 rounded-xl
-                  bg-gradient-to-br from-slate-900 to-slate-700
-                  shadow-[0_10px_30px_-18px_rgba(2,6,23,0.9)]
-                  flex items-center justify-center
-                "
-                >
-                  <span className="text-white text-sm font-semibold">NIF</span>
-                </div>
-                <div className="leading-tight">
-                  <div className="text-sm font-semibold tracking-tight text-slate-900">
-                    News In Flight
+      {/* UI Overlay Layer */}
+      <div className="absolute inset-0 z-10">
+        {/* Left Sidebar (Glassmorphism) */}
+        <aside className="absolute right-4 top-4 bottom-4 w-[92vw] md:w-[min(40vw,560px)] rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_30px_100px_-70px_rgba(0,0,0,0.9)]">
+          <div className="flex h-full flex-col">
+            {/* 상단바(헤더) 제거: 상단 공간 확보 */}
+            <div className="pt-5" />
+
+            <div className="mt-2 px-5">
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-xs text-white/60">승객</div>
+                    <div className="mt-1 text-sm font-semibold">{user.emailAddresses?.[0]?.emailAddress ?? 'Logged in'}</div>
                   </div>
-                  <div className="text-xs text-slate-600">First Class Insight</div>
+                  <UserButton afterSignOutUrl="/" />
+                </div>
+                <div className="mt-3 text-xs text-white/60">
+                  상태: <span className="text-emerald-300/90">FIRST CLASS 한달 체험</span>
                 </div>
               </div>
+            </div>
 
-              <div className="flex-1 text-center">
-                <h1 className="text-lg font-semibold text-slate-900 tracking-tight">
-                  Welcome aboard!
-                </h1>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="hidden sm:flex items-center gap-2 rounded-xl border border-white/50 bg-white/40 px-3 py-2 text-xs text-slate-600">
-                  <CalendarDays className="h-4 w-4 text-slate-700" />
-                  <span>무료 체험</span>
-                </div>
+            {/* 바로가기: 남는 공간을 3개 버튼이 채우도록 */}
+            <div className="mt-5 px-5 flex flex-col flex-1 min-h-0">
+              <div className="text-xs text-white/50">바로가기</div>
+              <div className="mt-3 flex flex-col gap-3 flex-1 min-h-0">
                 <button
                   type="button"
-                  onClick={() => console.info("[DASHBOARD] click: notifications")}
-                  className="
-                    relative
-                    rounded-xl
-                    border border-white/50
-                    bg-white/40 backdrop-blur
-                    px-3 py-2
-                    shadow-sm hover:shadow
-                    transition
-                  "
-                  aria-label="알림"
+                  onClick={() => openPanel('today')}
+                  className="group w-full flex-1 min-h-[96px] rounded-2xl border border-white/10 bg-white/5 px-5 py-5 text-left hover:bg-white/10 transition"
                 >
-                  <Bell className="h-4 w-4 text-slate-800" />
-                  <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-blue-600 ring-2 ring-white/70" />
+                  <div className="flex h-full items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <Newspaper className="h-5 w-5 text-sky-200 group-hover:text-sky-100" />
+                      <div>
+                        <div className="text-lg md:text-xl font-semibold">오늘의 뉴스</div>
+                        <div className="mt-1 text-sm md:text-base text-white/60">주요 헤드라인 요약</div>
+                      </div>
+                    </div>
+                    <span className="text-sm text-white/45">열기</span>
+                  </div>
                 </button>
-                <UserButton afterSignOutUrl="/" />
+
+                <button
+                  type="button"
+                  onClick={() => openPanel('monthly')}
+                  className="group w-full flex-1 min-h-[96px] rounded-2xl border border-white/10 bg-white/5 px-5 py-5 text-left hover:bg-white/10 transition"
+                >
+                  <div className="flex h-full items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <CalendarDays className="h-5 w-5 text-violet-200 group-hover:text-violet-100" />
+                      <div>
+                        <div className="text-lg md:text-xl font-semibold">이달의 뉴스</div>
+                        <div className="mt-1 text-sm md:text-base text-white/60">월간 브리핑</div>
+                      </div>
+                    </div>
+                    <span className="text-sm text-white/45">열기</span>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => openPanel('cycle')}
+                  className="group w-full flex-1 min-h-[96px] rounded-2xl border border-white/10 bg-white/5 px-5 py-5 text-left hover:bg-white/10 transition"
+                >
+                  <div className="flex h-full items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <LineChart className="h-5 w-5 text-emerald-200 group-hover:text-emerald-100" />
+                      <div>
+                        <div className="text-lg md:text-xl font-semibold">경제 순환기 지도</div>
+                        <div className="mt-1 text-sm md:text-base text-white/60">지표로 보는 국면</div>
+                      </div>
+                    </div>
+                    <span className="text-sm text-white/45">열기</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-auto px-5 pb-5">
+              <div className="flex items-center justify-between gap-3 text-xs text-white/55">
+                <Link
+                  href="/dashboard"
+                  onClick={() => console.info('[DASHBOARD] click: go legacy dashboard')}
+                  className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10 transition"
+                >
+                  기존 `/dashboard`로
+                </Link>
+                <span className="opacity-70">v2 prototype</span>
               </div>
             </div>
           </div>
-        </div>
-      </header>
+        </aside>
 
-      {/* 메인 콘텐츠 */}
-      <main className="relative z-20 w-full px-4 sm:px-6 lg:px-10">
-        {/* 기본 대시보드 뷰 (창문 5개) */}
-        <section className="h-[calc(100vh-108px)] flex items-center justify-center">
-          {/* 3) The Window Line */}
-          <motion.div
-            className="w-full"
-            initial={{ x: 140, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
-            onAnimationStart={() => console.info("[DASHBOARD] taxiing animation start")}
+
+        {/* Center Glass Modal - 경제 순환기 지도만 모달로 표시 */}
+        {activePanel === 'cycle' && (
+          <div
+            className="absolute inset-0 z-30 flex items-center justify-center px-4"
+            onClick={closePanel}
+            role="presentation"
           >
-            <div className="grid w-full grid-cols-5 place-items-center gap-4 sm:gap-6 lg:gap-8">
-              {/* Dummy - MAIN - MAIN - MAIN - Dummy (총 5개) */}
-              <WindowCapsule label="" Icon={CalendarDays} variant="dummy" />
+            <div
+              className="w-full max-w-2xl rounded-3xl border border-white/12 bg-black/35 backdrop-blur-2xl shadow-[0_30px_120px_-70px_rgba(0,0,0,0.95)]"
+              onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+            >
+              <div className="flex items-start justify-between gap-4 px-6 pt-6">
+                <div className="leading-tight">
+                  <div className="text-xs text-white/60">In-flight briefing</div>
+                  <div className="mt-1 text-xl font-semibold tracking-tight">
+                    경제 순환기 지도
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={closePanel}
+                  className="rounded-2xl border border-white/10 bg-white/5 p-2 hover:bg-white/10 transition"
+                  aria-label="닫기"
+                >
+                  <X className="h-4 w-4 text-white/80" />
+                </button>
+              </div>
 
-              {/* MAIN 1-3 */}
-              <WindowCapsule
-                label="이달의 뉴스"
-                Icon={CalendarDays}
-                variant="main"
-                isActive={isPanelActive(activePanel, PANEL_TYPES.MONTHLY)}
-                onClick={() => {
-                  console.info("[DASHBOARD] click window: monthly");
-                  setActivePanel(PANEL_TYPES.MONTHLY);
-                  setIsMonthlyOpen(true);
-                }}
-              />
-              <WindowCapsule
-                label="오늘의 뉴스"
-                Icon={Newspaper}
-                variant="main"
-                isActive={isPanelActive(activePanel, PANEL_TYPES.TODAY)}
-                onClick={() => {
-                  console.info("[DASHBOARD] click window: today");
-                  setIsMonthlyOpen(false);
-                  setActivePanel(PANEL_TYPES.TODAY);
-                }}
-              />
-              <WindowCapsule
-                label={"경제\n순환기 지도"}
-                Icon={Map}
-                variant="main"
-                isActive={isPanelActive(activePanel, PANEL_TYPES.MAP)}
-                onClick={() => {
-                  console.info("[DASHBOARD] click window: map");
-                  setIsMonthlyOpen(false);
-                  setActivePanel(PANEL_TYPES.MAP);
-                }}
-              />
+              <div className="px-6 pb-6 pt-4">
+                <div className="space-y-4">
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <div className="text-xs text-white/50">Phase</div>
+                    <div className="mt-2 text-base font-semibold text-white/90">
+                      {MOCK_DATA.economicCycle.phase}
+                    </div>
+                    <div className="mt-2 text-xs text-white/60">{MOCK_DATA.economicCycle.note}</div>
+                  </div>
 
-              <WindowCapsule label="" Icon={CalendarDays} variant="dummy" />
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <div className="text-xs text-white/50">Indicators (Mock)</div>
+                    <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      {MOCK_DATA.economicCycle.indicators.map((it) => (
+                        <div
+                          key={it.name}
+                          className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="text-sm font-medium text-white/85">{it.name}</div>
+                            <div
+                              className={`text-xs ${
+                                it.delta >= 0 ? 'text-emerald-200' : 'text-rose-200'
+                              }`}
+                            >
+                              {it.delta >= 0 ? '+' : ''}
+                              {it.delta}
+                            </div>
+                          </div>
+                          <div className="mt-1 text-xl font-semibold text-white">{it.value}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex items-center justify-between gap-3 text-xs text-white/55">
+                  <span>Tip: 바깥(배경)을 클릭해도 닫혀요.</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      console.info('[DASHBOARD] click: modal close (footer)');
+                      closePanel();
+                    }}
+                    className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10 transition"
+                  >
+                    닫기
+                  </button>
+                </div>
+              </div>
             </div>
-          </motion.div>
-        </section>
-      </main>
-
-      {/* 오늘의 뉴스: 새 페이지처럼 전체 화면 오버레이 */}
-      {isPanelActive(activePanel, PANEL_TYPES.TODAY) && (
-        <div className="fixed inset-0 z-[100]">
-          <NewsFeed
-            onBack={() => {
-              console.info("[DASHBOARD] back from NewsFeed -> dashboard");
-              setActivePanel(PANEL_TYPES.MONTHLY);
-              setIsMonthlyOpen(false);
-            }}
-          />
-        </div>
-      )}
-
-      {/* 이달의 뉴스: 전체 화면 오버레이 (초기 진입에서는 열지 않음) */}
-      {isPanelActive(activePanel, PANEL_TYPES.MONTHLY) && isMonthlyOpen && (
-        <div className="fixed inset-0 z-[100]">
-          <MonthlyNewsFeed
-            onBack={() => {
-              console.info("[DASHBOARD] back from MonthlyNewsFeed -> dashboard");
-              setIsMonthlyOpen(false);
-            }}
-          />
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
+
