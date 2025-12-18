@@ -1,32 +1,66 @@
 'use client';
 
 import { X } from 'lucide-react';
+import { useState } from 'react';
 
 interface BoardingPassModalProps {
   isOpen: boolean;
   onClose: () => void;
   newsTitle?: string;
   economicIndex?: string;
+  passengerName?: string;
+  subscriptionStatus?: 'first_class' | 'economy';
 }
 
 export default function BoardingPassModal({
   isOpen,
   onClose,
   newsTitle = "Global Market Rally",
-  economicIndex = "NASDAQ 100"
+  economicIndex = "NASDAQ 100",
+  passengerName = "PREMIUM MEMBER",
+  subscriptionStatus = 'economy'
 }: BoardingPassModalProps) {
+  const [analysisLevel, setAnalysisLevel] = useState<'lv1' | 'lv2' | 'lv3'>('lv1');
+
   if (!isOpen) return null;
 
-  // Generate random seat
-  const generateRandomSeat = () => {
-    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const numbers = '0123456789';
-    const letter = letters[Math.floor(Math.random() * letters.length)];
-    const number = numbers[Math.floor(Math.random() * numbers.length)];
-    return `${number}${letter}`;
+  console.info('[BOARDING_PASS_MODAL] opened with passengerName:', passengerName, 'subscriptionStatus:', subscriptionStatus);
+
+  const handleLevelChange = () => {
+    const levels: ('lv1' | 'lv2' | 'lv3')[] = ['lv1', 'lv2', 'lv3'];
+    const currentIndex = levels.indexOf(analysisLevel);
+    const nextIndex = (currentIndex + 1) % levels.length;
+    const nextLevel = levels[nextIndex];
+    setAnalysisLevel(nextLevel);
+    console.info('[BOARDING_PASS] analysis level changed to:', nextLevel);
   };
 
-  const seat = generateRandomSeat();
+  const getLevelDisplayText = (level: 'lv1' | 'lv2' | 'lv3') => {
+    switch (level) {
+      case 'lv1': return 'Lv.1';
+      case 'lv2': return 'Lv.2';
+      case 'lv3': return 'Lv.3';
+      default: return 'Lv.1';
+    }
+  };
+
+  const getLevelButtonClass = (level: 'lv1' | 'lv2' | 'lv3') => {
+    const baseClass = "w-32 h-16 px-8 py-4 text-white text-xl font-bold rounded-lg transition-colors shadow-lg flex items-center justify-center";
+
+    switch (level) {
+      case 'lv1':
+        return `${baseClass} bg-sky-500 hover:bg-sky-600`;
+      case 'lv2':
+        return `${baseClass} bg-blue-600 hover:bg-blue-700`;
+      case 'lv3':
+        return `${baseClass} bg-blue-800 hover:bg-blue-900`;
+      default:
+        return `${baseClass} bg-sky-500 hover:bg-sky-600`;
+    }
+  };
+
+  // Determine seat class based on subscription
+  const seat = subscriptionStatus === 'first_class' ? 'FIRST CLASS' : 'ECONOMY';
   const today = new Date().toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
@@ -57,7 +91,7 @@ export default function BoardingPassModal({
             {/* Passenger Name */}
             <div className="space-y-1">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">PASSENGER NAME</div>
-              <div className="text-2xl font-bold font-mono text-gray-900">PREMIUM MEMBER</div>
+              <div className="text-2xl font-bold font-mono text-gray-900">{passengerName}</div>
             </div>
 
             {/* From/To */}
@@ -115,9 +149,24 @@ export default function BoardingPassModal({
           </div>
 
           {/* Right Section (30%) - Stub */}
-          <div className="md:w-1/3 p-6 flex flex-col justify-between items-center bg-gray-50 min-h-[300px]">
+          <div className="md:w-1/3 p-6 flex flex-col items-center bg-gray-50 min-h-[300px]">
+            {/* News Analysis Level Selector */}
+            <div className="text-center mb-8">
+              <div className="text-sm font-semibold text-gray-500 mb-3">해설 난이도 레벨 변경하기</div>
+              <button
+                type="button"
+                onClick={handleLevelChange}
+                className={getLevelButtonClass(analysisLevel)}
+              >
+                {getLevelDisplayText(analysisLevel)}
+              </button>
+            </div>
+
+            {/* Spacer to push barcode to bottom */}
+            <div className="flex-1" />
+
             {/* Barcode Placeholder */}
-            <div className="flex-1 flex items-center justify-center w-full">
+            <div className="flex items-center justify-center w-full mt-4">
               <div className="w-32 h-20 bg-black flex flex-col justify-between p-1">
                 {/* Simple barcode pattern */}
                 <div className="flex justify-between h-full">
@@ -134,12 +183,6 @@ export default function BoardingPassModal({
                   <div className="w-1 bg-white"></div>
                 </div>
               </div>
-            </div>
-
-            {/* Flight Number at bottom */}
-            <div className="text-center">
-              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">FLIGHT</div>
-              <div className="text-lg font-bold font-mono text-gray-900">{economicIndex}</div>
             </div>
           </div>
         </div>

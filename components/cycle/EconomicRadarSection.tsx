@@ -274,13 +274,6 @@ export default function EconomicRadarSection({
 
               </div>
 
-              {/* 범례 */}
-              <div className="mt-6 flex justify-center text-xs font-mono">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-400 rounded-full opacity-70"></div>
-                  <span className="text-green-400">경제 자산</span>
-                </div>
-              </div>
             </div>
 
           </motion.div>

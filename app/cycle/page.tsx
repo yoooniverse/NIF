@@ -127,7 +127,29 @@ export default function CyclePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white">
+    <>
+      <style jsx global>{`
+        .custom-modal-scroll::-webkit-scrollbar {
+          width: 8px;
+        }
+        .custom-modal-scroll::-webkit-scrollbar-track {
+          background: #020617;
+          border-radius: 4px;
+        }
+        .custom-modal-scroll::-webkit-scrollbar-thumb {
+          background: #10B981;
+          border-radius: 4px;
+          border: 2px solid #020617;
+        }
+        .custom-modal-scroll::-webkit-scrollbar-thumb:hover {
+          background: #22c55e;
+        }
+        .custom-modal-scroll {
+          scrollbar-width: thin;
+          scrollbar-color: #10B981 #020617;
+        }
+      `}</style>
+      <div className="min-h-screen bg-[#020617] text-white">
       {/* 헤더 - Military HUD 스타일 */}
       <div className="border-b border-green-400/20 bg-black/40 backdrop-blur-md">
         <div className="mx-auto max-w-7xl px-6 py-4">
@@ -160,7 +182,9 @@ export default function CyclePage() {
       {/* 경제 순환기 특징 모달 - Military HUD 스타일 */}
       {showCycleModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="w-full max-w-4xl bg-[#020617] border border-green-400/20 rounded-xl shadow-2xl max-h-[90vh] overflow-y-auto backdrop-blur-md">
+          <div
+            className="w-full max-w-4xl bg-[#020617] border border-green-400/20 rounded-xl shadow-2xl max-h-[90vh] overflow-y-auto backdrop-blur-md rounded-xl custom-modal-scroll"
+          >
             <div className="p-8">
               <div className="flex items-start justify-between mb-6">
                   <h3 className="text-green-400 font-mono text-xl uppercase tracking-wider font-bold">경제 순환기 분석</h3>
@@ -174,19 +198,14 @@ export default function CyclePage() {
 
               <div className="space-y-6">
                 {CYCLE_PHASES.map((phase, index) => (
-                  <div key={phase.phase} className="rounded-xl border border-green-400/20 bg-black/40 backdrop-blur-md p-6 mb-4">
+                  <div key={phase.phase} className="rounded-xl border border-green-400/20 bg-black/40 backdrop-blur-md p-6 mb-4 rounded-xl">
                     <div className="flex items-start gap-4 mb-4">
                       {/* 단계 번호 */}
-                      <div className="flex-shrink-0">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg font-mono border-2 ${
-                          index === 0 ? 'bg-green-500/20 border-green-400 text-green-400' :
-                          index === 1 ? 'bg-blue-500/20 border-blue-400 text-blue-400' :
-                          index === 2 ? 'bg-yellow-500/20 border-yellow-400 text-yellow-400' :
-                          'bg-red-500/20 border-red-400 text-red-400'
-                        }`}>
-                          {index + 1}
+                        <div className="flex-shrink-0">
+                          <div className="w-12 h-12 rounded-full bg-green-500/20 border-green-400 text-green-400 flex items-center justify-center font-bold text-lg font-mono border-2">
+                            {index + 1}
+                          </div>
                         </div>
-                      </div>
 
                       {/* 제목과 설명 */}
                       <div className="flex-1">
@@ -211,7 +230,7 @@ export default function CyclePage() {
                     {/* 역사적 패턴 */}
                     <div>
                       <h4 className="text-green-400 font-mono text-sm uppercase tracking-wider mb-4">Historical Patterns</h4>
-                      <div className="p-4 bg-green-400/5 rounded-lg border border-green-400/20">
+                      <div className="p-4 bg-green-400/5 rounded-xl border border-green-400/20">
                         <p className="text-green-300/80 text-sm leading-relaxed">{phase.historicalPattern}</p>
                       </div>
                     </div>
@@ -226,7 +245,7 @@ export default function CyclePage() {
       {/* 현재 상황 모달 - Military HUD 스타일 */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="w-full max-w-2xl bg-[#020617] border border-green-400/20 rounded-xl shadow-2xl backdrop-blur-md">
+          <div className="w-full max-w-2xl bg-[#020617] border border-green-400/20 rounded-xl shadow-2xl backdrop-blur-md rounded-xl">
             <div className="p-8">
               <div className="flex items-start justify-between mb-6">
                   <h3 className="text-green-400 font-mono text-xl uppercase tracking-wider font-bold">현재 경제 상황</h3>
@@ -240,7 +259,7 @@ export default function CyclePage() {
 
               <div className="space-y-6">
                 {/* 신호등과 상태 */}
-                <div className="flex items-center gap-6 p-6 bg-black/40 border border-green-400/20 rounded-xl backdrop-blur-md">
+                <div className="flex items-center gap-6 p-6 bg-black/40 border border-green-400/20 rounded-xl backdrop-blur-md rounded-xl">
                   <div className={`w-20 h-20 rounded-full ${getTrafficLightColor(MOCK_CYCLE_DATA.status_color)} flex items-center justify-center shadow-lg border-2 border-white/20`}>
                     <div className="text-white font-bold text-2xl">
                       {MOCK_CYCLE_DATA.status_color === 'Yellow' ? '⚠️' : '🚦'}
@@ -258,7 +277,7 @@ export default function CyclePage() {
                 </div>
 
                 {/* 주요 지표 요약 */}
-                <div className="grid grid-cols-3 gap-4 p-6 bg-black/40 border border-green-400/20 rounded-xl backdrop-blur-md">
+                <div className="grid grid-cols-3 gap-4 p-6 bg-black/40 border border-green-400/20 rounded-xl backdrop-blur-md rounded-xl">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-green-400 font-mono">{MOCK_CYCLE_DATA.indicators_snapshot.yield_curve.value}%p</div>
                       <div className="text-green-300/70 font-mono text-xs uppercase tracking-wider">금리차</div>
@@ -278,5 +297,6 @@ export default function CyclePage() {
         </div>
       )}
     </div>
+    </>
   );
 }

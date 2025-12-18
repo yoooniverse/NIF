@@ -9,8 +9,10 @@ import {
   LineChart,
   Newspaper,
   X,
+  Ticket,
 } from 'lucide-react';
 import GlobeCanvas from '@/components/dashboard/GlobeCanvas';
+import BoardingPassModal from '@/components/news/BoardingPassModal';
 
 type PanelKey = 'today' | 'monthly' | 'cycle';
 
@@ -58,6 +60,7 @@ export default function DashboardV2Page() {
   const router = useRouter();
 
   const [activePanel, setActivePanel] = useState<PanelKey | null>(null);
+  const [isBoardingPassOpen, setIsBoardingPassOpen] = useState(false);
 
 
   const openPanel = (key: PanelKey) => {
@@ -118,6 +121,11 @@ export default function DashboardV2Page() {
       level: user.unsafeMetadata?.level,
       isNewUser,
       createdAt: user.createdAt,
+      fullName: user.fullName,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      username: user.username,
+      email: user.emailAddresses?.[0]?.emailAddress,
     });
 
     // 신규 사용자(5분 이내 가입)만 온보딩을 강제함
@@ -154,18 +162,48 @@ export default function DashboardV2Page() {
             <div className="pt-5" />
 
             <div className="mt-2 px-5">
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="text-xs text-white/60">승객</div>
-                    <div className="mt-1 text-sm font-semibold">{user.emailAddresses?.[0]?.emailAddress ?? 'Logged in'}</div>
+              <button
+                type="button"
+                onClick={() => {
+                  const passengerName = user ? (
+                    user.fullName ||
+                    `${user.firstName || ''} ${user.lastName || ''}`.trim() ||
+                    user.username ||
+                    user.emailAddresses?.[0]?.emailAddress?.split('@')[0] ||
+                    'PREMIUM MEMBER'
+                  ) : 'PREMIUM MEMBER';
+
+                  const subscriptionStatus =
+                    user?.unsafeMetadata?.subscription === 'premium' ||
+                    user?.unsafeMetadata?.level === 'premium' ||
+                    (user?.unsafeMetadata?.trialEnds && new Date(user.unsafeMetadata.trialEnds) > new Date())
+                      ? 'first_class'
+                      : 'economy';
+
+                  console.info('[DASHBOARD] click: boarding pass', {
+                    passengerName,
+                    subscriptionStatus,
+                    userSubscription: user?.unsafeMetadata?.subscription,
+                    userLevel: user?.unsafeMetadata?.level,
+                    userTrialEnds: user?.unsafeMetadata?.trialEnds,
+                    userFullName: user?.fullName,
+                    userFirstName: user?.firstName,
+                    userLastName: user?.lastName,
+                    userUsername: user?.username,
+                    userEmail: user?.emailAddresses?.[0]?.emailAddress,
+                  });
+                  setIsBoardingPassOpen(true);
+                }}
+                className="w-full rounded-2xl border border-white/10 bg-black/20 p-4 hover:bg-white/10 transition"
+              >
+                <div className="flex items-center justify-center gap-3">
+                  <Ticket className="h-5 w-5 text-white/80" />
+                  <div className="text-center">
+                    <div className="text-sm font-semibold text-white">Boarding Pass</div>
+                    <div className="text-xs text-white/60">My page</div>
                   </div>
-                  <UserButton afterSignOutUrl="/" />
                 </div>
-                <div className="mt-3 text-xs text-white/60">
-                  상태: <span className="text-emerald-300/90">FIRST CLASS 한달 체험</span>
-                </div>
-              </div>
+              </button>
             </div>
 
             {/* 바로가기: 남는 공간을 3개 버튼이 채우도록 */}
@@ -324,6 +362,24 @@ export default function DashboardV2Page() {
             </div>
           </div>
         )}
+
+        {/* Boarding Pass Modal */}
+        <BoardingPassModal
+          isOpen={isBoardingPassOpen}
+          onClose={() => setIsBoardingPassOpen(false)}
+          newsTitle="News Insight"
+          economicIndex="NIF-001"
+          passengerName={
+            user ? (
+              user.fullName ||
+              `${user.firstName || ''} ${user.lastName || ''}`.trim() ||
+              user.username ||
+              user.emailAddresses?.[0]?.emailAddress?.split('@')[0] ||
+              'PREMIUM MEMBER'
+            ) : 'PREMIUM MEMBER'
+          }
+          subscriptionStatus='first_class'
+        />
       </div>
     </div>
   );
