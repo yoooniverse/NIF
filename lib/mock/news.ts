@@ -1,4 +1,4 @@
-export type NewsCategory = "real-estate" | "stock" | "exchange" | "etf" | "crypto";
+export type NewsCategory = "부동산" | "주식" | "환율" | "ETF" | "가상화폐";
 
 export interface NewsItem {
   id: string;
@@ -26,22 +26,22 @@ export interface NewsItem {
 export const mockNewsData: NewsItem[] = [
   {
     id: "1",
-    title: "한은, 기준금리 동결 결정... 시장 예상대로",
-    category: "stock",
-    url: "https://news.example.com/interest-rate-hold",
+    title: "미 연준, 금리 동결 시사 — 시장은 '인하 시점' 주목",
+    category: "주식",
+    url: "https://news.example.com/fed-rate-hold",
     content:
-      "한국은행 금융통화위원회는 오늘 통화정책방향 회의를 열어 기준금리를 현 수준에서 동결하기로 결정했다. 이는 시장의 예상과 일치하는 결과다...",
-    published_at: "2025-12-18T09:30:00Z",
+      "연준이 금리 동결을 시사하며 시장의 관심이 다음 인하 시점으로 이동했습니다...",
+    published_at: "2025-12-18T09:00:00Z",
     source: "연합뉴스",
     analysis: {
       level: 2,
-      easy_title: "한국은행이 금리를 그대로 두었어요",
+      easy_title: "미국 중앙은행이 금리를 그대로 유지했어요",
       summary:
-        "한국은행이 기준금리를 3.5%로 유지하기로 했습니다. 금리가 그대로면 대출 이자나 예금 이자도 당분간 큰 변화 없이 이어질 가능성이 큽니다.",
+        "미국 연준이 금리 동결을 시사했습니다. 시장은 이제 다음 금리 인하 시점을 주목하고 있습니다.",
       worst_scenario:
-        "금리가 오래 높은 수준에서 유지되면, 대출이 있는 분들은 이자 부담이 계속될 수 있어요. 물가가 다시 오르면 생활비 압박도 커질 수 있습니다.",
+        "금리가 예상보다 오래 유지되면 주식 시장 변동성이 커질 수 있어요. 투자 손실 위험이 증가할 수 있습니다.",
       user_action_tip:
-        "대출이 있다면 상환 계획을 다시 점검하고, 변동금리라면 고정금리 전환 가능성을 비교해보세요. 예적금은 만기/금리를 분산해 리스크를 줄이는 게 좋아요.",
+        "포트폴리오 다각화를 고려해보세요. 고위험 자산 비중을 조절하고, 현금 비중을 늘리는 것도 좋은 전략입니다.",
       should_blur: false,
     },
     subscription: {
@@ -51,23 +51,22 @@ export const mockNewsData: NewsItem[] = [
   },
   {
     id: "2",
-    title: "달러-원 환율 1,350원 돌파... 수출 기업 수혜",
-    category: "exchange",
-    url: "https://news.example.com/usd-krw-rise",
+    title: "비트코인 변동성 확대… 현물 ETF 자금 유입/유출 혼조",
+    category: "가상화폐",
+    url: "https://news.example.com/bitcoin-volatility",
     content:
-      "원/달러 환율이 1,350원을 돌파하며 상승세를 이어가고 있습니다. 수출 기업들의 실적 기대가 커지고 있으며...",
-    published_at: "2025-12-18T16:45:00Z",
-    source: "매일경제",
+      "비트코인 가격 변동성이 커지며 ETF 자금 흐름도 불안정한 모습을 보이고 있습니다...",
+    published_at: "2025-12-18T08:30:00Z",
+    source: "코인니스",
     analysis: {
       level: 2,
-      easy_title: "달러 값이 올라서, 해외 관련 비용이 늘 수 있어요",
+      easy_title: "비트코인 가격이 많이 흔들리고 있어요",
       summary:
-        "원화 가치가 약해지면서 달러 가격이 상승했습니다. 수출 기업에는 유리할 수 있지만, 해외여행/직구/수입 원재료 비용은 올라갈 수 있어요.",
+        "비트코인 변동성이 확대되며 현물 ETF 자금도 불안정한 흐름을 보이고 있습니다.",
       worst_scenario:
-        "환율 상승이 길어지면 해외여행 비용이 크게 늘고, 수입 물가가 오르면서 생활비 부담이 커질 수 있어요. 달러 부채가 있다면 상환 부담도 증가할 수 있습니다.",
+        "급격한 가격 하락 시 투자 손실이 커질 수 있어요. 특히 레버리지를 사용한 투자는 위험합니다.",
       user_action_tip:
-        "해외 지출 계획이 있다면 환전 시점을 나눠 리스크를 줄이세요. 달러 자산 비중을 점검하고, 사업자는 원가/환헤지 옵션을 검토해보는 게 좋습니다.",
-      // 무료 체험(30일) 버전: 행동 가이드는 전체 공개
+        "가상화폐 투자는 전체 자산의 5-10% 이내로 제한하세요. 분할 매수 전략을 사용하고, 손절매를 설정하는 게 안전합니다.",
       should_blur: false,
     },
     subscription: {
@@ -77,22 +76,22 @@ export const mockNewsData: NewsItem[] = [
   },
   {
     id: "3",
-    title: "S&P 500 지수 사상 최고치 경신",
-    category: "etf",
-    url: "https://news.example.com/sp500-ath",
+    title: "중국 경기 부양책 기대감… 원자재 가격 반등",
+    category: "ETF",
+    url: "https://news.example.com/china-stimulus",
     content:
-      "미국 대표 주식 지수인 S&P 500이 역사상 최고치를 기록했습니다. 대형 기술주 상승과 경기 기대가 반영되며...",
-    published_at: "2025-12-18T14:20:00Z",
+      "중국의 경기 부양책 기대감으로 원자재 관련 ETF 가격이 상승했습니다...",
+    published_at: "2025-12-18T07:00:00Z",
     source: "Bloomberg",
     analysis: {
       level: 2,
-      easy_title: "미국 주식 시장이 정말 강해졌어요",
+      easy_title: "중국 경제 부양 기대감에 원자재 가격이 올랐어요",
       summary:
-        "S&P 500이 사상 최고치를 경신했습니다. 투자 심리가 좋아졌다는 뜻이지만, 단기적으로는 변동성이 커질 수 있어요.",
+        "중국 경기 부양책 기대감으로 원자재 관련 ETF 가격이 반등했습니다.",
       worst_scenario:
-        "너무 빠른 상승 뒤에는 조정(가격 하락)이 올 수 있어요. 고점에서 무리하게 들어가면 손실이 커질 수 있습니다.",
+        "기대감만으로 오른 가격이 실제 정책 효과가 미흡하면 하락할 수 있어요. 글로벌 경기 불확실성이 커질 수 있습니다.",
       user_action_tip:
-        "분할 매수/정기 적립처럼 ‘나눠서’ 접근하세요. 이미 보유 중이라면 목표 비중을 넘지 않도록 리밸런싱을 고려해보세요.",
+        "원자재 ETF 투자는 분산 투자 관점에서 접근하세요. 중국 관련 리스크를 충분히 고려한 포트폴리오 구성이 필요합니다.",
       should_blur: false,
     },
     subscription: {
@@ -102,22 +101,72 @@ export const mockNewsData: NewsItem[] = [
   },
   {
     id: "4",
-    title: "비트코인 상승세 지속... 기관 투자 확대",
-    category: "crypto",
-    url: "https://news.example.com/bitcoin-surge",
+    title: "AI 반도체 공급망 재편… 대형주 중심 랠리 지속",
+    category: "주식",
+    url: "https://news.example.com/ai-semiconductor",
     content:
-      "비트코인 가격이 상승세를 이어가고 있습니다. 최근 기관 투자자들의 참여가 증가하면서 변동성은 여전히 크지만...",
-    published_at: "2025-12-18T11:15:00Z",
+      "AI 반도체 공급망 재편으로 대형 기술주들의 상승세가 이어지고 있습니다...",
+    published_at: "2025-12-18T07:30:00Z",
     source: "한국경제",
     analysis: {
       level: 2,
-      easy_title: "가상화폐가 오르지만, 흔들림도 커요",
+      easy_title: "AI 관련 기술주들이 계속 오르고 있어요",
       summary:
-        "기관 투자자 유입으로 상승 기대가 커졌습니다. 다만 변동성이 큰 자산이라 갑작스런 하락도 가능해요.",
+        "AI 반도체 공급망 재편으로 대형 기술주들의 상승세가 지속되고 있습니다.",
       worst_scenario:
-        "급락 시 손실이 커질 수 있어요. 레버리지(빚 투자)나 몰빵 투자는 위험합니다.",
+        "기술주 과열로 인한 조정 가능성이 있습니다. AI 투자 열풍이 식으면 주가 하락 위험이 있습니다.",
       user_action_tip:
-        "가상화폐는 전체 자산의 작은 비중(예: 5~10%)으로만, 잃어도 생활에 영향 없는 범위에서 접근하세요.",
+        "AI 테마주 투자는 신중하게 접근하세요. 분산 투자 원칙을 지키고, 기업 실적을 꼼꼼히 확인해보세요.",
+      should_blur: false,
+    },
+    subscription: {
+      active: true,
+      days_remaining: 27,
+    },
+  },
+  {
+    id: "5",
+    title: "중국 경기 부양책 기대감… 원자재 가격 반등",
+    category: "ETF",
+    url: "https://news.example.com/china-stimulus",
+    content:
+      "중국의 경기 부양책 기대감으로 원자재 관련 ETF 가격이 상승했습니다...",
+    published_at: "2025-12-18T07:00:00Z",
+    source: "Bloomberg",
+    analysis: {
+      level: 2,
+      easy_title: "중국 경제 부양 기대감에 원자재 가격이 올랐어요",
+      summary:
+        "중국 경기 부양책 기대감으로 원자재 관련 ETF 가격이 반등했습니다.",
+      worst_scenario:
+        "기대감만으로 오른 가격이 실제 정책 효과가 미흡하면 하락할 수 있어요. 글로벌 경기 불확실성이 커질 수 있습니다.",
+      user_action_tip:
+        "원자재 ETF 투자는 분산 투자 관점에서 접근하세요. 중국 관련 리스크를 충분히 고려한 포트폴리오 구성이 필요합니다.",
+      should_blur: false,
+    },
+    subscription: {
+      active: true,
+      days_remaining: 27,
+    },
+  },
+  {
+    id: "6",
+    title: "부동산 시장 안정화 조짐… 매수세 회복",
+    category: "부동산",
+    url: "https://news.example.com/real-estate-recovery",
+    content:
+      "부동산 시장에 안정화 조짐이 나타나며 매수세가 서서히 회복되고 있습니다...",
+    published_at: "2025-12-18T06:30:00Z",
+    source: "부동산경제신문",
+    analysis: {
+      level: 2,
+      easy_title: "부동산 시장이 안정되고 있어요",
+      summary:
+        "부동산 시장 안정화 조짐이 나타나며 매수세가 회복되고 있습니다.",
+      worst_scenario:
+        "금리 인상이나 경기 침체 시 부동산 시장이 다시 얼어붙을 수 있어요. 투자 손실 위험이 있습니다.",
+      user_action_tip:
+        "부동산 투자는 장기적 관점으로 접근하세요. 지역별 시장 상황을 충분히 조사하고, 대출 비율을 신중하게 결정하세요.",
       should_blur: false,
     },
     subscription: {
@@ -130,4 +179,3 @@ export const mockNewsData: NewsItem[] = [
 export function getMockNewsById(id: string): NewsItem | null {
   return mockNewsData.find((n) => n.id === id) ?? null;
 }
-

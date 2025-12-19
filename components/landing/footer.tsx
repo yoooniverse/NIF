@@ -100,16 +100,16 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Copyright - Apple 스타일 */}
+        {/* Copyright */}
         <div className="pt-8 border-t border-gray-200">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-gray-300 font-medium">
               <p>
                 © {new Date().getFullYear()} News In Flight. All rights reserved.
               </p>
             </div>
 
-            <div className="flex items-center gap-6 text-xs text-gray-500">
+            <div className="flex items-center gap-6 text-xs text-gray-400 font-medium">
               <span>Powered by Claude Sonnet 4.5</span>
               <span>Built with Next.js & Supabase</span>
             </div>

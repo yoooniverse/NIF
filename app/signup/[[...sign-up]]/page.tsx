@@ -1,7 +1,38 @@
+"use client";
+
 import Link from "next/link";
-import { SignUp } from "@clerk/nextjs";
+import { SignUp, useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
 
 export default function SignupPage() {
+  const { user, isLoaded } = useUser();
+  const router = useRouter();
+
+  // 핵심 기능 로그: 이미 로그인된 사용자는 대시보드로 리다이렉트
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    if (user) {
+      console.log("[SIGNUP_PAGE] 이미 로그인된 사용자 감지 -> 대시보드로 리다이렉트");
+      router.push("/dashboard");
+      return;
+    }
+  }, [user, isLoaded, router]);
+
+  // 로딩 중이거나 이미 로그인된 경우 로딩 표시
+  if (!isLoaded || user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-sky-50 flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+          <p className="text-gray-600">리다이렉트 중...</p>
+        </div>
+      </div>
+    );
+  }
+
   console.log("[SIGNUP_PAGE] 회원가입 페이지 로드됨 - News In Flight");
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-sky-50 flex items-center justify-center p-4">
@@ -60,7 +91,9 @@ export default function SignupPage() {
                 socialButtonsBlockButtonArrow: 'text-gray-500',
                 formFieldInput: 'rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 h-12',
                 formFieldLabel: 'text-gray-700 font-medium mb-2 block',
-                footerActionLink: 'text-blue-600 hover:text-blue-700 font-medium hover:underline',
+                footerActionLink: 'hidden',
+                footer: 'hidden',
+                signInLink: 'hidden',
                 dividerLine: 'bg-gray-200',
                 dividerText: 'text-gray-500 text-sm font-medium',
                 formFieldInputShowPasswordButton: 'text-gray-500 hover:text-gray-700',
@@ -82,17 +115,9 @@ export default function SignupPage() {
               },
             }}
           />
+
         </div>
 
-        {/* 푸터 */}
-        <div className="text-center mt-6">
-          <p className="text-sm text-gray-500">
-            이미 계정이 있으신가요?{" "}
-            <Link href="/login" className="text-blue-600 hover:text-blue-700 font-medium">
-              로그인
-            </Link>
-          </p>
-        </div>
       </div>
     </div>
   );

@@ -356,3 +356,7 @@ CREATE TABLE "subscriptions" (
 ## 라이선스
 
 이 프로젝트는 News In Flight의 일부입니다.
+
+
+
+

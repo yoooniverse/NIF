@@ -1,8 +1,8 @@
 # News In Flight - Development TODO List
 
 > 개발 기간: 33일 (2025.12.11 ~ 2026.01.13)
-> 현재: 2025.12.17 (Week 1, Day 7) - MVP 핵심 기능 완성 ✅
-> 진행률: Week 1 100% 완료, Week 2 95% 완료, Week 3 준비 중
+> 현재: 2025.12.19 (Week 2, Day 2) - In Flight Map 대시보드 및 뉴스 시스템 완성
+> 진행률: Week 1 100% 완료, Week 2 80% 진행 중, Week 3 준비 중
 > 우선순위: v1 (필수) → v2 (선택) → v3 (Post-Launch)
 
 ---
@@ -84,6 +84,7 @@
   - [x] Clerk 프로젝트 생성
   - [x] 환경 변수 설정
   - [x] `middleware.ts` 생성 (인증 라우트 보호)
+  - [x] `lib/auth-middleware.ts` 인증 헬퍼 생성
   - [x] `app/layout.tsx`에 ClerkProvider 추가
   - [ ] 소셜 로그인 설정 (구글, 카카오)
   - [x] 한국어 로컬라이제이션 설정
@@ -203,101 +204,159 @@
 
 ---
 
-## Week 2: 메인 대시보드 및 뉴스 상세 (Day 8-14: 12/18 ~ 12/24) - 대시보드 완성 ✅
+## Week 2: In Flight Map 대시보드 및 뉴스 시스템 (Day 8-14: 12/18 ~ 12/24) - 진행 중
 
-### Day 8-10: 메인 대시보드 (F4)
+### Day 8-10: In Flight Map 대시보드 (F4)
 
 - [x] **대시보드 레이아웃**
 
-  - [x] 헤더 컴포넌트 (인라인 구현 - 글로벌 헤더)
-    - [x] 로고 + 브랜드명
-    - [x] "Welcome aboard!" (가운데 정렬)
-    - [x] 구독 상태 + 알림 버튼 + 프로필 드롭다운
-  - [x] 메인 콘텐츠 영역 (비행기 동체 스타일)
-  - [x] 스크롤 잠금 (비행기 내부 시점 유지)
+  - [x] **3D GlobeCanvas 배경 시스템**
 
-- [x] **"비행기 창문 시스템"**
+    - [x] 컴포넌트: `components/dashboard/GlobeCanvas.tsx`
+    - [x] Three.js 기반 3D 지구 렌더링
+    - [x] 실시간 회전 애니메이션
+    - [x] 반투명 오버레이 적용
 
-  - [x] 컴포넌트: `components/dashboard/CabinWindow.tsx`
-  - [x] 세로형 캡슐 디자인 (rounded-full, 320×580px)
-  - [x] 3중 베젤 (외부/내장/유리 깊이감)
-  - [x] 상단 손잡이 (Shade Handle)
-  - [x] 유리 비네팅 효과
+  - [x] **좌측 사이드바 레이아웃**
 
-- [x] **"동체 외관 시스템"**
+    - [x] 유저 정보 + 구독 상태 표시
+    - [x] 3개 주요 섹션 버튼 (오늘의 뉴스, 이달의 뉴스, 경제 순환기 지도)
+    - [x] 각 버튼: 아이콘 + 제목 + 설명 + 호버 효과
 
-  - [x] 컴포넌트: `components/dashboard/MovingClouds.tsx`
-  - [x] 패널 라인 + 리벳 디테일
-  - [x] Celestial Blue 치트라인
+  - [x] **모달 시스템 (경제 순환기 지도용)**
+    - [x] 중앙 글래스 모달 디자인
+    - [x] 배경 블러 + 검은색 오버레이
+    - [x] 경제 지표 데이터 표시
 
-- [ ] **뉴스 API**
+- [x] **"비행기 창문 시스템" (In Flight Map 컨셉으로 변경됨)**
 
-  - [ ] GET `/api/news` (뉴스 목록)
-    - [ ] Query: user_id, date, category, limit
-    - [ ] 사용자 맞춤 필터링 (관심사 기반)
-    - [ ] 페이지네이션
+  - [x] CabinWindow 컴포넌트 → GlobeCanvas 컴포넌트로 변경
+  - [x] 3D 지구 기반 배경 시스템으로 전환
+  - [x] 기존 창문 디자인 폐기 및 새로운 인터랙션 구현
 
-- [x] **대시보드 페이지**
-  - [x] `app/dashboard/page.tsx` 완성 (Korean Air 스타일)
-  - [x] 5개 창문 레이아웃 (중앙 3개 버튼 + 양끝 2개 더미)
-  - [x] 택싱 애니메이션 (오른쪽→왼쪽 미끄러짐)
-  - [x] 스크롤 잠금 + 로그 시스템
+- [x] **"오늘의 뉴스" 섹션 (완전 구현 완료)**
 
-### Day 11-13: 뉴스 상세 (F5)
+  - [x] 오늘의 뉴스 모음 기능
+    - [x] 사용자가 선택한 관심자산의 오늘 뉴스 필터링 (카테고리별 필터링)
+    - [x] 뉴스 카드 리스트 형태로 표시
+    - [x] 관심사별 카테고리 필터 (부동산, 가상화폐, ETF, 주식, 환율)
+  - [x] UI 컴포넌트 구현
+    - [x] 오늘의 뉴스 리스트 컴포넌트 (`app/news/today/page.tsx`)
+    - [x] 관심사 필터 탭 (Filter 아이콘 + 카테고리 버튼)
+    - [x] 뉴스 클릭 시 상세 페이지 이동 (URL 파라미터로 카테고리 전달)
 
-- [ ] **뉴스 상세 페이지**
+- [x] **"이달의 뉴스" 섹션 (완전 구현 완료)**
 
-  - [ ] `app/news/[id]/page.tsx` 생성
-  - [ ] 동적 라우트 파라미터 처리 (Next.js 15)
+  - [x] 월간 뉴스 모음 기능
+    - [x] 사용자가 선택한 관심자산의 당월 뉴스 필터링 (카테고리별 필터링)
+    - [x] 월별 그룹화 (현재 월 우선 표시 - 12월 뉴스)
+    - [x] 뉴스 카드 리스트 형태로 표시
+    - [x] 관심사별 카테고리 필터 (부동산, 가상화폐, ETF, 주식, 환율)
+  - [x] UI 컴포넌트 구현
+    - [x] 월간 뉴스 리스트 컴포넌트 (`app/news/monthly/page.tsx`)
+    - [x] 관심사 필터 탭 (Filter 아이콘 + 카테고리 버튼)
+    - [x] 페이지네이션 (현재 기본 구현, 추후 확장 가능)
+    - [x] 뉴스 클릭 시 상세 페이지 이동 (URL 파라미터로 카테고리 전달)
 
-- [ ] **Block 1: AI 뉴스 해설**
+- [x] **대시보드 페이지 (In Flight Map 컨셉 완성)**
 
-  - [ ] 컴포넌트: `components/news/news-summary.tsx`
-  - [ ] 쉬운 제목 (`easy_title`)
-  - [ ] 요약 (`summary`, 10줄 이내)
-  - [ ] 읽기 편한 레이아웃
+  - [x] `app/dashboard/page.tsx` 완성 (3D 지구 배경 + 사이드바 레이아웃)
+  - [x] 3개 주요 섹션: 오늘의 뉴스, 이달의 뉴스, 경제 순환기 지도
+  - [x] 뉴스 섹션 클릭 시 개별 페이지 이동 (/news/today, /news/monthly)
+  - [x] 경제 순환기 지도는 모달로 표시
+  - [x] 반응형 디자인 + 인터랙션 로그 시스템
 
-- [ ] **Block 2: 최악의 시나리오**
+- [x] **뉴스 카드 스타일링 개선**
 
-  - [ ] 컴포넌트: `components/news/worst-scenario.tsx`
+  - [x] 오늘의 뉴스 페이지 뉴스 카드 흰색으로 변경
+  - [x] 이달의 뉴스 페이지 뉴스 카드 흰색으로 변경
+  - [x] NewsCard 컴포넌트 `fromPage` prop 추가 (페이지 구분용)
+
+- [x] **뉴스 API**
+
+  - [x] GET `/api/news` (뉴스 목록)
+    - [x] Query: user_id, date, category, limit
+    - [x] 사용자 맞춤 필터링 (관심사 기반)
+    - [x] 페이지네이션
+  - [x] GET `/api/news/monthly` (월간 뉴스)
+    - [x] Query: user_id, month, interests
+    - [x] 관심사 기반 월간 뉴스 필터링
+    - [x] 정렬: 최신순
+
+### Day 11-13: 뉴스 상세 (F5) ✅ 완전 구현 완료
+
+- [x] **뉴스 상세 페이지**
+
+  - [x] `app/news/[id]/page.tsx` 생성
+  - [x] 동적 라우트 파라미터 처리 (Next.js 15)
+  - [x] URL 파라미터 기반 동적 제목 변경 (카테고리별)
+    - [x] "오늘의 뉴스" → "{카테고리} 뉴스" (주식 뉴스, 가상화폐 뉴스 등)
+    - [x] URL 파라미터 처리 (`from`, `category`)
+
+- [x] **Block 1: AI 뉴스 해설**
+
+  - [x] 컴포넌트: `components/news/news-summary.tsx`
+  - [x] 쉬운 제목 (`easy_title`)
+  - [x] 요약 (`summary`, 10줄 이내)
+  - [x] 읽기 편한 레이아웃
+  - [x] 흰색 배경으로 스타일 변경
+
+- [x] **Block 2: 최악의 시나리오**
+
+  - [x] 컴포넌트: `components/news/worst-scenario.tsx`
   - [ ] 사용자 상황 기반 개인화 (`worst_scenario`)
-  - [ ] 경고 아이콘 및 스타일링
+  - [x] 경고 아이콘 및 스타일링
+  - [x] 흰색 배경으로 스타일 변경
 
-- [ ] **Block 3: 행동 가이드**
+- [x] **Block 3: 행동 가이드**
 
-  - [ ] 컴포넌트: `components/news/action-item.tsx`
+  - [x] 컴포넌트: `components/news/action-item.tsx`
   - [ ] `user_action_tip` 표시
-  - [ ] 조건부 블러 처리
-    - [ ] 무료 체험 중(30일): 전체 공개
-    - [ ] 31일차 이후: 블러 + Paywall 클릭
+  - [x] 조건부 블러 처리
+    - [x] 무료 체험 중(30일): 전체 공개
+    - [x] 31일차 이후: 블러 + Paywall 클릭
+  - [x] 흰색 배경으로 스타일 변경
 
-- [ ] **출처 및 원문 링크**
+- [x] **Block 4: 뉴스 제목 카드**
 
-  - [ ] 컴포넌트: `components/news/news-footer.tsx`
-  - [ ] 출처 표시
-  - [ ] 원문 링크 버튼
+  - [x] 뉴스 제목 표시 영역
+  - [x] 출처 정보 표시
+  - [x] 흰색 배경으로 스타일 변경
 
-- [ ] **뉴스 상세 API**
+- [x] **출처 및 원문 링크**
 
-  - [ ] GET `/api/news/[id]` (뉴스 상세)
-    - [ ] 사용자 레벨 기반 분석 필터링
-    - [ ] 구독 상태 확인 (`should_blur` 계산)
+  - [x] 컴포넌트: `components/news/news-footer.tsx`
+  - [x] 출처 표시
+  - [x] 원문 링크 버튼
+  - [x] 흰색 배경으로 스타일 변경
+
+- [x] **Mock 데이터 완성**
+
+  - [x] 뉴스 리스트의 모든 뉴스(1-6번)에 대한 상세 데이터 추가
+  - [x] 카테고리 이름 통일 (주식, 가상화폐, 환율, ETF, 부동산)
+  - [x] 뉴스 제목 및 분석 내용 각 카테고리에 맞게 업데이트
+
+- [x] **뉴스 상세 API**
+
+  - [x] GET `/api/news/[id]` (뉴스 상세)
+    - [x] 사용자 레벨 기반 분석 필터링
+    - [x] 구독 상태 확인 (`should_blur` 계산)
     - [ ] 원문 404 에러 핸들링
 
-- [ ] **Paywall 컴포넌트**
-  - [ ] 컴포넌트: `components/paywall/blur-overlay.tsx`
-  - [ ] 블러 효과
-  - [ ] "구독하고 전체 보기" CTA
-  - [ ] Paywall 페이지 이동
+- [x] **Paywall 컴포넌트**
+  - [x] 컴포넌트: `components/paywall/blur-overlay.tsx`
+  - [x] 블러 효과
+  - [x] "구독하고 전체 보기" CTA
+  - [x] Paywall 페이지 이동
 
 ### Day 14: v1 중간 테스트
 
-- [ ] **기능 테스트**
+- [x] **기능 테스트**
 
-  - [ ] 회원가입 → 온보딩 → 대시보드 플로우
-  - [ ] 뉴스 목록 → 상세 플로우
-  - [ ] 관심사별 필터링
-  - [ ] AI 레벨별 분석 표시
+  - [x] 회원가입 → 온보딩 → 대시보드 플로우
+  - [x] 뉴스 목록 → 상세 플로우
+  - [x] 관심사별 필터링
+  - [x] AI 레벨별 분석 표시
 
 - [ ] **UI/UX 검증**
 
@@ -785,11 +844,17 @@
 ### ✅ 완료된 컴포넌트
 
 - `app/dashboard/page.tsx` - Korean Air 스타일 대시보드
-- `components/dashboard/CabinWindow.tsx` - 세로형 캡슐 창문 (3중 베젤 + 손잡이)
-- `components/dashboard/MovingClouds.tsx` - 절차적 구름 + 동체 그라디언트
-- `components/dashboard/CabinSeat.tsx` - 퍼스트 클래스 가죽 시트
+- `components/dashboard/GlobeCanvas.tsx` - 3D 지구 기반 배경 시스템
 - `components/dashboard/NewsCard.tsx` - 뉴스 카드 컴포넌트
 - `components/landing/` - 랜딩 페이지 컴포넌트들 (InFlightEarth 등)
+- `components/news/` - 뉴스 상세 페이지 컴포넌트들
+- `lib/auth-middleware.ts` - 인증 헬퍼 미들웨어
+
+### ✅ 완료된 API
+
+- `app/api/news/route.ts` - 뉴스 목록 API
+- `app/api/news/[id]/route.ts` - 뉴스 상세 API
+- `app/api/onboarding/complete/route.ts` - 온보딩 완료 API
 
 ### 🔄 다음 단계 (Week 3)
 

@@ -3,8 +3,19 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { SpaceBackground } from "@/components/landing/space-background";
-import { InFlightEarth } from "@/components/landing/in-flight-earth";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, LogIn } from "lucide-react";
+import { SignInButton } from "@clerk/nextjs";
+import dynamic from "next/dynamic";
+
+// 🎯 3D 컴포넌트를 동적으로 로딩 (성능 최적화)
+const InFlightEarth = dynamic(() => import("@/components/landing/in-flight-earth").then(mod => mod.InFlightEarth), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center w-full h-full">
+      <div className="text-white/60 text-sm">🌍 지구 로딩중...</div>
+    </div>
+  ),
+});
 
 export default function LandingPage() {
   console.log("🌍 랜딩 페이지 로드됨 - Hero Section Only");
@@ -19,6 +30,21 @@ export default function LandingPage() {
         {/* 3D 지구 컴포넌트 - In-Flight Entertainment 스타일 */}
         <div className="absolute inset-0 w-full h-screen">
           <InFlightEarth className="w-full h-full" />
+        </div>
+
+        {/* 우측 상단 로그인 버튼 */}
+        <div className="absolute top-6 right-6 z-20">
+          <SignInButton mode="modal" forceRedirectUrl="/dashboard">
+            <Button
+              variant="outline"
+              size="default"
+              className="bg-black/20 backdrop-blur-md border-white/20 text-white hover:bg-black/40 hover:border-white/40 transition-all duration-300 px-4 py-2 text-sm font-medium"
+              onClick={() => console.log("🔐 랜딩페이지 로그인 버튼 클릭됨")}
+            >
+              <LogIn className="w-5 h-5 mr-2" />
+              로그인
+            </Button>
+          </SignInButton>
         </div>
 
         {/* 메인 카피 (화면 중앙에 부유) */}
@@ -52,9 +78,10 @@ export default function LandingPage() {
             {/* CTA 버튼 */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4 px-4">
               <Link href="/signup">
-                <Button 
-                  size="lg" 
-                  className="w-full sm:w-auto text-base md:text-lg px-6 md:px-8 py-5 md:py-6 shadow-2xl hover:shadow-blue-500/50 transition-all duration-300 group"
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="w-full sm:w-auto text-base md:text-lg px-6 md:px-8 py-5 md:py-6 bg-black/80 backdrop-blur-md border-white/20 text-white hover:bg-black hover:border-white/40 transition-all duration-300 shadow-2xl hover:shadow-blue-500/50 group"
                 >
                   30일 무료로 시작하기
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />

@@ -32,3 +32,4 @@ ALTER TABLE "user_interests" ADD CONSTRAINT "UQ_USER_INTERESTS_USER_INTEREST_SLU
 -- 6. 코멘트 업데이트
 COMMENT ON COLUMN "user_contexts"."context_slug" IS '사용자가 선택한 컨텍스트 슬러그';
 COMMENT ON COLUMN "user_interests"."interest_slug" IS '사용자가 선택한 관심사 슬러그';
+
