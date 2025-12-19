@@ -12,3 +12,6 @@ export const createSupabaseClient = () => {
     }
   );
 };
+
+// 서버 사이드에서 사용할 supabase 클라이언트
+export const supabase = createSupabaseClient();

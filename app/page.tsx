@@ -3,9 +3,19 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { SpaceBackground } from "@/components/landing/space-background";
-import { InFlightEarth } from "@/components/landing/in-flight-earth";
 import { ArrowRight, LogIn } from "lucide-react";
 import { SignInButton } from "@clerk/nextjs";
+import dynamic from "next/dynamic";
+
+// 🎯 3D 컴포넌트를 동적으로 로딩 (성능 최적화)
+const InFlightEarth = dynamic(() => import("@/components/landing/in-flight-earth").then(mod => mod.InFlightEarth), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center w-full h-full">
+      <div className="text-white/60 text-sm">🌍 지구 로딩중...</div>
+    </div>
+  ),
+});
 
 export default function LandingPage() {
   console.log("🌍 랜딩 페이지 로드됨 - Hero Section Only");
@@ -68,9 +78,10 @@ export default function LandingPage() {
             {/* CTA 버튼 */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4 px-4">
               <Link href="/signup">
-                <Button 
-                  size="lg" 
-                  className="w-full sm:w-auto text-base md:text-lg px-6 md:px-8 py-5 md:py-6 shadow-2xl hover:shadow-blue-500/50 transition-all duration-300 group"
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="w-full sm:w-auto text-base md:text-lg px-6 md:px-8 py-5 md:py-6 bg-black/80 backdrop-blur-md border-white/20 text-white hover:bg-black hover:border-white/40 transition-all duration-300 shadow-2xl hover:shadow-blue-500/50 group"
                 >
                   30일 무료로 시작하기
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />

@@ -26,12 +26,21 @@ function RotatingEarth({ radius }: EarthMeshProps) {
   const groupRef = useRef<THREE.Group>(null);
   const cloudsRef = useRef<THREE.Mesh>(null);
   
-  // 텍스처 로드 (Day, Night-Lights, Cloud)
+  // 텍스처 로드 (Day, Night-Lights, Cloud) - 최적화된 설정
   const [dayTexture, nightTexture, cloudTexture] = useTexture([
     '/textures/earth-day.png',
     '/textures/earth-lights.jpg',
     '/textures/earth-cloud.png'
-  ]);
+  ], (textures) => {
+    // 텍스처 최적화 설정
+    textures.forEach((texture) => {
+      texture.generateMipmaps = false; // Mipmap 비활성화로 메모리 절약
+      texture.minFilter = THREE.LinearFilter; // 필터링 최적화
+      texture.magFilter = THREE.LinearFilter;
+      texture.wrapS = THREE.ClampToEdgeWrapping;
+      texture.wrapT = THREE.ClampToEdgeWrapping;
+    });
+  });
 
   useEffect(() => {
     console.log("🌍 지구 텍스처 로드 완료 (Day, Night-Lights, Cloud)");

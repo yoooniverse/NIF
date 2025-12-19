@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth, clerkClient } from '@clerk/nextjs';
+import { auth, clerkClient } from '@clerk/nextjs/server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,8 +31,8 @@ export async function POST(request: NextRequest) {
     let metadataUpdated = false;
 
     try {
-      // 메타데이터 업데이트 시도
-      const result = await client.users.updateUser(userId, {
+      // Clerk v5 방식으로 메타데이터 업데이트 시도
+      const result = await client.users.updateUserMetadata(userId, {
         publicMetadata: {
           onboardingCompleted: true,
           userProfiles: {
@@ -45,10 +45,10 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      console.log(`[API] 메타데이터 업데이트 성공:`, result);
+      console.log(`[API] Clerk v5 메타데이터 업데이트 성공:`, result);
       metadataUpdated = true;
     } catch (metadataError) {
-      console.error('[API] 메타데이터 업데이트 실패 상세:', metadataError);
+      console.error('[API] Clerk v5 메타데이터 업데이트 실패 상세:', metadataError);
 
       // Clerk 메타데이터 업데이트 실패 시에도 온보딩 완료 처리 진행
       console.log('[API] 메타데이터 업데이트 실패했지만 온보딩은 완료 처리');

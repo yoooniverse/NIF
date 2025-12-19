@@ -109,14 +109,19 @@ export default function OnboardingLevelPage() {
           }),
         });
 
-        if (response.ok) {
-          const result = await response.json();
-          console.log("[ONBOARDING_LEVEL] Clerk 메타데이터 저장 완료:", result);
+        const result = await response.json();
+
+        if (response.ok && result.metadataUpdated) {
+          console.log("[ONBOARDING_LEVEL] Clerk v5 메타데이터 저장 성공:", result);
+        } else if (response.ok && !result.metadataUpdated) {
+          console.warn("[ONBOARDING_LEVEL] 메타데이터 저장 실패했지만 온보딩 진행:", result);
         } else {
-          console.warn("[ONBOARDING_LEVEL] 메타데이터 저장 실패했지만 진행");
+          console.error("[ONBOARDING_LEVEL] API 오류 발생:", result);
+          throw new Error('메타데이터 저장 실패');
         }
       } catch (apiError) {
-        console.warn("[ONBOARDING_LEVEL] API 호출 실패했지만 진행:", apiError);
+        console.error("[ONBOARDING_LEVEL] API 호출 실패:", apiError);
+        throw apiError; // API 실패 시 온보딩 중단
       }
 
       // 로컬 스토리지 클리어 (온보딩 완료 후 정리)
