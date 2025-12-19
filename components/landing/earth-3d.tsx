@@ -5,56 +5,49 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { Stars, useTexture } from "@react-three/drei";
 import * as THREE from "three";
 
-interface InFlightEarthProps {
-  className?: string;
+interface Earth3DProps {
   onLoad?: () => void;
 }
 
 // 🎯 Golden Ratio 설정 (변경 금지!)
 const EARTH_RADIUS = 2.8;
 
-console.log("🌍 Flight Window Style 지구 배경 설정:");
-console.log("  - 지구 반지름:", EARTH_RADIUS);
-console.log("  - 지구 위치: [0, -3.4, 0]");
-console.log("  - 카메라: [0, 2.5, 6.5] (낮은 각도, 카메라 흔들림 효과 추가)");
-
 // 🌍 회전하는 지구 메시
 interface EarthMeshProps {
   radius: number;
+  onLoad?: () => void;
 }
 
-function RotatingEarth({ radius }: EarthMeshProps) {
+function RotatingEarth({ radius, onLoad }: EarthMeshProps) {
   const groupRef = useRef<THREE.Group>(null);
   const cloudsRef = useRef<THREE.Mesh>(null);
-  
-  // 텍스처 로드 (Day, Night-Lights, Cloud) - 고성능 최적화 설정
-  const [dayTexture, nightTexture, cloudTexture] = useTexture([
-    '/textures/earth-day.png',
-    '/textures/earth-lights.jpg',
-    '/textures/earth-cloud.png'
-  ], (textures) => {
-    // 텍스처 고성능 최적화 설정
-    textures.forEach((texture) => {
-      texture.generateMipmaps = false; // Mipmap 비활성화로 메모리 절약
-      texture.minFilter = THREE.LinearFilter; // 필터링 최적화
-      texture.magFilter = THREE.LinearFilter;
-      texture.wrapS = THREE.ClampToEdgeWrapping;
-      texture.wrapT = THREE.ClampToEdgeWrapping;
-      // 텍스처 크기 제한으로 메모리 절약
-      if (texture.image) {
-        const maxSize = 512; // 최대 512x512로 제한
-        if (texture.image.width > maxSize || texture.image.height > maxSize) {
-          texture.needsUpdate = true;
-        }
-      }
-    });
-  });
+
+  // 텍스처 로드 (Day, Night-Lights, Cloud) - 안전한 성능 최적화 설정
+  const [dayTexture, nightTexture, cloudTexture] = useTexture(
+    [
+      '/textures/earth-day.png',
+      '/textures/earth-lights.jpg',
+      '/textures/earth-cloud.png'
+    ],
+    (textures) => {
+      // 텍스처 안전한 성능 최적화 설정
+      textures.forEach((texture) => {
+        texture.generateMipmaps = false; // Mipmap 비활성화로 메모리 절약
+        texture.minFilter = THREE.LinearFilter; // 필터링 최적화
+        texture.magFilter = THREE.LinearFilter;
+        texture.wrapS = THREE.ClampToEdgeWrapping;
+        texture.wrapT = THREE.ClampToEdgeWrapping;
+      });
+    }
+  );
 
   useEffect(() => {
-    console.log("🌍 지구 텍스처 로드 완료 (Day, Night-Lights, Cloud)");
+    if (dayTexture && nightTexture && cloudTexture) {
+      console.log("🌍 지구 텍스처 로드 완료 (Day, Night-Lights, Cloud)");
+    }
   }, [dayTexture, nightTexture, cloudTexture]);
 
-  // 텍스처 로드 완료 시 콜백 호출
+  // 텍스처 로드 완료 시 콜백 호출 (안전한 체크)
   useEffect(() => {
     if (dayTexture && nightTexture && cloudTexture && onLoad) {
       console.log("🎯 모든 텍스처 로드 완료 - onLoad 콜백 호출");
@@ -120,7 +113,7 @@ function RotatingEarth({ radius }: EarthMeshProps) {
 }
 
 // 🌍 Fallback 지구 (로딩 중) - 성능 최적화 버전
-function FallbackEarth({ radius }: EarthMeshProps) {
+function FallbackEarth({ radius }: { radius: number }) {
   console.log("⏳ 지구 로딩 중...");
 
   return (
@@ -143,7 +136,7 @@ function FallbackEarth({ radius }: EarthMeshProps) {
 }
 
 // 🎬 메인 씬 - 뉴스 페이지 스타일 적용
-function Scene() {
+function Scene({ onLoad }: { onLoad?: () => void }) {
   useEffect(() => {
     console.log("🎬 Flight Window Style 씬 초기화 완료");
     console.log("📐 지구: [0, -3.4, 0], 반지름: 2.8, 뉴스 페이지 스타일 회전");
@@ -170,7 +163,7 @@ function Scene() {
       {/* 🌍 회전하는 지구 - Low Angle 위치 */}
       <group position={[0, -3.4, 0]}>
         <Suspense fallback={<FallbackEarth radius={EARTH_RADIUS} />}>
-          <RotatingEarth radius={EARTH_RADIUS} />
+          <RotatingEarth radius={EARTH_RADIUS} onLoad={onLoad} />
         </Suspense>
       </group>
 
@@ -217,13 +210,13 @@ function CameraRig() {
 }
 
 // 🎬 메인 컴포넌트
-export function InFlightEarth({ className = "", onLoad }: InFlightEarthProps) {
+export function Earth3D({ onLoad }: Earth3DProps) {
   useEffect(() => {
-    console.log("🚀 InFlightEarth 마운트 - Flight Window Style 적용 (News Page Style)");
+    console.log("🚀 Earth3D 마운트 - Flight Window Style 적용 (News Page Style)");
   }, []);
 
   return (
-    <div className={`absolute inset-0 z-0 h-full w-full bg-[#030308] overflow-hidden ${className}`}>
+    <div className="absolute inset-0 z-0 h-full w-full bg-[#030308] overflow-hidden">
       <Canvas
         dpr={[1, 1.5]} // 픽셀 비율 낮춤으로 성능 향상
         camera={{ position: [0, 2.5, 6.5], fov: 45 }}
@@ -238,7 +231,7 @@ export function InFlightEarth({ className = "", onLoad }: InFlightEarthProps) {
           camera.lookAt(0, 0, 0);
         }}
       >
-        <Scene />
+        <Scene onLoad={onLoad} />
       </Canvas>
 
       {/* 비네팅 효과 (가장자리 어둡게) - 시네마틱한 느낌 강화 */}

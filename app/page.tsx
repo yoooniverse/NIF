@@ -3,19 +3,9 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { SpaceBackground } from "@/components/landing/space-background";
+import { LazyEarth } from "@/components/landing/lazy-earth";
 import { ArrowRight, LogIn } from "lucide-react";
 import { SignInButton } from "@clerk/nextjs";
-import dynamic from "next/dynamic";
-
-// 🎯 3D 컴포넌트를 동적으로 로딩 (성능 최적화)
-const InFlightEarth = dynamic(() => import("@/components/landing/in-flight-earth").then(mod => mod.InFlightEarth), {
-  ssr: false,
-  loading: () => (
-    <div className="flex items-center justify-center w-full h-full">
-      <div className="text-white/60 text-sm">🌍 지구 로딩중...</div>
-    </div>
-  ),
-});
 
 export default function LandingPage() {
   console.log("🌍 랜딩 페이지 로드됨 - Hero Section Only");
@@ -27,10 +17,8 @@ export default function LandingPage() {
         {/* 우주 배경 */}
         <SpaceBackground />
 
-        {/* 3D 지구 컴포넌트 - In-Flight Entertainment 스타일 */}
-        <div className="absolute inset-0 w-full h-screen">
-          <InFlightEarth className="w-full h-full" />
-        </div>
+        {/* 3D 지구 컴포넌트 - Lazy Loading으로 성능 최적화 */}
+        <LazyEarth />
 
         {/* 우측 상단 로그인 버튼 */}
         <div className="absolute top-6 right-6 z-20">
