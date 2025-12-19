@@ -25,7 +25,6 @@ type HubDatum = {
   color: string;
 };
 
-// 외부 CDN 사용 (안정성 우선)
 const EARTH_TEXTURES = {
   day: 'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg',
   night: 'https://unpkg.com/three-globe/example/img/earth-night.jpg',
@@ -42,33 +41,6 @@ export default function GlobeCanvas({ className = '' }: GlobeCanvasProps) {
   const globeRef = useRef<any>(null);
   const [globeError, setGlobeError] = useState<string | null>(null);
   const [globeLoading, setGlobeLoading] = useState(true);
-  const [texturesLoaded, setTexturesLoaded] = useState(false);
-
-  // 간단한 텍스처 프리로딩
-  useEffect(() => {
-    const preloadTextures = async () => {
-      const texturePromises = Object.entries(EARTH_TEXTURES).map(async ([key, url]) => {
-        return new Promise<void>((resolve) => {
-          const img = new Image();
-          img.onload = () => {
-            console.info(`[GLOBE_CANVAS] texture preloaded: ${key}`);
-            resolve();
-          };
-          img.onerror = () => {
-            console.warn(`[GLOBE_CANVAS] texture preload failed: ${key}`);
-            resolve(); // 실패해도 계속 진행
-          };
-          img.src = url;
-        });
-      });
-
-      await Promise.all(texturePromises);
-      console.info('[GLOBE_CANVAS] texture preloading completed');
-      setTexturesLoaded(true);
-    };
-
-    preloadTextures();
-  }, []);
 
   const arcsData: ArcDatum[] = useMemo(
     () => [
@@ -145,7 +117,7 @@ export default function GlobeCanvas({ className = '' }: GlobeCanvasProps) {
         setGlobeError('Globe loading timeout - please refresh the page');
         setGlobeLoading(false);
       }
-    }, 8000); // 8 seconds timeout
+    }, 10000); // 10 seconds timeout
 
     return () => clearTimeout(timeout);
   }, [globeLoading, globeError]);
@@ -202,26 +174,32 @@ export default function GlobeCanvas({ className = '' }: GlobeCanvasProps) {
 
       const loader = new THREE.TextureLoader();
 
-      // 간단한 텍스처 로딩
       const nightTex = loader.load(
         EARTH_TEXTURES.night,
-        (texture) => console.info('[GLOBE_CANVAS] night texture loaded'),
         undefined,
-        (err) => console.warn('[GLOBE_CANVAS] night texture failed', err)
+        undefined,
+        (err) => {
+          console.error('[GLOBE_CANVAS] failed to load night texture', { url: EARTH_TEXTURES.night, err });
+          setGlobeError('Failed to load night texture (network blocked?)');
+        }
       );
-
       const bumpTex = loader.load(
         EARTH_TEXTURES.bump,
-        (texture) => console.info('[GLOBE_CANVAS] bump texture loaded'),
         undefined,
-        (err) => console.warn('[GLOBE_CANVAS] bump texture failed', err)
+        undefined,
+        (err) => {
+          console.error('[GLOBE_CANVAS] failed to load bump texture', { url: EARTH_TEXTURES.bump, err });
+          setGlobeError('Failed to load bump texture (network blocked?)');
+        }
       );
-
       const specularTex = loader.load(
         EARTH_TEXTURES.specular,
-        (texture) => console.info('[GLOBE_CANVAS] specular texture loaded'),
         undefined,
-        (err) => console.warn('[GLOBE_CANVAS] specular texture failed', err)
+        undefined,
+        (err) => {
+          console.error('[GLOBE_CANVAS] failed to load specular texture', { url: EARTH_TEXTURES.specular, err });
+          setGlobeError('Failed to load specular texture (network blocked?)');
+        }
       );
 
       material.bumpMap = bumpTex;
@@ -262,7 +240,7 @@ export default function GlobeCanvas({ className = '' }: GlobeCanvasProps) {
         <>
         <Globe
           ref={globeRef}
-          // Globe look & feel - 텍스처 우선 사용
+          // Globe look & feel
           backgroundColor="rgba(0,0,0,0)"
           backgroundImageUrl={EARTH_TEXTURES.stars}
           globeImageUrl={EARTH_TEXTURES.day}
@@ -300,8 +278,7 @@ export default function GlobeCanvas({ className = '' }: GlobeCanvasProps) {
           onGlobeReady={() => {
             console.info('[GLOBE_CANVAS] globe ready');
             setGlobeLoading(false);
-            // 지구가 준비되면 머터리얼 설정
-            setTimeout(() => setupControlsAndMaterial(), 100);
+            setupControlsAndMaterial();
           }}
           onGlobeClick={() => console.info('[GLOBE_CANVAS] globe click')}
           onPointClick={(d: HubDatum) =>
@@ -313,9 +290,7 @@ export default function GlobeCanvas({ className = '' }: GlobeCanvasProps) {
           <div className="pointer-events-none absolute inset-0 flex h-full items-center justify-center">
             <div className="text-center">
               <div className="mx-auto h-16 w-16 animate-spin rounded-full border-4 border-sky-200 border-t-transparent" />
-              <div className="mt-4 text-sm text-white/60">
-                3D 지구 로딩 중...
-              </div>
+              <div className="mt-4 text-sm text-white/60">3D 지구 로딩 중...</div>
             </div>
           </div>
         )}

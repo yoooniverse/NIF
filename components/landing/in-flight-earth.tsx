@@ -24,25 +24,55 @@ interface EarthMeshProps {
 
 function RotatingEarth({ radius }: EarthMeshProps) {
   const groupRef = useRef<THREE.Group>(null);
-  const earthTexture = useTexture('/earth/earth.jpg');
+  const cloudsRef = useRef<THREE.Mesh>(null);
+  
+  // 텍스처 로드 (Day, Night-Lights, Cloud)
+  const [dayTexture, nightTexture, cloudTexture] = useTexture([
+    '/textures/earth-day.png',
+    '/textures/earth-lights.jpg',
+    '/textures/earth-cloud.png'
+  ]);
 
   useEffect(() => {
-    console.log("🌍 지구 텍스처 로드 완료");
-  }, [earthTexture]);
+    console.log("🌍 지구 텍스처 로드 완료 (Day, Night-Lights, Cloud)");
+  }, [dayTexture, nightTexture, cloudTexture]);
 
   // 🎬 느린 회전 애니메이션 (Y축)
   useFrame(() => {
     if (groupRef.current) {
-      groupRef.current.rotation.y += 0.0005;
+      groupRef.current.rotation.y += 0.0005; // 지구 자전
+    }
+    if (cloudsRef.current) {
+      cloudsRef.current.rotation.y += 0.0007; // 구름은 조금 더 빠르게 이동
     }
   });
 
   return (
     <group ref={groupRef}>
-      {/* 지구 본체 - 천천히 회전 */}
+      {/* 지구 본체 (Day + Night Lights) */}
       <mesh>
         <sphereGeometry args={[radius, 128, 128]} />
-        <meshPhongMaterial map={earthTexture} />
+        <meshPhongMaterial 
+          map={dayTexture}
+          emissiveMap={nightTexture}
+          emissive={new THREE.Color(0x444444)}
+          emissiveIntensity={5}
+          specular={new THREE.Color(0x333333)}
+          shininess={5}
+        />
+      </mesh>
+
+      {/* 구름 레이어 */}
+      <mesh ref={cloudsRef} scale={[1.02, 1.02, 1.02]}>
+        <sphereGeometry args={[radius, 128, 128]} />
+        <meshPhongMaterial 
+          map={cloudTexture}
+          transparent={true}
+          opacity={0.8}
+          side={THREE.DoubleSide}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
       </mesh>
 
       {/* 대기권 후광 */}
@@ -122,7 +152,7 @@ function Scene() {
 // 🎬 메인 컴포넌트
 export function InFlightEarth({ className = "" }: InFlightEarthProps) {
   useEffect(() => {
-    console.log("🚀 InFlightEarth 마운트 - Golden Ratio 회전 지구 버전");
+    console.log("🚀 InFlightEarth 마운트 - Golden Ratio 회전 지구 버전 (Night Lights Added)");
   }, []);
 
   return (

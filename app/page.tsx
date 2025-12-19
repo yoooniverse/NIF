@@ -4,7 +4,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { SpaceBackground } from "@/components/landing/space-background";
 import { InFlightEarth } from "@/components/landing/in-flight-earth";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, LogIn } from "lucide-react";
+import { SignInButton } from "@clerk/nextjs";
 
 export default function LandingPage() {
   console.log("🌍 랜딩 페이지 로드됨 - Hero Section Only");
@@ -19,6 +20,21 @@ export default function LandingPage() {
         {/* 3D 지구 컴포넌트 - In-Flight Entertainment 스타일 */}
         <div className="absolute inset-0 w-full h-screen">
           <InFlightEarth className="w-full h-full" />
+        </div>
+
+        {/* 우측 상단 로그인 버튼 */}
+        <div className="absolute top-6 right-6 z-20">
+          <SignInButton mode="modal" forceRedirectUrl="/dashboard">
+            <Button
+              variant="outline"
+              size="default"
+              className="bg-black/20 backdrop-blur-md border-white/20 text-white hover:bg-black/40 hover:border-white/40 transition-all duration-300 px-4 py-2 text-sm font-medium"
+              onClick={() => console.log("🔐 랜딩페이지 로그인 버튼 클릭됨")}
+            >
+              <LogIn className="w-5 h-5 mr-2" />
+              로그인
+            </Button>
+          </SignInButton>
         </div>
 
         {/* 메인 카피 (화면 중앙에 부유) */}

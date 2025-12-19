@@ -9,6 +9,7 @@ import ActionItem from "../../../components/news/action-item";
 import NewsFooter from "../../../components/news/news-footer";
 import BoardingPassModal from "../../../components/news/BoardingPassModal";
 import { getMockNewsById } from "../../../lib/mock/news";
+import { FlightViewBackground } from '@/components/landing/FlightViewBackground';
 
 export default function NewsDetailPage() {
   const router = useRouter();
@@ -64,8 +65,11 @@ export default function NewsDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050814] text-white">
-      <div className="mx-auto w-full max-w-[1100px] px-6 pt-8 pb-16">
+    <div className="relative min-h-screen bg-[#050814] text-white overflow-hidden">
+      {/* 우주 배경 (비행기 뷰) */}
+      <FlightViewBackground />
+
+      <div className="relative z-10 mx-auto w-full max-w-[1100px] px-6 pt-8 pb-16">
         <div className="flex items-start gap-4">
           <button
             type="button"

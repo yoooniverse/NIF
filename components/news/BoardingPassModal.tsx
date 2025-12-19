@@ -1,7 +1,10 @@
 'use client';
 
-import { X } from 'lucide-react';
-import { useState } from 'react';
+import { X, LogOut, Settings, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useClerk } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 interface BoardingPassModalProps {
   isOpen: boolean;
@@ -20,43 +23,31 @@ export default function BoardingPassModal({
   passengerName = "PREMIUM MEMBER",
   subscriptionStatus = 'economy'
 }: BoardingPassModalProps) {
-  const [analysisLevel, setAnalysisLevel] = useState<'lv1' | 'lv2' | 'lv3'>('lv1');
+  const { signOut } = useClerk();
+  const router = useRouter();
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  // 모달이 열릴 때 온보딩 페이지를 미리 로드(Prefetch)
+  useEffect(() => {
+    if (isOpen) {
+      console.info('[BOARDING_PASS] prefetching /onboarding/interests page');
+      router.prefetch('/onboarding/interests');
+    }
+  }, [isOpen, router]);
 
   if (!isOpen) return null;
 
   console.info('[BOARDING_PASS_MODAL] opened with passengerName:', passengerName, 'subscriptionStatus:', subscriptionStatus);
 
-  const handleLevelChange = () => {
-    const levels: ('lv1' | 'lv2' | 'lv3')[] = ['lv1', 'lv2', 'lv3'];
-    const currentIndex = levels.indexOf(analysisLevel);
-    const nextIndex = (currentIndex + 1) % levels.length;
-    const nextLevel = levels[nextIndex];
-    setAnalysisLevel(nextLevel);
-    console.info('[BOARDING_PASS] analysis level changed to:', nextLevel);
+  const handleSettingsClick = () => {
+    console.info('[BOARDING_PASS] settings button clicked -> navigating to /onboarding/interests');
+    setIsNavigating(true); // 로딩 상태 표시
+    router.push('/onboarding/interests');
   };
 
-  const getLevelDisplayText = (level: 'lv1' | 'lv2' | 'lv3') => {
-    switch (level) {
-      case 'lv1': return 'Lv.1';
-      case 'lv2': return 'Lv.2';
-      case 'lv3': return 'Lv.3';
-      default: return 'Lv.1';
-    }
-  };
-
-  const getLevelButtonClass = (level: 'lv1' | 'lv2' | 'lv3') => {
-    const baseClass = "w-32 h-16 px-8 py-4 text-white text-xl font-bold rounded-lg transition-colors shadow-lg flex items-center justify-center";
-
-    switch (level) {
-      case 'lv1':
-        return `${baseClass} bg-sky-500 hover:bg-sky-600`;
-      case 'lv2':
-        return `${baseClass} bg-blue-600 hover:bg-blue-700`;
-      case 'lv3':
-        return `${baseClass} bg-blue-800 hover:bg-blue-900`;
-      default:
-        return `${baseClass} bg-sky-500 hover:bg-sky-600`;
-    }
+  const handleSignOut = () => {
+    console.info('[BOARDING_PASS] user signing out');
+    signOut();
   };
 
   // Determine seat class based on subscription
@@ -148,18 +139,44 @@ export default function BoardingPassModal({
             <div className="absolute bottom-0 translate-y-1/2 w-4 h-4 bg-white rounded-full border-2 border-gray-300"></div>
           </div>
 
-          {/* Right Section (30%) - Stub */}
-          <div className="md:w-1/3 p-6 flex flex-col items-center bg-gray-50 min-h-[300px]">
-            {/* News Analysis Level Selector */}
-            <div className="text-center mb-8">
-              <div className="text-sm font-semibold text-gray-500 mb-3">해설 난이도 레벨 변경하기</div>
+          {/* Right Section (30%) - Settings & Barcode */}
+          <div className="md:w-1/3 p-6 flex flex-col items-center bg-gray-50 min-h-[300px] relative overflow-hidden">
+            {/* Settings Button (Replaces Analysis Level) */}
+            <div className="text-center mb-4 relative z-10">
+              <div className="text-sm font-semibold text-gray-500 mb-3">내 정보 수정하기</div>
               <button
                 type="button"
-                onClick={handleLevelChange}
-                className={getLevelButtonClass(analysisLevel)}
+                onClick={handleSettingsClick}
+                disabled={isNavigating}
+                className="w-32 h-16 px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 text-sm font-bold rounded-xl border-2 border-gray-200 hover:border-sky-300 transition-all shadow-sm flex flex-col items-center justify-center gap-1 group disabled:opacity-70 disabled:cursor-wait"
               >
-                {getLevelDisplayText(analysisLevel)}
+                {isNavigating ? (
+                  <>
+                    <Loader2 className="w-5 h-5 text-sky-500 animate-spin" />
+                    <span className="text-sky-600">이동 중...</span>
+                  </>
+                ) : (
+                  <>
+                    <Settings className="w-5 h-5 text-gray-400 group-hover:text-sky-500 transition-colors" />
+                    <span className="group-hover:text-sky-600 transition-colors">환경설정</span>
+                  </>
+                )}
               </button>
+            </div>
+
+            {/* Bon Voyage Stamp */}
+            <div className="relative z-0 mt-2 select-none pointer-events-none">
+              <div 
+                className="relative w-32 h-32 transform -rotate-12 opacity-90 mix-blend-multiply rounded-full overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-red-600"></div>
+                <Image
+                  src="/images/bon-voyage-stamp.png"
+                  alt="Bon Voyage Stamp"
+                  fill
+                  className="object-cover mix-blend-screen grayscale contrast-150 brightness-110"
+                />
+              </div>
             </div>
 
             {/* Spacer to push barcode to bottom */}
@@ -193,9 +210,19 @@ export default function BoardingPassModal({
         </div>
 
         {/* Footer Note */}
-        <div className="px-8 py-4 bg-gray-100 text-center">
-          <div className="text-xs text-gray-600">
-            This boarding pass is valid for News In Flight premium access
+        <div className="px-8 py-4 bg-gray-100">
+          <div className="flex items-center justify-between">
+            <div className="text-xs text-gray-600">
+              This boarding pass is valid for News In Flight premium access
+            </div>
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="flex items-center gap-2 px-3 py-2 bg-red-500 hover:bg-red-600 text-white text-xs font-medium rounded-md transition-colors"
+            >
+              <LogOut className="w-3 h-3" />
+              로그아웃
+            </button>
           </div>
         </div>
       </div>

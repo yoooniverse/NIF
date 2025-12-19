@@ -152,8 +152,8 @@ export default function CyclePage() {
       <div className="min-h-screen bg-[#020617] text-white">
       {/* 헤더 - Military HUD 스타일 */}
       <div className="border-b border-green-400/20 bg-black/40 backdrop-blur-md">
-        <div className="mx-auto max-w-7xl px-6 py-4">
-          <div className="flex items-center gap-4">
+        <div className="mx-auto max-w-7xl px-4 py-4">
+          <div className="flex items-center gap-2">
             <Link
               href="/dashboard"
               className="flex items-center gap-2 rounded-lg border border-green-400/30 bg-black/20 px-4 py-2 text-green-400 hover:bg-green-400/10 transition-all duration-300 font-mono text-sm uppercase tracking-wider"

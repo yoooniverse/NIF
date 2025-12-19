@@ -104,7 +104,13 @@ export default function DashboardV2Page() {
 
   useEffect(() => {
     console.info('[DASHBOARD] page loaded');
-  }, []);
+    
+    // 🚀 페이지 미리 로드 (Prefetch) - 버튼 클릭 시 빠른 전환을 위해
+    console.info('[DASHBOARD] prefetching pages for faster navigation');
+    router.prefetch('/news/today');
+    router.prefetch('/news/monthly');
+    router.prefetch('/cycle');
+  }, [router]);
 
 
   useEffect(() => {
@@ -112,13 +118,19 @@ export default function DashboardV2Page() {
     if (!isLoaded) return;
     if (!user) return;
 
-    const onboardingCompleted = Boolean(user.unsafeMetadata?.onboardingCompleted);
+    // 개발 단계에서는 publicMetadata와 unsafeMetadata 모두 확인 (Clerk 메타데이터 업데이트 문제 우회)
+    const onboardingCompleted = Boolean(
+      user.publicMetadata?.onboardingCompleted ||
+      user.unsafeMetadata?.onboardingCompleted
+    );
     const isNewUser = user.createdAt && (Date.now() - new Date(user.createdAt).getTime()) < 5 * 60 * 1000; // 5분 이내 가입한 사용자
 
     console.info('[DASHBOARD] user state', {
       userId: user.id,
       onboardingCompleted,
-      level: user.unsafeMetadata?.level,
+      publicMetadataOnboarding: user.publicMetadata?.onboardingCompleted,
+      unsafeMetadataOnboarding: user.unsafeMetadata?.onboardingCompleted,
+      level: (user.publicMetadata as Record<string, any>)?.userProfiles?.level || (user.unsafeMetadata as Record<string, any>)?.level,
       isNewUser,
       createdAt: user.createdAt,
       fullName: user.fullName,
@@ -174,18 +186,23 @@ export default function DashboardV2Page() {
                   ) : 'PREMIUM MEMBER';
 
                   const subscriptionStatus =
-                    user?.unsafeMetadata?.subscription === 'premium' ||
-                    user?.unsafeMetadata?.level === 'premium' ||
-                    (user?.unsafeMetadata?.trialEnds && new Date(user.unsafeMetadata.trialEnds) > new Date())
+                    (user?.publicMetadata as Record<string, any>)?.subscription === 'premium' ||
+                    (user?.publicMetadata as Record<string, any>)?.userProfiles?.level === 'premium' ||
+                    (user?.unsafeMetadata as Record<string, any>)?.subscription === 'premium' ||
+                    (user?.unsafeMetadata as Record<string, any>)?.level === 'premium' ||
+                    ((user?.publicMetadata as Record<string, any>)?.trialEnds && new Date((user.publicMetadata as Record<string, any>).trialEnds) > new Date()) ||
+                    ((user?.unsafeMetadata as Record<string, any>)?.trialEnds && new Date((user.unsafeMetadata as Record<string, any>).trialEnds) > new Date())
                       ? 'first_class'
                       : 'economy';
 
                   console.info('[DASHBOARD] click: boarding pass', {
                     passengerName,
                     subscriptionStatus,
-                    userSubscription: user?.unsafeMetadata?.subscription,
-                    userLevel: user?.unsafeMetadata?.level,
-                    userTrialEnds: user?.unsafeMetadata?.trialEnds,
+                    publicMetadata: user?.publicMetadata,
+                    unsafeMetadata: user?.unsafeMetadata,
+                    userSubscription: user?.publicMetadata?.subscription || user?.unsafeMetadata?.subscription,
+                    userLevel: (user?.publicMetadata as Record<string, any>)?.userProfiles?.level || (user?.unsafeMetadata as Record<string, any>)?.level,
+                    userTrialEnds: user?.publicMetadata?.trialEnds || user?.unsafeMetadata?.trialEnds,
                     userFullName: user?.fullName,
                     userFirstName: user?.firstName,
                     userLastName: user?.lastName,
@@ -263,18 +280,6 @@ export default function DashboardV2Page() {
               </div>
             </div>
 
-            <div className="mt-auto px-5 pb-5">
-              <div className="flex items-center justify-between gap-3 text-xs text-white/55">
-                <Link
-                  href="/dashboard"
-                  onClick={() => console.info('[DASHBOARD] click: go legacy dashboard')}
-                  className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10 transition"
-                >
-                  기존 `/dashboard`로
-                </Link>
-                <span className="opacity-70">v2 prototype</span>
-              </div>
-            </div>
           </div>
         </aside>
 

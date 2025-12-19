@@ -1,8 +1,8 @@
 "use client";
 
 import { Canvas, useLoader, useFrame } from "@react-three/fiber";
-import { Sphere } from "@react-three/drei";
-import { useEffect, useRef, useState } from "react";
+import { Sphere, useTexture } from "@react-three/drei";
+import { useEffect, useRef, useState, Suspense } from "react";
 import * as THREE from "three";
 
 // No props currently needed for EarthGlobe3D
@@ -91,34 +91,51 @@ function Airplane() {
 
 function Earth() {
   const meshRef = useRef<THREE.Mesh>(null);
+  const cloudsRef = useRef<THREE.Mesh>(null);
+
+  // 텍스처 로드 (Day, Night-Lights, Cloud)
+  const [dayTexture, nightTexture, cloudTexture] = useTexture([
+    '/textures/earth-day.png',
+    '/textures/earth-lights.jpg',
+    '/textures/earth-cloud.png'
+  ]);
 
   useEffect(() => {
-    console.log("🌍 3D 지구 컴포넌트 마운트됨 - In-flight map 스타일 렌더링");
-  }, []);
+    console.log("🌍 3D 지구 텍스처 로드 완료 (Day, Night, Cloud)");
+  }, [dayTexture, nightTexture, cloudTexture]);
 
-  // 선명한 주간 지구 텍스처 (In-flight map 스타일)
-  const earthTexture = useLoader(
-    THREE.TextureLoader,
-    'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_atmos_2048.jpg'
-  );
-
-  useEffect(() => {
-    if (earthTexture) {
-      console.log("✅ 선명한 주간 지구 텍스처 로드 완료 (In-flight map 스타일)");
+  useFrame(() => {
+    if (cloudsRef.current) {
+      cloudsRef.current.rotation.y += 0.0002;
     }
-  }, [earthTexture]);
+  });
 
   return (
     <>
       {/* 메인 지구 구체 - In-flight map 스타일 (더 크고 진한 색감) */}
       <group rotation={[0.2, -0.5, 0]} position={[0, -10, 0]}>
-        {/* 지구 본체 (주간 텍스처 - 진한 색감) */}
+        {/* 지구 본체 (주간 + 야간 텍스처) */}
         <Sphere ref={meshRef} args={[15, 256, 256]} position={[0, 0, 0]} receiveShadow>
           <meshStandardMaterial
-            map={earthTexture}
+            map={dayTexture}
+            emissiveMap={nightTexture}
+            emissive={new THREE.Color(0x444444)}
+            emissiveIntensity={3}
             roughness={0.3}
             metalness={0.05}
             color="#ffffff"
+          />
+        </Sphere>
+
+        {/* 구름 레이어 */}
+        <Sphere ref={cloudsRef} args={[15.1, 128, 128]} position={[0, 0, 0]}>
+          <meshStandardMaterial
+            map={cloudTexture}
+            transparent={true}
+            opacity={0.4}
+            side={THREE.DoubleSide}
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
           />
         </Sphere>
 
@@ -209,11 +226,11 @@ export function EarthGlobe3D() {
             console.log("✅ Three.js Canvas 생성 완료 - 진한 색감 + 비행기 애니메이션");
           }}
         >
-          <Earth />
+          <Suspense fallback={null}>
+            <Earth />
+          </Suspense>
         </Canvas>
       </div>
     </div>
   );
 }
-
-

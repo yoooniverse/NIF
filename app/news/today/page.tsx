@@ -1,10 +1,11 @@
 'use client';
 
 import { useUser } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState, useCallback, Suspense } from 'react';
 import { ArrowLeft, Filter } from 'lucide-react';
 import NewsCard from '@/components/dashboard/NewsCard';
+import { FlightViewBackground } from '@/components/landing/FlightViewBackground';
 
 // 관심분야 카테고리
 const INTEREST_CATEGORIES = [
@@ -15,6 +16,15 @@ const INTEREST_CATEGORIES = [
   { id: 'etf', name: 'ETF', slug: 'etf' },
   { id: 'exchange-rate', name: '환율', slug: 'exchange-rate' },
 ];
+
+// 카테고리 slug ↔ 한글명 매핑
+const CATEGORY_SLUG_TO_NAME: { [key: string]: string } = {
+  'stock': '주식',
+  'crypto': '가상화폐',
+  'real-estate': '부동산',
+  'etf': 'ETF',
+  'exchange-rate': '환율',
+};
 
 // Mock 뉴스 데이터
 const MOCK_NEWS = [
@@ -62,14 +72,44 @@ const MOCK_NEWS = [
   },
 ];
 
+// 메인 컴포넌트를 Suspense로 감싸기 위한 래퍼
 export default function TodayNewsPage() {
+  return (
+    <Suspense fallback={<TodayNewsLoading />}>
+      <TodayNewsContent />
+    </Suspense>
+  );
+}
+
+// 로딩 컴포넌트
+function TodayNewsLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[#050814]">
+      <div className="text-center">
+        <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-white border-t-transparent" />
+        <p className="text-white/70">로딩 중...</p>
+      </div>
+    </div>
+  );
+}
+
+function TodayNewsContent() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const searchParams = useSearchParams();
+  
+  // URL에서 카테고리 읽기 (뒤로가기 시 유지됨)
+  const categoryFromUrl = searchParams.get('category') || 'all';
+  const [selectedCategory, setSelectedCategory] = useState(categoryFromUrl);
+
+  // URL 파라미터 변경 시 state 동기화
+  useEffect(() => {
+    setSelectedCategory(categoryFromUrl);
+  }, [categoryFromUrl]);
 
   useEffect(() => {
-    console.info('[TODAY_NEWS] page loaded');
-  }, []);
+    console.info('[TODAY_NEWS] page loaded, category:', categoryFromUrl);
+  }, [categoryFromUrl]);
 
   // 인증 체크
   useEffect(() => {
@@ -80,6 +120,19 @@ export default function TodayNewsPage() {
     }
   }, [isLoaded, user, router]);
 
+  // 카테고리 변경 시 URL 업데이트
+  const handleCategoryChange = useCallback((slug: string) => {
+    console.info('[TODAY_NEWS] category filter:', slug);
+    setSelectedCategory(slug);
+    
+    // URL 쿼리 파라미터 업데이트 (뒤로가기 시 유지되도록)
+    if (slug === 'all') {
+      router.replace('/news/today', { scroll: false });
+    } else {
+      router.replace(`/news/today?category=${slug}`, { scroll: false });
+    }
+  }, [router]);
+
   const handleBack = () => {
     console.info('[TODAY_NEWS] click: back to dashboard');
     router.push('/dashboard');
@@ -88,15 +141,11 @@ export default function TodayNewsPage() {
   const filteredNews = selectedCategory === 'all'
     ? MOCK_NEWS
     : MOCK_NEWS.filter(news => {
-        const categoryMap: { [key: string]: string } = {
-          'stock': '주식',
-          'crypto': '가상화폐',
-          'real-estate': '부동산',
-          'etf': 'ETF',
-          'exchange-rate': '환율',
-        };
-        return news.category === categoryMap[selectedCategory];
+        return news.category === CATEGORY_SLUG_TO_NAME[selectedCategory];
       });
+
+  // 카테고리별 배경 설정 - 카테고리 버튼의 배경을 전체 버튼에서도 동일하게 사용
+  const earthSize = selectedCategory === 'all' ? 2.5 : 2.5; // 모두 동일한 크기로 통일
 
   if (!isLoaded || !user) {
     return (
@@ -110,8 +159,11 @@ export default function TodayNewsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050814] text-white">
-      <div className="mx-auto w-full max-w-[1100px] px-6 pt-8 pb-16">
+    <div className="relative min-h-screen bg-[#050814] text-white overflow-hidden">
+      {/* 우주 배경 (비행기 뷰) */}
+      <FlightViewBackground earthSize={earthSize} />
+      
+      <div className="relative z-10 mx-auto w-full max-w-[1100px] px-6 pt-8 pb-16">
         <div className="flex items-start gap-4">
           <button
             onClick={handleBack}
@@ -151,14 +203,11 @@ export default function TodayNewsPage() {
               {INTEREST_CATEGORIES.map((category) => (
                 <button
                   key={category.id}
-                  onClick={() => {
-                    console.info('[TODAY_NEWS] category filter:', category.slug);
-                    setSelectedCategory(category.slug);
-                  }}
+                  onClick={() => handleCategoryChange(category.slug)}
                   className={`px-5 py-3 rounded-full text-base font-semibold transition ${
                     selectedCategory === category.slug
                       ? 'bg-blue-600 text-white'
-                      : 'bg-white/20 text-white hover:bg-white/30 border border-white/20'
+                      : 'bg-[#050814] text-white hover:bg-[#0a0f29] border border-white/20'
                   }`}
                 >
                   {category.name}
@@ -181,6 +230,7 @@ export default function TodayNewsPage() {
                   id={news.id}
                   title={news.title}
                   category={news.category}
+                  categorySlug={selectedCategory !== 'all' ? selectedCategory : undefined}
                   publishedAt={news.publishedAt}
                   summary={news.summary}
                   isWhite={true}

@@ -1,18 +1,23 @@
-'use client';
+"use client";
 
-import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 
 export default function OnboardingLevelPage() {
-  const { user } = useUser();
   const router = useRouter();
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     console.log("[ONBOARDING_LEVEL] AI 레벨 선택 페이지 진입");
-    
+
+    // 로컬 스토리지에서 기존 선택사항 불러오기
+    const saved = localStorage.getItem('onboarding_level');
+    if (saved) {
+      setSelectedLevel(parseInt(saved));
+    }
+
     // 이전 단계 확인
     const interests = localStorage.getItem('onboarding_interests');
     const contexts = localStorage.getItem('onboarding_contexts');
@@ -24,42 +29,39 @@ export default function OnboardingLevelPage() {
 
   // PRD에 명시된 AI 레벨
   const levels = [
-    { 
-      level: 1, 
-      label: "초보자", 
-      icon: "🌱", 
+    {
+      level: 1,
+      label: "초보자",
       description: "경제 뉴스가 처음이신가요?",
-      detail: "중학생도 이해할 수 있는 쉬운 설명" 
+      detail: "중학생도 이해할 수 있는 쉬운 설명"
     },
-    { 
-      level: 2, 
-      label: "일반", 
-      icon: "🎯", 
+    {
+      level: 2,
+      label: "일반",
       description: "기본적인 경제 지식이 있으신가요?",
-      detail: "적당한 수준의 전문 용어 사용" 
+      detail: "적당한 수준의 전문 용어 사용"
     },
-    { 
-      level: 3, 
-      label: "전문가", 
-      icon: "🚀", 
+    {
+      level: 3,
+      label: "전문가",
       description: "경제 전문가시군요!",
-      detail: "심화 분석과 전문 용어 중심" 
+      detail: "간단한 수치,통계 중심 설명"
     },
   ];
 
   const handleBack = () => {
     console.log("[ONBOARDING_LEVEL] 이전 단계로 이동");
+
+    // 현재 선택사항 저장
+    if (selectedLevel) {
+      localStorage.setItem('onboarding_level', selectedLevel.toString());
+    }
     router.push('/onboarding/contexts');
   };
 
   const handleComplete = async () => {
     if (!selectedLevel) {
-      alert("AI 레벨을 선택해주세요");
-      return;
-    }
-
-    if (!user) {
-      alert("사용자 정보를 불러올 수 없습니다");
+      console.log("[ONBOARDING_LEVEL] 선택된 레벨이 없음");
       return;
     }
 
@@ -67,9 +69,25 @@ export default function OnboardingLevelPage() {
     console.log("[ONBOARDING_LEVEL] 온보딩 완료 처리 시작");
 
     try {
-      // 로컬 스토리지에서 데이터 가져오기
-      const interests = JSON.parse(localStorage.getItem('onboarding_interests') || '[]');
-      const contexts = JSON.parse(localStorage.getItem('onboarding_contexts') || '[]');
+      // 로컬 스토리지에서 데이터 가져오기 (안전하게 파싱)
+      let interests: string[] = [];
+      let contexts: string[] = [];
+
+      try {
+        const interestsData = localStorage.getItem('onboarding_interests');
+        interests = interestsData ? JSON.parse(interestsData) : [];
+      } catch (e) {
+        console.warn("[ONBOARDING_LEVEL] 관심사 데이터 파싱 실패:", e);
+        interests = [];
+      }
+
+      try {
+        const contextsData = localStorage.getItem('onboarding_contexts');
+        contexts = contextsData ? JSON.parse(contextsData) : [];
+      } catch (e) {
+        console.warn("[ONBOARDING_LEVEL] 상황 데이터 파싱 실패:", e);
+        contexts = [];
+      }
 
       console.log("[ONBOARDING_LEVEL] 최종 데이터:", {
         level: selectedLevel,
@@ -77,22 +95,46 @@ export default function OnboardingLevelPage() {
         contexts,
       });
 
-      // Clerk의 사용자 메타데이터에 저장
-      await user.update({
-        unsafeMetadata: {
-          onboardingCompleted: true,
-          level: selectedLevel,
-          interests: interests,
-          contexts: contexts,
-          onboardingCompletedAt: new Date().toISOString(),
-        },
+      // API를 통해 Clerk 메타데이터 업데이트 (Clerk v5 대응)
+      try {
+        const response = await fetch('/api/onboarding/complete', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            level: selectedLevel,
+            interests,
+            contexts,
+          }),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log("[ONBOARDING_LEVEL] Clerk 메타데이터 저장 완료:", result);
+        } else {
+          console.warn("[ONBOARDING_LEVEL] 메타데이터 저장 실패했지만 진행");
+        }
+      } catch (apiError) {
+        console.warn("[ONBOARDING_LEVEL] API 호출 실패했지만 진행:", apiError);
+      }
+
+      // 로컬 스토리지 클리어 (온보딩 완료 후 정리)
+      console.log("[ONBOARDING_LEVEL] 로컬 스토리지 클리어 전:", {
+        interests: localStorage.getItem('onboarding_interests'),
+        contexts: localStorage.getItem('onboarding_contexts'),
+        level: localStorage.getItem('onboarding_level'),
       });
 
-      console.log("[ONBOARDING_LEVEL] Clerk 메타데이터 저장 완료");
-
-      // 로컬 스토리지 클리어
       localStorage.removeItem('onboarding_interests');
       localStorage.removeItem('onboarding_contexts');
+      localStorage.removeItem('onboarding_level');
+
+      console.log("[ONBOARDING_LEVEL] 로컬 스토리지 클리어 후:", {
+        interests: localStorage.getItem('onboarding_interests'),
+        contexts: localStorage.getItem('onboarding_contexts'),
+        level: localStorage.getItem('onboarding_level'),
+      });
 
       console.log("[ONBOARDING_LEVEL] 대시보드로 이동");
       router.push('/dashboard');
@@ -104,98 +146,186 @@ export default function OnboardingLevelPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-3xl">
-        {/* 진행 상황 표시 (Step 3/3) */}
-        <div className="mb-8">
-          <div className="flex items-center justify-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-blue-400"></div>
-            <div className="w-2 h-2 rounded-full bg-blue-400"></div>
-            <div className="w-8 h-2 rounded-full bg-blue-600"></div>
+    <div className="w-full">
+      {/* 전광판 행들 */}
+      {levels.map((levelOption, index) => {
+        const isSelected = selectedLevel === levelOption.level;
+
+        return (
+          <motion.div
+            key={levelOption.level}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className={`grid grid-cols-12 gap-4 px-8 py-4 border-b border-[#FFB800]/20 hover:bg-[#FFB800]/5 transition-colors duration-200 cursor-pointer ${
+              isSelected ? 'bg-[#FFB800]/10' : ''
+            }`}
+            onClick={() => setSelectedLevel(levelOption.level)}
+          >
+            {/* STEP (03/03) */}
+            <div className="col-span-1 flex items-center justify-center">
+              <motion.div
+                animate={{ rotateX: isSelected ? [0, 90, 0] : 0 }}
+                transition={{ duration: 0.3 }}
+                className="text-center"
+              >
+                <div className="text-lg font-mono font-bold text-[#FFB800]">
+                  03
+                </div>
+                <div className="text-xs font-mono text-white/60">/03</div>
+              </motion.div>
+            </div>
+
+            {/* DESTINATION (질문/카테고리명) */}
+            <div className="col-span-4 flex items-center">
+              <div>
+                <div className="text-white font-mono font-bold text-lg">
+                  Lv.{levelOption.level} {levelOption.label}
+                </div>
+                <div className="text-white/60 font-mono text-sm">
+                  {levelOption.description}
+                </div>
+                <div className="text-white/40 font-mono text-xs">
+                  {levelOption.detail}
+                </div>
+              </div>
+            </div>
+
+            {/* GATE (선택된 옵션 개수) */}
+            <div className="col-span-2 flex items-center justify-center">
+              <motion.div
+                animate={{ scale: isSelected ? [1, 1.2, 1] : 1 }}
+                transition={{ duration: 0.3 }}
+                className="text-center"
+              >
+                <div className={`text-xl font-mono font-bold ${
+                  isSelected ? 'text-[#FFB800]' : 'text-white/40'
+                }`}>
+                  {isSelected ? '✓' : '-'}
+                </div>
+              </motion.div>
+            </div>
+
+            {/* STATUS (현재 상태) */}
+            <div className="col-span-2 flex items-center justify-center">
+              <motion.div
+                animate={{ rotateX: isSelected ? [0, 90, 0] : 0 }}
+                transition={{ duration: 0.3 }}
+                className="px-3 py-1 rounded bg-[#FFB800]/20"
+              >
+                <span className={`font-mono text-sm font-bold ${
+                  isSelected ? 'text-[#FFB800]' : 'text-white/60'
+                }`}>
+                  {isSelected ? 'SELECTED' : 'WAITING'}
+                </span>
+              </motion.div>
+            </div>
+
+            {/* REMARKS (현재 상태 세부) */}
+            <div className="col-span-3 flex items-center">
+              <div className="text-white/80 font-mono text-sm">
+                {isSelected ? '맞춤 AI 분석 준비됨' : '레벨 선택하기'}
+              </div>
+            </div>
+          </motion.div>
+        );
+      })}
+
+      {/* COMPLETE 행 */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="grid grid-cols-12 gap-4 px-8 py-6 border-b-2 border-[#FFB800]/30 bg-[#FFB800]/5"
+      >
+        {/* STEP */}
+        <div className="col-span-1 flex items-center justify-center">
+          <div className="text-lg font-mono font-bold text-[#FFB800]">
+            ✓
           </div>
-          <p className="text-center text-sm text-gray-500 mt-3">3 / 3</p>
         </div>
 
-        {/* 메인 콘텐츠 */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 p-8 md:p-12">
-          {/* 헤더 */}
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-              <span className="text-3xl">🤖</span>
+        {/* DESTINATION */}
+        <div className="col-span-4 flex items-center">
+          <div>
+            <div className="text-white font-mono font-bold text-lg">
+              온보딩 완료
             </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-3">
-              AI 레벨을 선택해주세요
-            </h2>
-            <p className="text-gray-600 text-lg">
-              어떤 수준의 설명을 원하시나요?
-            </p>
+            <div className="text-white/60 font-mono text-sm">
+              30일 무료 체험 시작
+            </div>
+          </div>
+        </div>
+
+        {/* GATE */}
+        <div className="col-span-2 flex items-center justify-center">
+          <div className="text-xl font-mono font-bold text-[#FFB800]">
+            {selectedLevel ? `Lv.${selectedLevel}` : '-'}
+          </div>
+        </div>
+
+        {/* STATUS */}
+        <div className="col-span-2 flex items-center justify-center">
+          <div className="px-3 py-1 rounded bg-green-600/20">
+            <span className="font-mono text-sm font-bold text-green-400">
+              READY
+            </span>
+          </div>
+        </div>
+
+        {/* REMARKS */}
+        <div className="col-span-3 flex items-center justify-end">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleComplete}
+            disabled={!selectedLevel || isSubmitting}
+            className={`px-6 py-2 font-mono font-bold text-sm rounded transition-all duration-200 border-2 ${
+              selectedLevel && !isSubmitting
+                ? 'bg-[#FFB800] border-[#FFB800] text-black hover:bg-[#FFB800]/90'
+                : 'bg-gray-600 border-gray-500 text-gray-400 cursor-not-allowed'
+            }`}
+          >
+            {isSubmitting ? '처리 중...' : '출발하기 ▶'}
+          </motion.button>
+        </div>
+      </motion.div>
+
+      {/* 하단 네비게이션 */}
+      <div className="px-8 py-6 border-t border-[#FFB800]/20 bg-black/20">
+        <div className="flex items-center justify-between">
+          {/* BACK 버튼 */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleBack}
+            disabled={isSubmitting}
+            className="px-6 py-3 bg-[#FFB800]/20 hover:bg-[#FFB800]/30 border-2 border-[#FFB800] text-[#FFB800] font-mono font-bold text-sm rounded transition-all duration-200 disabled:opacity-50"
+          >
+            ◀ BACK
+          </motion.button>
+
+          {/* 선택 상태 표시 */}
+          <div className="text-center">
+            <div className="text-white/60 font-mono text-sm mb-1">
+              AI LEVEL: {selectedLevel ? `Lv.${selectedLevel}` : 'NOT SELECTED'}
+            </div>
+            {!selectedLevel && (
+              <div className="text-red-400 font-mono text-xs animate-pulse">
+                AI 레벨 선택 필요
+              </div>
+            )}
           </div>
 
-          {/* 레벨 선택 카드 */}
-          <div className="space-y-4 mb-10">
-            {levels.map((levelOption) => (
-              <button
-                key={levelOption.level}
-                onClick={() => setSelectedLevel(levelOption.level)}
-                className={`w-full p-6 rounded-xl border-2 transition-all duration-200 text-left ${
-                  selectedLevel === levelOption.level
-                    ? "border-blue-500 bg-blue-50 shadow-md scale-105"
-                    : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
-                }`}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="text-4xl">{levelOption.icon}</div>
-                  <div className="flex-1">
-                    <div className="text-xl font-bold text-gray-900 mb-1">
-                      Lv.{levelOption.level} {levelOption.label}
-                    </div>
-                    <div className="text-base text-gray-700 mb-2">
-                      {levelOption.description}
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      {levelOption.detail}
-                    </div>
-                  </div>
-                  {selectedLevel === levelOption.level && (
-                    <div className="text-blue-600">
-                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-              </button>
-            ))}
+          {/* 상태 표시 */}
+          <div className="text-right">
+            <div className="text-white/60 font-mono text-sm">
+              FINAL STEP
+            </div>
+            <div className="text-[#FFB800] font-mono text-xs">
+              FREE TRIAL READY
+            </div>
           </div>
-
-          {/* 버튼 */}
-          <div className="flex justify-between items-center">
-            <button
-              onClick={handleBack}
-              disabled={isSubmitting}
-              className="px-6 py-3 rounded-xl border-2 border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-all duration-200 disabled:opacity-50"
-            >
-              이전
-            </button>
-
-            <button
-              onClick={handleComplete}
-              disabled={!selectedLevel || isSubmitting}
-              className={`px-8 py-3 rounded-xl font-medium transition-all duration-200 shadow-md ${
-                selectedLevel && !isSubmitting
-                  ? "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg"
-                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
-              }`}
-            >
-              {isSubmitting ? "처리 중..." : "시작하기"}
-            </button>
-          </div>
-
-          {!selectedLevel && (
-            <p className="text-center text-sm text-gray-500 mt-4">
-              AI 레벨을 선택해주세요
-            </p>
-          )}
         </div>
       </div>
     </div>

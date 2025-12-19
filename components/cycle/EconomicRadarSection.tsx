@@ -9,7 +9,7 @@ const ECONOMIC_DATA = {
   spread: "-0.15%",
   unemployment: "3.9%",
   exchange: "1,340 KRW",
-  currentPhase: "회복기 감지됨. 인플레이션 안정화 중.",
+  currentPhase: "경기는 아직 크게 나쁘진 않지만, 돈의 흐름은 이미 '조심 모드'로 들어가 있어서 불안 신호가 켜짐",
   metrics: {
     yield_curve: {
       value: -0.15,

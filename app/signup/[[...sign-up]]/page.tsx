@@ -4,6 +4,7 @@ import Link from "next/link";
 import { SignUp, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
 
 export default function SignupPage() {
   const { user, isLoaded } = useUser();
@@ -90,7 +91,9 @@ export default function SignupPage() {
                 socialButtonsBlockButtonArrow: 'text-gray-500',
                 formFieldInput: 'rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 h-12',
                 formFieldLabel: 'text-gray-700 font-medium mb-2 block',
-                footerActionLink: 'text-blue-600 hover:text-blue-700 font-medium hover:underline',
+                footerActionLink: 'hidden',
+                footer: 'hidden',
+                signInLink: 'hidden',
                 dividerLine: 'bg-gray-200',
                 dividerText: 'text-gray-500 text-sm font-medium',
                 formFieldInputShowPasswordButton: 'text-gray-500 hover:text-gray-700',
@@ -112,17 +115,9 @@ export default function SignupPage() {
               },
             }}
           />
+
         </div>
 
-        {/* 푸터 */}
-        <div className="text-center mt-6">
-          <p className="text-sm text-gray-500">
-            이미 계정이 있으신가요?{" "}
-            <Link href="/login" className="text-blue-600 hover:text-blue-700 font-medium">
-              로그인
-            </Link>
-          </p>
-        </div>
       </div>
     </div>
   );

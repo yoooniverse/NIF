@@ -7,6 +7,7 @@ interface NewsCardProps {
   id: string;
   title: string;
   category: string;
+  categorySlug?: string; // 카테고리 slug (뒤로가기 시 유지용)
   publishedAt: string;
   summary?: string;
   isWhite?: boolean;
@@ -17,6 +18,7 @@ export default function NewsCard({
   id,
   title,
   category,
+  categorySlug,
   publishedAt,
   summary,
   isWhite = false,
@@ -25,9 +27,17 @@ export default function NewsCard({
   const router = useRouter();
 
   const handleClick = () => {
-    // 뉴스 상세 페이지로 이동
-    console.info('[NEWS_CARD] click:', { id, title, fromPage, category });
-    const url = fromPage ? `/news/${id}?from=${fromPage}&category=${encodeURIComponent(category)}` : `/news/${id}`;
+    // 뉴스 상세 페이지로 이동 (카테고리 slug 포함하여 뒤로가기 시 유지)
+    console.info('[NEWS_CARD] click:', { id, title, fromPage, category, categorySlug });
+    
+    // URL 쿼리 파라미터 구성
+    const params = new URLSearchParams();
+    if (fromPage) params.set('from', fromPage);
+    if (categorySlug) params.set('categorySlug', categorySlug);
+    if (category) params.set('category', category);
+    
+    const queryString = params.toString();
+    const url = queryString ? `/news/${id}?${queryString}` : `/news/${id}`;
     router.push(url);
   };
 

@@ -11,9 +11,19 @@ export default function AboutPage() {
   console.log("📄 상세 페이지 로드됨 - Apple 디자인 스타일");
 
   return (
-    <div className="min-h-screen bg-white overflow-x-hidden">
-      {/* 네비게이션 헤더 - 비행기 티켓 디자인 */}
-      <nav className="sticky top-0 z-50 bg-sky-100/95 backdrop-blur-xl border-b border-sky-200/50">
+    <div
+      className="min-h-screen overflow-x-hidden bg-cover bg-center bg-no-repeat relative"
+      style={{
+        backgroundImage: "url('/textures/airport-night.png.png')"
+      }}
+    >
+      {/* 어두운 오버레이로 텍스트 가독성 확보 */}
+      <div className="absolute inset-0 bg-black/40"></div>
+
+      {/* 내용 컨테이너 */}
+      <div className="relative z-10">
+        {/* 네비게이션 헤더 - 비행기 티켓 디자인 */}
+        <nav className="sticky top-0 z-50 bg-sky-100/95 backdrop-blur-xl border-b border-sky-200/50">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             {/* 티켓 스타일 왼쪽 정보 */}
@@ -105,6 +115,7 @@ export default function AboutPage() {
             지금 시작하기
           </Button>
         </Link>
+      </div>
       </div>
     </div>
   );
