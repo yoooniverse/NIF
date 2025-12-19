@@ -1,8 +1,8 @@
 # News In Flight - Development TODO List
 
 > 개발 기간: 33일 (2025.12.11 ~ 2026.01.13)
-> 현재: 2025.12.18 (Week 2, Day 1) - In Flight Map 대시보드 및 뉴스 시스템 완성
-> 진행률: Week 1 100% 완료, Week 2 75% 진행 중, Week 3 준비 중
+> 현재: 2025.12.19 (Week 2, Day 2) - In Flight Map 대시보드 및 뉴스 시스템 완성
+> 진행률: Week 1 100% 완료, Week 2 80% 진행 중, Week 3 준비 중
 > 우선순위: v1 (필수) → v2 (선택) → v3 (Post-Launch)
 
 ---
@@ -84,6 +84,7 @@
   - [x] Clerk 프로젝트 생성
   - [x] 환경 변수 설정
   - [x] `middleware.ts` 생성 (인증 라우트 보호)
+  - [x] `lib/auth-middleware.ts` 인증 헬퍼 생성
   - [x] `app/layout.tsx`에 ClerkProvider 추가
   - [ ] 소셜 로그인 설정 (구글, 카카오)
   - [x] 한국어 로컬라이제이션 설정
@@ -271,16 +272,16 @@
   - [x] 이달의 뉴스 페이지 뉴스 카드 흰색으로 변경
   - [x] NewsCard 컴포넌트 `fromPage` prop 추가 (페이지 구분용)
 
-- [ ] **뉴스 API**
+- [x] **뉴스 API**
 
-  - [ ] GET `/api/news` (뉴스 목록)
-    - [ ] Query: user_id, date, category, limit
-    - [ ] 사용자 맞춤 필터링 (관심사 기반)
-    - [ ] 페이지네이션
-  - [ ] GET `/api/news/monthly` (월간 뉴스)
-    - [ ] Query: user_id, month, interests
-    - [ ] 관심사 기반 월간 뉴스 필터링
-    - [ ] 정렬: 최신순
+  - [x] GET `/api/news` (뉴스 목록)
+    - [x] Query: user_id, date, category, limit
+    - [x] 사용자 맞춤 필터링 (관심사 기반)
+    - [x] 페이지네이션
+  - [x] GET `/api/news/monthly` (월간 뉴스)
+    - [x] Query: user_id, month, interests
+    - [x] 관심사 기반 월간 뉴스 필터링
+    - [x] 정렬: 최신순
 
 ### Day 11-13: 뉴스 상세 (F5) ✅ 완전 구현 완료
 
@@ -335,11 +336,11 @@
   - [x] 카테고리 이름 통일 (주식, 가상화폐, 환율, ETF, 부동산)
   - [x] 뉴스 제목 및 분석 내용 각 카테고리에 맞게 업데이트
 
-- [ ] **뉴스 상세 API**
+- [x] **뉴스 상세 API**
 
-  - [ ] GET `/api/news/[id]` (뉴스 상세)
-    - [ ] 사용자 레벨 기반 분석 필터링
-    - [ ] 구독 상태 확인 (`should_blur` 계산)
+  - [x] GET `/api/news/[id]` (뉴스 상세)
+    - [x] 사용자 레벨 기반 분석 필터링
+    - [x] 구독 상태 확인 (`should_blur` 계산)
     - [ ] 원문 404 에러 핸들링
 
 - [x] **Paywall 컴포넌트**
@@ -350,16 +351,16 @@
 
 ### Day 14: v1 중간 테스트
 
-- [ ] **기능 테스트**
+- [x] **기능 테스트**
 
-  - [ ] 회원가입 → 온보딩 → 대시보드 플로우
-  - [ ] 뉴스 목록 → 상세 플로우
-  - [ ] 관심사별 필터링
-  - [ ] AI 레벨별 분석 표시
+  - [x] 회원가입 → 온보딩 → 대시보드 플로우
+  - [x] 뉴스 목록 → 상세 플로우
+  - [x] 관심사별 필터링
+  - [x] AI 레벨별 분석 표시
 
 - [ ] **UI/UX 검증**
 
-  - [ ] 반응형 디자인 (모바일 웹)
+  - [x] 반응형 디자인 (모바일 웹)
   - [ ] 로딩 상태
   - [ ] 에러 메시지
   - [ ] 빈 상태 (Empty State)
@@ -843,9 +844,17 @@
 ### ✅ 완료된 컴포넌트
 
 - `app/dashboard/page.tsx` - Korean Air 스타일 대시보드
-- `components/dashboard/CabinWindow.tsx` - 세로형 캡슐 창문 (3중 베젤 + 손잡이)
+- `components/dashboard/GlobeCanvas.tsx` - 3D 지구 기반 배경 시스템
 - `components/dashboard/NewsCard.tsx` - 뉴스 카드 컴포넌트
 - `components/landing/` - 랜딩 페이지 컴포넌트들 (InFlightEarth 등)
+- `components/news/` - 뉴스 상세 페이지 컴포넌트들
+- `lib/auth-middleware.ts` - 인증 헬퍼 미들웨어
+
+### ✅ 완료된 API
+
+- `app/api/news/route.ts` - 뉴스 목록 API
+- `app/api/news/[id]/route.ts` - 뉴스 상세 API
+- `app/api/onboarding/complete/route.ts` - 온보딩 완료 API
 
 ### 🔄 다음 단계 (Week 3)
 
