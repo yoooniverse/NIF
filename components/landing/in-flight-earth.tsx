@@ -21,12 +21,13 @@ console.log("  - 카메라: [0, 2.5, 6.5] (낮은 각도, 카메라 흔들림 �
 // 🌍 회전하는 지구 메시
 interface EarthMeshProps {
   radius: number;
+  onLoad?: () => void;
 }
 
-function RotatingEarth({ radius }: EarthMeshProps) {
+function RotatingEarth({ radius, onLoad }: EarthMeshProps) {
   const groupRef = useRef<THREE.Group>(null);
   const cloudsRef = useRef<THREE.Mesh>(null);
-  
+
   // 텍스처 로드 (Day, Night-Lights, Cloud) - 고성능 최적화 설정
   const [dayTexture, nightTexture, cloudTexture] = useTexture([
     '/textures/earth-day.png',
@@ -41,9 +42,11 @@ function RotatingEarth({ radius }: EarthMeshProps) {
       texture.wrapS = THREE.ClampToEdgeWrapping;
       texture.wrapT = THREE.ClampToEdgeWrapping;
       // 텍스처 크기 제한으로 메모리 절약
+      // 텍스처 크기 제한으로 메모리 절약
       if (texture.image) {
+        const img = texture.image as HTMLImageElement;
         const maxSize = 512; // 최대 512x512로 제한
-        if (texture.image.width > maxSize || texture.image.height > maxSize) {
+        if (img.width > maxSize || img.height > maxSize) {
           texture.needsUpdate = true;
         }
       }
@@ -143,7 +146,7 @@ function FallbackEarth({ radius }: EarthMeshProps) {
 }
 
 // 🎬 메인 씬 - 뉴스 페이지 스타일 적용
-function Scene() {
+function Scene({ onLoad }: { onLoad?: () => void }) {
   useEffect(() => {
     console.log("🎬 Flight Window Style 씬 초기화 완료");
     console.log("📐 지구: [0, -3.4, 0], 반지름: 2.8, 뉴스 페이지 스타일 회전");
@@ -170,7 +173,7 @@ function Scene() {
       {/* 🌍 회전하는 지구 - Low Angle 위치 */}
       <group position={[0, -3.4, 0]}>
         <Suspense fallback={<FallbackEarth radius={EARTH_RADIUS} />}>
-          <RotatingEarth radius={EARTH_RADIUS} />
+          <RotatingEarth radius={EARTH_RADIUS} onLoad={onLoad} />
         </Suspense>
       </group>
 
@@ -238,7 +241,7 @@ export function InFlightEarth({ className = "", onLoad }: InFlightEarthProps) {
           camera.lookAt(0, 0, 0);
         }}
       >
-        <Scene />
+        <Scene onLoad={onLoad} />
       </Canvas>
 
       {/* 비네팅 효과 (가장자리 어둡게) - 시네마틱한 느낌 강화 */}
