@@ -124,11 +124,11 @@ async function handleGet(request: NextRequest, userId: string): Promise<Response
       title: item.title,
       category: item.metadata?.category || "기타",
       published_at: item.published_at,
-      analysis: item.news_analysis_levels ? {
-        level: item.news_analysis_levels.level,
-        easy_title: item.news_analysis_levels.easy_title,
-        summary: item.news_analysis_levels.summary,
-        worst_scenario: item.news_analysis_levels.worst_scenario,
+      analysis: item.news_analysis_levels && item.news_analysis_levels[0] ? {
+        level: item.news_analysis_levels[0].level,
+        easy_title: item.news_analysis_levels[0].easy_title,
+        summary: item.news_analysis_levels[0].summary,
+        worst_scenario: item.news_analysis_levels[0].worst_scenario,
         should_blur: !subscription.active // 무료 체험 중이 아니면 블러 처리
       } : undefined
     }));
