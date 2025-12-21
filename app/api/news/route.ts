@@ -46,12 +46,30 @@ async function handleGet(request: NextRequest, userId: string): Promise<Response
 
     console.log(`[API] 쿼리 파라미터 - date: ${date}, category: ${category}, limit: ${limit}`);
 
-    // 사용자 프로필 조회 (AI 레벨 확인)
-    const { data: profile, error: profileError } = await supabase
-      .from("user_profiles")
-      .select("level")
-      .eq("user_id", userId)
-      .single();
+    // 1. 독립적인 데이터 병렬 조회 (Promise.all)
+    const [
+      { data: profile, error: profileError },
+      { data: userInterests },
+      subscription
+    ] = await Promise.all([
+      // A. 사용자 레벨 조회
+      supabase
+        .from("user_profiles")
+        .select("level")
+        .eq("user_id", userId)
+        .single(),
+
+      // B. 사용자 관심사 조회
+      supabase
+        .from("user_interests")
+        .select(`
+          interests!inner(slug)
+        `)
+        .eq("user_id", userId),
+
+      // C. 구독 상태 확인
+      checkSubscription(userId)
+    ]);
 
     if (profileError) {
       console.error("사용자 프로필 조회 실패:", profileError);
@@ -59,14 +77,6 @@ async function handleGet(request: NextRequest, userId: string): Promise<Response
     }
 
     const userLevel = profile?.level || 2;
-
-    // 사용자 관심사 조회
-    const { data: userInterests } = await supabase
-      .from("user_interests")
-      .select(`
-        interests!inner(slug)
-      `)
-      .eq("user_id", userId);
 
     // 관심사 슬러그 목록 추출
     const interestSlugs = userInterests?.map(ui => (ui.interests as any).slug) || [];
@@ -110,13 +120,10 @@ async function handleGet(request: NextRequest, userId: string): Promise<Response
       // 오류 발생 시 빈 배열 반환
       const emptyResponse: NewsListResponse = {
         news: [],
-        subscription: await checkSubscription(userId)
+        subscription // 이미 조회됨
       };
       return Response.json(emptyResponse);
     }
-
-    // 구독 상태 확인
-    const subscription = await checkSubscription(userId);
 
     // 응답 데이터 구성
     const news: NewsListItem[] = (newsData || []).map(item => ({

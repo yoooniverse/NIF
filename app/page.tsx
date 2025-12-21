@@ -1,11 +1,26 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
-import { SpaceBackground } from "@/components/landing/space-background";
-import { LazyEarth } from "@/components/landing/lazy-earth";
 import { ArrowRight, LogIn } from "lucide-react";
 import { SignInButton } from "@clerk/nextjs";
+
+const SpaceBackground = dynamic(
+  () => import("@/components/landing/space-background").then((mod) => mod.SpaceBackground),
+  {
+    ssr: false,
+    loading: () => <div className="absolute inset-0 bg-[#050814]" />
+  }
+);
+
+const LazyEarth = dynamic(
+  () => import("@/components/landing/lazy-earth").then((mod) => mod.LazyEarth),
+  {
+    ssr: false,
+    loading: () => <div className="absolute inset-0 bg-[#050814]" />
+  }
+);
 
 export default function LandingPage() {
   console.log("🌍 랜딩 페이지 로드됨 - Hero Section Only");
@@ -37,7 +52,7 @@ export default function LandingPage() {
 
         {/* 메인 카피 (화면 중앙에 부유) */}
         <div className="absolute inset-0 flex flex-col items-center justify-center z-10 px-4 pointer-events-none">
-          <div 
+          <div
             className="text-center space-y-6 md:space-y-8 pointer-events-auto max-w-4xl"
             style={{
               animation: "fade-in-up 1s ease-out 0.3s both",
@@ -76,8 +91,8 @@ export default function LandingPage() {
                 </Button>
               </Link>
               <Link href="/about">
-                <Button 
-                  size="lg" 
+                <Button
+                  size="lg"
                   variant="outline"
                   className="w-full sm:w-auto text-base md:text-lg px-6 md:px-8 py-5 md:py-6 bg-black/80 backdrop-blur-md border-white/20 text-white hover:bg-black hover:border-white/40 transition-all duration-300"
                 >

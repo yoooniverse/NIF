@@ -30,22 +30,27 @@ export function LazyEarth({ className }: LazyEarthProps) {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !hasLoaded) {
-          console.log("🌍 지구 컴포넌트가 뷰포트에 들어옴 - 초기 로딩 대기 중...");
-          
-          // LCP와 초기 렌더링을 위해 2초 딜레이 후 3D 로드 시작
-          setTimeout(() => {
-            console.log("🚀 딜레이 종료 - 프로그레시브 로딩 시작");
+          console.log("🌍 지구 컴포넌트가 뷰포트에 들어옴 - 성능 최적화를 위해 지연 로딩");
+
+          // LCP/TBT 개선을 위해 메인 스레드가 안정된 후 로드 (2s 딜레이)
+          const loadComponent = () => {
             setIsVisible(true);
             setHasLoaded(true);
-          }, 2000); // 2초 딜레이
-          
+          };
+
+          if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+            (window as any).requestIdleCallback(() => setTimeout(loadComponent, 1500));
+          } else {
+            setTimeout(loadComponent, 2000);
+          }
+
           // 관찰 중지
           observer.disconnect();
         }
       },
       {
-        threshold: 0.1, // 10%가 보이면 로딩 시작
-        rootMargin: "100px" // 100px 미리 로딩
+        threshold: 0.1, // 10%가 보이면 로딩 트리거
+        rootMargin: "100px" // 여유 공간
       }
     );
 

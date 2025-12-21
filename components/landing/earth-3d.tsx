@@ -242,3 +242,10 @@ export function Earth3D({ onLoad }: Earth3DProps) {
     </div>
   );
 }
+
+// 텍스처 프리로딩 (병렬 다운로드 유도)
+useTexture.preload([
+  '/textures/earth-day.png',
+  '/textures/earth-lights.jpg',
+  '/textures/earth-cloud.png'
+]);
