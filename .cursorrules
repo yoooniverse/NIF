@@ -1,14 +1,18 @@
 # Cursor Project Rules
 
+light house 개선한 방법
+
 ## 1. Package Manager Enforcement
+
 - **Strictly use `pnpm`** for all package management tasks.
 - **FORBIDDEN**: Do `npm install`, `npm add`, or `yarn`.
-- **ALLOWED**: 
+- **ALLOWED**:
   - `pnpm install`
   - `pnpm add <package>`
   - `pnpm run <script>`
 
 ## 2. Backend Performance Optimization (Data Fetching)
+
 - **Avoid Waterfall Requests**: In Server Components (`page.tsx`, `layout.tsx`) and API Routes (`route.ts`), do **NOT** use serial `await` calls for independent data fetches.
 - **Enforce Parallel Execution**: Always use `Promise.all()` to fetch independent data concurrently.
   - **Bad**:
@@ -18,20 +22,18 @@
     ```
   - **Good**:
     ```typescript
-    const [user, posts] = await Promise.all([
-      getUser(),
-      getPosts()
-    ]);
+    const [user, posts] = await Promise.all([getUser(), getPosts()]);
     ```
 
 ## 3. Frontend Performance & TBT Reduction
+
 - **Lazy Load Heavy Libraries**: Components utilizing heavy client-side libraries (e.g., `Three.js`, `@react-three/fiber`, `Lottie`, `Maps`) must **NOT** be included in the initial bundle.
 - **Use Dynamic Imports**: Strictly use `next/dynamic` for these components.
 - **Disable SSR for Interactive/Visual Heavy Components**: Always set `{ ssr: false }` to prevent server rendering overhead and hydration mismatches for non-SEO critical visual elements.
   - **Example**:
     ```typescript
-    const Heavy3DComponent = dynamic(() => import('./3d-component'), { 
+    const Heavy3DComponent = dynamic(() => import("./3d-component"), {
       ssr: false,
-      loading: () => <div className="placeholder" /> // Always provide a lightweight fallback
+      loading: () => <div className="placeholder" />, // Always provide a lightweight fallback
     });
     ```
