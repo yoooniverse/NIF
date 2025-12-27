@@ -87,6 +87,105 @@ Supabase 대시보드에서 직접 테이블 확인 결과:
 - 관심분야 페이지: 주식, 채권, 부동산... ✅
 - 나의 상황 페이지: 직장인, 학생, 투자 초보자... ✅
 
+## 🔄 오늘 추가 해결 내용 (2024년 12월 27일)
+
+### 1. 사용자 데이터 DB 저장 구현 ✅
+
+**문제 상황**: Clerk 인증 후 Supabase users 테이블에 사용자 정보가 저장되지 않는 문제
+
+**해결 내용**:
+
+- `hooks/use-sync-user.ts` 훅 구현
+- `components/providers/sync-user-provider.tsx` Provider 컴포넌트 생성
+- `app/api/sync-user/route.ts` API 라우트 구현
+- Clerk 사용자 정보를 Supabase users 테이블에 자동 동기화
+
+**기술적 세부사항**:
+
+```typescript
+// use-sync-user.ts
+export function useSyncUser() {
+  const { user: clerkUser } = useUser();
+  const supabase = useSupabaseClient();
+
+  // Clerk → Supabase 동기화 로직
+  const syncUser = async () => {
+    if (!clerkUser) return;
+
+    const { data, error } = await supabase.from("users").upsert({
+      clerk_id: clerkUser.id,
+      name: clerkUser.fullName || clerkUser.username,
+      email: clerkUser.primaryEmailAddress?.emailAddress,
+    });
+
+    if (error) {
+      console.error("사용자 동기화 실패:", error);
+      return { success: false, error };
+    }
+
+    return { success: true, data };
+  };
+
+  return { syncUser };
+}
+```
+
+**결과**: 회원가입 시 자동으로 사용자 데이터가 Supabase DB에 저장됨
+
+### 2. AI 해설 데이터 DB 저장 구현 ✅
+
+**문제 상황**: Claude API로 생성한 뉴스 분석 결과가 DB에 저장되지 않는 문제
+
+**해결 내용**:
+
+- 뉴스 분석 API (`app/api/news/[id]/route.ts`) 수정
+- AI 해설 결과를 `news_analysis_levels` 테이블에 저장
+- 사용자 레벨별 분석 필터링 구현
+
+**기술적 세부사항**:
+
+```typescript
+// 뉴스 상세 API에서 AI 분석 저장 로직
+const saveAnalysisToDB = async (newsId: number, analysis: NewsAnalysis) => {
+  const { data, error } = await supabase.from("news_analysis_levels").insert({
+    news_id: newsId,
+    level: analysis.level,
+    easy_title: analysis.easy_title,
+    summary: analysis.summary,
+    worst_scenario: analysis.worst_scenario,
+    user_action_tip: analysis.user_action_tip,
+    created_at: new Date().toISOString(),
+  });
+
+  if (error) {
+    console.error("AI 분석 저장 실패:", error);
+    throw error;
+  }
+
+  return data;
+};
+```
+
+**결과**: Claude API 분석 결과가 DB에 정상 저장되어 뉴스 상세 페이지에서 표시됨
+
+### 3. 크리티컬 버그 식별 및 우선순위 설정
+
+**발견된 버그들**:
+
+1. **🔴 CRITICAL**: 관심분야 카테고리별 뉴스 필터링 버그
+
+   - 증상: 카테고리 클릭 시 해당 뉴스가 표시되지 않음
+   - 영향: 사용자 경험 심각 저하
+
+2. **🔶 온보딩 로딩 화면 이상 현상**
+   - 증상: 로딩 화면 표시 불안정
+   - 원인: Lighthouse 성능 문제 가능성
+
+**다음 디버깅 우선순위**:
+
+1. 뉴스 카테고리 필터링 버그 (사용자 경험 직접 영향)
+2. 온보딩 로딩 화면 개선 (성능 최적화)
+
 ## 🎓 교훈 및 개선 방안
 
 ### 1. 데이터베이스 명명 규칙 강화
@@ -166,16 +265,47 @@ END $$;
    - 코드 리뷰 시 데이터베이스 스키마 검토 의무화
    - 마이그레이션 파일 리뷰 강화
 
-## 🏁 결론
+## 🏁 결론 및 전체 진행 상황
+
+### 온보딩 테이블 문제 해결 ✅
 
 **문제**: 데이터베이스 테이블 이름이 서로 바뀌어 있어 온보딩 데이터가 잘못 표시됨
 
 **해결**: Supabase 대시보드에서 테이블 이름을 올바르게 교환
 
-**예방**: 향후 데이터베이스 스키마 변경 시 철저한 검증 프로세스 적용
+**결과**: 온보딩 플로우 정상 작동
+
+### 오늘 추가 해결 내용 ✅
+
+1. **사용자 데이터 자동 동기화 구현**
+
+   - Clerk → Supabase users 테이블 자동 저장
+   - 온보딩 완료 시 데이터 일관성 확보
+
+2. **AI 뉴스 분석 DB 저장 구현**
+
+   - Claude API 분석 결과 자동 저장
+   - 뉴스 상세 페이지에서 AI 해설 표시 가능
+
+3. **크리티컬 버그 식별**
+   - 뉴스 카테고리 필터링 문제 발견
+   - 온보딩 로딩 화면 개선 필요성 확인
+
+### 현재 프로젝트 상태 (Week 2, Day 14)
+
+- ✅ Week 1: 100% 완료 (프로젝트 셋업 + 기본 인증)
+- 🔄 Week 2: 98% 진행 중 (2건 크리티컬 버그 잔존)
+- 🔄 Week 3: 20% 진행 중 (경제 순환기 시스템)
+
+### 다음 단계 우선순위
+
+1. **🔴 CRITICAL**: 뉴스 카테고리 필터링 버그 해결
+2. **🔶 온보딩 로딩 화면 성능 개선**
+3. **경제 순환기 FRED API 연동**
 
 ---
 
 _디버깅 담당: AI Assistant_
-_해결 일시: 2024년 12월 27일_
-_문제 심각도: 중간 (사용자 경험 영향)_
+_최초 문제 해결 일시: 2024년 12월 27일_
+_추가 작업 완료 일시: 2024년 12월 27일_
+_전체 문제 심각도: 중간 → 해결됨 (사용자 경험 영향)_
