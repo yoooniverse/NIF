@@ -1,8 +1,8 @@
 # News In Flight - Development TODO List
 
 > 개발 기간: 33일 (2025.12.11 ~ 2026.01.13)
-> 현재: 2025.12.19 (Week 2, Day 2) - In Flight Map 대시보드 및 뉴스 시스템 완성
-> 진행률: Week 1 100% 완료, Week 2 80% 진행 중, Week 3 준비 중
+> 현재: 2025.12.27 (Week 2, Day 14) - 버그 수정 및 디버깅 중
+> 진행률: Week 1 100% 완료, Week 2 98% 진행 중 (크리티컬 버그 2건 잔존), Week 3 20% 진행 중
 > 우선순위: v1 (필수) → v2 (선택) → v3 (Post-Launch)
 
 ---
@@ -172,7 +172,7 @@
   - [x] `hooks/use-sync-user.ts` 생성
   - [x] `components/providers/sync-user-provider.tsx` 생성
   - [x] `app/api/sync-user/route.ts` 생성
-  - [x] Clerk → Supabase `users` 테이블 자동 동기화
+  - [x] Clerk → Supabase `users` 테이블 자동 동기화 ✅ **사용자 데이터 DB 저장 완료**
 
 - [x] **온보딩 플로우 (F2)**
 
@@ -335,6 +335,7 @@
   - [x] 뉴스 리스트의 모든 뉴스(1-6번)에 대한 상세 데이터 추가
   - [x] 카테고리 이름 통일 (주식, 가상화폐, 환율, ETF, 부동산)
   - [x] 뉴스 제목 및 분석 내용 각 카테고리에 맞게 업데이트
+  - [x] **AI 해설 데이터 DB 저장 완료** - Claude API 분석 결과 Supabase DB에 저장됨
 
 - [x] **뉴스 상세 API**
 
@@ -358,21 +359,25 @@
   - [x] 관심사별 필터링
   - [x] AI 레벨별 분석 표시
 
-- [ ] **UI/UX 검증**
+- [x] **UI/UX 검증** ✅ 디자인 완료
 
-  - [ ] 반응형 디자인 (모바일 웹)
-  - [ ] 로딩 상태
-  - [ ] 에러 메시지
-  - [ ] 빈 상태 (Empty State)
+  - [x] 반응형 디자인 (모바일 웹)
+  - [x] 로딩 상태
+  - [x] 에러 메시지
+  - [x] 빈 상태 (Empty State)
 
-- [ ] **버그 수정**
+- [ ] **버그 수정 및 디버깅**
   - [ ] 발견된 버그 목록 작성
   - [ ] 우선순위 분류
   - [ ] 크리티컬 버그 즉시 수정
+  - [ ] 상세페이지 약간 수정
+  - [ ] 웹사이트 페이지 순서 이상하게 바뀌는 문제 수정
+  - [ ] **🔴 CRITICAL: 관심분야 카테고리별 뉴스 필터링 버그** - 카테고리 클릭 시 해당 뉴스가 표시되지 않는 문제 디버깅 필요
+  - [ ] **🔶 온보딩 로딩 화면 이상 현상** - Lighthouse 문제인지 파악하고 디버깅 필요
 
 ---
 
-## Week 3: v1 완성 및 v2 시작 (Day 15-21: 12/25 ~ 12/31) - 다음 우선순위
+## Week 3: v1 완성 및 v2 시작 (Day 15-21: 12/25 ~ 12/31) - 진행 중 (D-19~D-13)
 
 ### Day 15-16: v1 통합 테스트 및 버그 수정
 
@@ -404,22 +409,22 @@
 
 ### Day 17-19: 경제 순환기 지도 (F7 - v2)
 
-- [ ] **FRED API 연동**
+- [ ] **FRED API 연동** 🔄 진행 중 (오늘 완료 목표)
 
-  - [ ] 환경 변수 설정 (`FRED_API_KEY`)
-  - [ ] FRED API 클라이언트 생성 (`lib/fred.ts`)
-  - [ ] 3개 지표 수집 함수
+  - [ ] 환경 변수 설정 (`FRED_API_KEY`) 🔄 진행 중
+  - [ ] FRED API 클라이언트 생성 (`lib/fred.ts`) 🔄 진행 중
+  - [ ] 3개 지표 수집 함수 🔄 진행 중
     - [ ] 장단기 금리차 (T10Y2Y)
     - [ ] 미국 실업률 (UNRATE)
     - [ ] 원/달러 환율 (DEXKOUS)
 
-- [ ] **신호등 색상 로직**
+- [ ] **신호등 색상 로직** 🔄 진행 중 (오늘 완료 목표)
 
-  - [ ] `lib/cycle/determine-status.ts` 생성
-  - [ ] `determineStatusColor()` 함수 구현
+  - [ ] `lib/cycle/determine-status.ts` 생성 🔄 진행 중
+  - [ ] `determineStatusColor()` 함수 구현 🔄 진행 중
     - [ ] 점수 계산 로직
     - [ ] Red/Yellow/Green 결정
-  - [ ] 단위 테스트 작성
+  - [ ] 단위 테스트 작성 🔄 진행 중
 
 - [ ] **DB 스키마 (cycle_explanations)**
 
@@ -441,17 +446,17 @@
   - [ ] DB 저장 로직
   - [ ] 이전 레코드 `is_latest=false` 업데이트
 
-- [ ] **n8n 워크플로우**
+- [ ] **n8n 워크플로우** 🔄 진행 중 (기본 구조 완료, 테스트 및 자동화 진행 중)
 
-  - [ ] n8n 설치 및 설정
-  - [ ] 워크플로우 생성
-    - [ ] Cron Trigger (매일 09:00)
-    - [ ] FRED API 호출
-    - [ ] 신호등 색상 계산
-    - [ ] Claude API 호출
-    - [ ] Supabase에 저장
-  - [ ] 에러 핸들링 및 재시도 로직
-  - [ ] 관리자 이메일 알림 (실패 시)
+  - [x] n8n 설치 및 설정 ✅ 완료
+  - [x] 워크플로우 생성 ✅ 기본 구조 완료
+    - [x] Cron Trigger (매일 09:00) ✅ 설정 완료
+    - [ ] FRED API 호출 🔄 진행 중
+    - [ ] 신호등 색상 계산 🔄 진행 중
+    - [ ] Claude API 호출 🔄 진행 중
+    - [ ] Supabase에 저장 🔄 진행 중
+  - [ ] 에러 핸들링 및 재시도 로직 🔄 진행 중
+  - [ ] 관리자 이메일 알림 (실패 시) 🔄 진행 중
 
 - [ ] **경제 순환기 API**
   - [ ] GET `/api/cycle/current` (최신 데이터)
@@ -853,8 +858,9 @@
 ### ✅ 완료된 API
 
 - `app/api/news/route.ts` - 뉴스 목록 API
-- `app/api/news/[id]/route.ts` - 뉴스 상세 API
+- `app/api/news/[id]/route.ts` - 뉴스 상세 API ✅ **AI 해설 DB 저장 완료**
 - `app/api/onboarding/complete/route.ts` - 온보딩 완료 API
+- `app/api/sync-user/route.ts` - 사용자 동기화 API ✅ **사용자 데이터 DB 저장 완료**
 
 ### 🔄 다음 단계 (Week 3)
 

@@ -3,29 +3,58 @@
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useUser } from "@clerk/nextjs";
+import { useClerkSupabaseClient } from "@/lib/supabase/clerk-client";
+import { Database } from "@/database.types";
 
 export default function OnboardingInterestsPage() {
   const router = useRouter();
+  const { user, isLoaded } = useUser();
+  const supabase = useClerkSupabaseClient();
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const [interests, setInterests] = useState<Database['public']['Tables']['interests']['Row'][]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     console.log("[ONBOARDING_INTERESTS] 관심 자산 선택 페이지 진입");
 
-    // 로컬 스토리지에서 기존 선택사항 불러오기
-    const saved = localStorage.getItem('onboarding_interests');
-    if (saved) {
-      setSelectedInterests(JSON.parse(saved));
-    }
-  }, []);
+    if (!isLoaded) return;
 
-  // PRD에 명시된 관심 자산
-  const interests = [
-    { id: "real-estate", label: "부동산" },
-    { id: "crypto", label: "가상화폐" },
-    { id: "etf", label: "ETF" },
-    { id: "stock", label: "주식" },
-    { id: "exchange-rate", label: "환율" },
-  ];
+    if (!user) {
+      console.log("[ONBOARDING_INTERESTS] 사용자가 로그인되지 않음");
+      router.push('/login');
+      return;
+    }
+
+    // 데이터베이스에서 interests 불러오기
+    const loadInterests = async () => {
+      try {
+        console.log("[ONBOARDING_INTERESTS] 데이터베이스에서 interests 불러오기");
+
+        const { data: interestsData, error } = await supabase
+          .from('interests')
+          .select('*')
+          .order('created_at', { ascending: true });
+
+        if (error) {
+          console.error("[ONBOARDING_INTERESTS] interests 불러오기 실패:", error);
+          return;
+        }
+
+        console.log("[ONBOARDING_INTERESTS] 불러온 interests:", interestsData);
+        setInterests(interestsData || []);
+
+      } catch (error) {
+        console.error("[ONBOARDING_INTERESTS] interests 로딩 중 에러:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadInterests();
+  }, [router, user, isLoaded]);
+
+  // interests는 데이터베이스에서 불러옴
 
   const toggleInterest = (interestId: string) => {
     console.log("[ONBOARDING_INTERESTS] 관심사 토글:", interestId);
@@ -45,14 +74,22 @@ export default function OnboardingInterestsPage() {
     console.log("[ONBOARDING_INTERESTS] 선택 완료, 다음 단계로 이동");
     console.log("[ONBOARDING_INTERESTS] 선택된 관심사:", selectedInterests);
 
-    // 로컬 스토리지에 임시 저장
-    localStorage.setItem('onboarding_interests', JSON.stringify(selectedInterests));
+    // 세션 스토리지에 임시 저장 (온보딩 마지막에 DB 저장)
+    sessionStorage.setItem('onboarding_interests', JSON.stringify(selectedInterests));
     router.push('/onboarding/contexts');
   };
 
   const handleBack = () => {
     router.back();
   };
+
+  if (loading) {
+    return (
+      <div className="w-full flex items-center justify-center py-20">
+        <div className="text-white/60 font-mono">관심사 데이터를 불러오는 중...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
@@ -89,7 +126,7 @@ export default function OnboardingInterestsPage() {
             <div className="col-span-4 flex items-center">
               <div>
                 <div className="text-white font-mono font-bold text-lg">
-                  {interest.label}
+                  {interest.name}
                 </div>
               </div>
             </div>

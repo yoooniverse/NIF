@@ -12,15 +12,15 @@ export default function OnboardingLevelPage() {
   useEffect(() => {
     console.log("[ONBOARDING_LEVEL] AI 레벨 선택 페이지 진입");
 
-    // 로컬 스토리지에서 기존 선택사항 불러오기
-    const saved = localStorage.getItem('onboarding_level');
+    // 세션 스토리지에서 기존 선택사항 불러오기
+    const saved = sessionStorage.getItem('onboarding_level');
     if (saved) {
       setSelectedLevel(parseInt(saved));
     }
 
     // 이전 단계 확인
-    const interests = localStorage.getItem('onboarding_interests');
-    const contexts = localStorage.getItem('onboarding_contexts');
+    const interests = sessionStorage.getItem('onboarding_interests');
+    const contexts = sessionStorage.getItem('onboarding_contexts');
     if (!interests || !contexts) {
       console.log("[ONBOARDING_LEVEL] 이전 단계 미완료 - 관심사 페이지로 이동");
       router.push('/onboarding/interests');
@@ -54,7 +54,7 @@ export default function OnboardingLevelPage() {
 
     // 현재 선택사항 저장
     if (selectedLevel) {
-      localStorage.setItem('onboarding_level', selectedLevel.toString());
+      sessionStorage.setItem('onboarding_level', selectedLevel.toString());
     }
     router.push('/onboarding/contexts');
   };
@@ -69,12 +69,12 @@ export default function OnboardingLevelPage() {
     console.log("[ONBOARDING_LEVEL] 온보딩 완료 처리 시작");
 
     try {
-      // 로컬 스토리지에서 데이터 가져오기 (안전하게 파싱)
+      // 세션 스토리지에서 데이터 가져오기 (안전하게 파싱)
       let interests: string[] = [];
       let contexts: string[] = [];
 
       try {
-        const interestsData = localStorage.getItem('onboarding_interests');
+        const interestsData = sessionStorage.getItem('onboarding_interests');
         interests = interestsData ? JSON.parse(interestsData) : [];
       } catch (e) {
         console.warn("[ONBOARDING_LEVEL] 관심사 데이터 파싱 실패:", e);
@@ -82,7 +82,7 @@ export default function OnboardingLevelPage() {
       }
 
       try {
-        const contextsData = localStorage.getItem('onboarding_contexts');
+        const contextsData = sessionStorage.getItem('onboarding_contexts');
         contexts = contextsData ? JSON.parse(contextsData) : [];
       } catch (e) {
         console.warn("[ONBOARDING_LEVEL] 상황 데이터 파싱 실패:", e);
@@ -111,34 +111,32 @@ export default function OnboardingLevelPage() {
 
         const result = await response.json();
 
-        if (response.ok && result.metadataUpdated) {
-          console.log("[ONBOARDING_LEVEL] Clerk v5 메타데이터 저장 성공:", result);
-        } else if (response.ok && !result.metadataUpdated) {
-          console.warn("[ONBOARDING_LEVEL] 메타데이터 저장 실패했지만 온보딩 진행:", result);
+        if (response.ok) {
+          console.log("[ONBOARDING_LEVEL] 온보딩 완료 처리 성공:", result);
         } else {
           console.error("[ONBOARDING_LEVEL] API 오류 발생:", result);
-          throw new Error('메타데이터 저장 실패');
+          throw new Error('온보딩 완료 처리 실패');
         }
       } catch (apiError) {
         console.error("[ONBOARDING_LEVEL] API 호출 실패:", apiError);
         throw apiError; // API 실패 시 온보딩 중단
       }
 
-      // 로컬 스토리지 클리어 (온보딩 완료 후 정리)
-      console.log("[ONBOARDING_LEVEL] 로컬 스토리지 클리어 전:", {
-        interests: localStorage.getItem('onboarding_interests'),
-        contexts: localStorage.getItem('onboarding_contexts'),
-        level: localStorage.getItem('onboarding_level'),
+      // 세션 스토리지 클리어 (온보딩 완료 후 정리)
+      console.log("[ONBOARDING_LEVEL] 세션 스토리지 클리어 전:", {
+        interests: sessionStorage.getItem('onboarding_interests'),
+        contexts: sessionStorage.getItem('onboarding_contexts'),
+        level: sessionStorage.getItem('onboarding_level'),
       });
 
-      localStorage.removeItem('onboarding_interests');
-      localStorage.removeItem('onboarding_contexts');
-      localStorage.removeItem('onboarding_level');
+      sessionStorage.removeItem('onboarding_interests');
+      sessionStorage.removeItem('onboarding_contexts');
+      sessionStorage.removeItem('onboarding_level');
 
-      console.log("[ONBOARDING_LEVEL] 로컬 스토리지 클리어 후:", {
-        interests: localStorage.getItem('onboarding_interests'),
-        contexts: localStorage.getItem('onboarding_contexts'),
-        level: localStorage.getItem('onboarding_level'),
+      console.log("[ONBOARDING_LEVEL] 세션 스토리지 클리어 후:", {
+        interests: sessionStorage.getItem('onboarding_interests'),
+        contexts: sessionStorage.getItem('onboarding_contexts'),
+        level: sessionStorage.getItem('onboarding_level'),
       });
 
       console.log("[ONBOARDING_LEVEL] 대시보드로 이동");

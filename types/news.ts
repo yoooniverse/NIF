@@ -9,12 +9,22 @@ export interface News {
   content: string;
   published_at: string;
   ingested_at: string;
-  metadata: {
-    category: string;
-    thumbnail_url?: string;
-    impact_score?: number;
-    is_curated: boolean;
-  };
+  metadata: NewsMetadata;
+}
+
+export interface NewsMetadata {
+  tags: string[];
+  targets: string[];
+  level1: NewsAnalysisLevel;
+  level2: NewsAnalysisLevel;
+  level3: NewsAnalysisLevel;
+}
+
+export interface NewsAnalysisLevel {
+  title: string;
+  content: string;
+  worst: string;
+  action: string;
 }
 
 export interface NewsAnalysisLevel {

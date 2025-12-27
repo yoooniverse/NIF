@@ -6,6 +6,9 @@ import { useEffect, useState, useCallback, Suspense } from 'react';
 import { ArrowLeft, Filter } from 'lucide-react';
 import NewsCard from '@/components/dashboard/NewsCard';
 import { FlightViewBackground } from '@/components/landing/FlightViewBackground';
+import { useClerkSupabaseClient } from '@/lib/supabase/clerk-client';
+import { fetchTodayNews, filterNewsByCategory, transformNewsForCard } from '@/lib/news';
+import { News } from '@/types/news';
 
 // 관심분야 카테고리
 const INTEREST_CATEGORIES = [
@@ -97,10 +100,16 @@ function TodayNewsContent() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+  const supabase = useClerkSupabaseClient();
+
   // URL에서 카테고리 읽기 (뒤로가기 시 유지됨)
   const categoryFromUrl = searchParams.get('category') || 'all';
   const [selectedCategory, setSelectedCategory] = useState(categoryFromUrl);
+
+  // 뉴스 데이터 상태
+  const [news, setNews] = useState<News[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // URL 파라미터 변경 시 state 동기화
   useEffect(() => {
@@ -110,6 +119,31 @@ function TodayNewsContent() {
   useEffect(() => {
     console.info('[TODAY_NEWS] page loaded, category:', categoryFromUrl);
   }, [categoryFromUrl]);
+
+  // 뉴스 데이터 로딩
+  useEffect(() => {
+    async function loadNews() {
+      if (!isLoaded || !user) return;
+
+      try {
+        console.info('[TODAY_NEWS] loading news data...');
+        setLoading(true);
+        setError(null);
+
+        const newsData = await fetchTodayNews(supabase, 20); // 오늘의 뉴스는 최대 20개
+        setNews(newsData);
+
+        console.info('[TODAY_NEWS] news data loaded successfully, count:', newsData.length);
+      } catch (err) {
+        console.error('[TODAY_NEWS] failed to load news:', err);
+        setError('뉴스를 불러오는 중 오류가 발생했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadNews();
+  }, [isLoaded, user, supabase]);
 
   // 인증 체크
   useEffect(() => {
@@ -138,11 +172,7 @@ function TodayNewsContent() {
     router.push('/dashboard');
   };
 
-  const filteredNews = selectedCategory === 'all'
-    ? MOCK_NEWS
-    : MOCK_NEWS.filter(news => {
-        return news.category === CATEGORY_SLUG_TO_NAME[selectedCategory];
-      });
+  const filteredNews = filterNewsByCategory(news, selectedCategory);
 
   // 카테고리별 배경 설정 - 카테고리 버튼의 배경을 전체 버튼에서도 동일하게 사용
   const earthSize = selectedCategory === 'all' ? 2.5 : 2.5; // 모두 동일한 크기로 통일
@@ -218,25 +248,40 @@ function TodayNewsContent() {
 
           {/* 뉴스 목록 */}
           <div className="space-y-4">
-            {filteredNews.length === 0 ? (
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent" />
+                <p className="text-white/70">뉴스를 불러오는 중...</p>
+              </div>
+            ) : error ? (
+              <div className="text-center py-12">
+                <div className="text-white/50 text-lg mb-2">오류 발생</div>
+                <div className="text-white/40 text-sm">{error}</div>
+              </div>
+            ) : filteredNews.length === 0 ? (
               <div className="text-center py-12">
                 <div className="text-white/50 text-lg mb-2">뉴스가 없습니다</div>
                 <div className="text-white/40 text-sm">해당 카테고리의 뉴스가 아직 준비되지 않았습니다.</div>
               </div>
             ) : (
-              filteredNews.map((news) => (
-                <NewsCard
-                  key={news.id}
-                  id={news.id}
-                  title={news.title}
-                  category={news.category}
-                  categorySlug={selectedCategory !== 'all' ? selectedCategory : undefined}
-                  publishedAt={news.publishedAt}
-                  summary={news.summary}
-                  isWhite={true}
-                  fromPage="today"
-                />
-              ))
+              filteredNews.map((newsItem) => {
+                const cardData = transformNewsForCard(newsItem);
+                return (
+                  <NewsCard
+                    key={newsItem.id}
+                    id={newsItem.id}
+                    title={cardData.title}
+                    category={cardData.category}
+                    categorySlug={selectedCategory !== 'all' ? selectedCategory : undefined}
+                    publishedAt={cardData.publishedAt}
+                    summary={cardData.summary}
+                    tags={cardData.tags}
+                    targets={cardData.targets}
+                    isWhite={true}
+                    fromPage="today"
+                  />
+                );
+              })
             )}
           </div>
         </div>

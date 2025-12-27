@@ -3,37 +3,58 @@
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useUser } from "@clerk/nextjs";
+import { useClerkSupabaseClient } from "@/lib/supabase/clerk-client";
+import { Database } from "@/database.types";
 
 export default function OnboardingContextsPage() {
   const router = useRouter();
+  const { user, isLoaded } = useUser();
+  const supabase = useClerkSupabaseClient();
   const [selectedContexts, setSelectedContexts] = useState<string[]>([]);
+  const [contexts, setContexts] = useState<Database['public']['Tables']['contexts']['Row'][]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     console.log("[ONBOARDING_CONTEXTS] 나의 상황 선택 페이지 진입");
 
-    // 로컬 스토리지에서 기존 선택사항 불러오기
-    const saved = localStorage.getItem('onboarding_contexts');
-    if (saved) {
-      setSelectedContexts(JSON.parse(saved));
+    if (!isLoaded) return;
+
+    if (!user) {
+      console.log("[ONBOARDING_CONTEXTS] 사용자가 로그인되지 않음");
+      router.push('/login');
+      return;
     }
 
-    // 이전 단계 확인
-    const interests = localStorage.getItem('onboarding_interests');
-    if (!interests) {
-      console.log("[ONBOARDING_CONTEXTS] 이전 단계 미완료 - 관심사 페이지로 이동");
-      router.push('/onboarding/interests');
-    }
-  }, [router]);
+    // 데이터베이스에서 contexts 불러오기
+    const loadContexts = async () => {
+      try {
+        console.log("[ONBOARDING_CONTEXTS] 데이터베이스에서 contexts 불러오기");
 
-  // PRD에 명시된 나의 상황
-  const contexts = [
-    { id: "loan-holder", label: "대출보유" },
-    { id: "savings-only", label: "예적금" },
-    { id: "dollar-holder", label: "달러보유" },
-    { id: "business-owner", label: "사업가" },
-    { id: "employee", label: "직장인" },
-    { id: "overseas-travel", label: "해외여행" },
-  ];
+        const { data: contextsData, error } = await supabase
+          .from('contexts')
+          .select('*')
+          .order('created_at', { ascending: true });
+
+        if (error) {
+          console.error("[ONBOARDING_CONTEXTS] contexts 불러오기 실패:", error);
+          return;
+        }
+
+        console.log("[ONBOARDING_CONTEXTS] 불러온 contexts:", contextsData);
+        setContexts(contextsData || []);
+
+      } catch (error) {
+        console.error("[ONBOARDING_CONTEXTS] contexts 로딩 중 에러:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadContexts();
+  }, [router, user, isLoaded]);
+
+  // contexts는 데이터베이스에서 불러옴
 
   const toggleContext = (contextId: string) => {
     console.log("[ONBOARDING_CONTEXTS] 상황 토글:", contextId);
@@ -46,9 +67,6 @@ export default function OnboardingContextsPage() {
 
   const handleBack = () => {
     console.log("[ONBOARDING_CONTEXTS] 이전 단계로 이동");
-
-    // 현재 선택사항 저장
-    localStorage.setItem('onboarding_contexts', JSON.stringify(selectedContexts));
     router.push('/onboarding/interests');
   };
 
@@ -61,10 +79,18 @@ export default function OnboardingContextsPage() {
     console.log("[ONBOARDING_CONTEXTS] 선택 완료, 다음 단계로 이동");
     console.log("[ONBOARDING_CONTEXTS] 선택된 상황:", selectedContexts);
 
-    // 로컬 스토리지에 임시 저장
-    localStorage.setItem('onboarding_contexts', JSON.stringify(selectedContexts));
+    // 세션 스토리지에 임시 저장 (온보딩 마지막에 DB 저장)
+    sessionStorage.setItem('onboarding_contexts', JSON.stringify(selectedContexts));
     router.push('/onboarding/level');
   };
+
+  if (loading) {
+    return (
+      <div className="w-full flex items-center justify-center py-20">
+        <div className="text-white/60 font-mono">상황 데이터를 불러오는 중...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
@@ -101,7 +127,7 @@ export default function OnboardingContextsPage() {
             <div className="col-span-4 flex items-center">
               <div>
                 <div className="text-white font-mono font-bold text-lg">
-                  {context.label}
+                  {context.name}
                 </div>
               </div>
             </div>

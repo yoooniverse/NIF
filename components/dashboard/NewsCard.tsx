@@ -12,6 +12,8 @@ interface NewsCardProps {
   summary?: string;
   isWhite?: boolean;
   fromPage?: 'today' | 'monthly';
+  tags?: string[]; // 관심분야 태그들
+  targets?: string[]; // 타겟 사용자 그룹들
 }
 
 export default function NewsCard({
@@ -23,6 +25,8 @@ export default function NewsCard({
   summary,
   isWhite = false,
   fromPage,
+  tags = [],
+  targets = [],
 }: NewsCardProps) {
   const router = useRouter();
 
@@ -69,6 +73,37 @@ export default function NewsCard({
           <h3 className={`font-bold text-lg leading-snug mb-2 ${isWhite ? 'text-gray-900' : 'text-white'}`}>
             {title}
           </h3>
+
+          {/* 태그와 타겟 배지들 */}
+          {(tags.length > 0 || targets.length > 0) && (
+            <div className="flex flex-wrap gap-1 mb-3">
+              {tags.map((tag, index) => (
+                <span
+                  key={`tag-${index}`}
+                  className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${
+                    isWhite
+                      ? 'bg-blue-100 text-blue-800'
+                      : 'bg-blue-900/50 text-blue-200 border border-blue-700/50'
+                  }`}
+                >
+                  #{tag}
+                </span>
+              ))}
+              {targets.map((target, index) => (
+                <span
+                  key={`target-${index}`}
+                  className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${
+                    isWhite
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-green-900/50 text-green-200 border border-green-700/50'
+                  }`}
+                >
+                  {target}
+                </span>
+              ))}
+            </div>
+          )}
+
           {summary && (
             <p className={`text-base leading-relaxed mb-3 ${isWhite ? 'text-gray-600' : 'text-white/80'}`}>
               {summary}

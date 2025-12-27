@@ -1,0 +1,45 @@
+-- 1. user_id 컬럼 추가 (개인화를 위해 필수)
+ALTER TABLE "news_analysis_levels" 
+ADD COLUMN IF NOT EXISTS "user_id" UUID;
+
+-- 2. users 테이블과 연결 (Foreign Key)
+-- 유저가 탈퇴하면 분석 데이터도 같이 지워지게(CASCADE) 설정
+ALTER TABLE "news_analysis_levels"
+DROP CONSTRAINT IF EXISTS "FK_users_TO_news_analysis_levels"; -- 혹시 있으면 삭제 후 재생성
+
+ALTER TABLE "news_analysis_levels"
+ADD CONSTRAINT "FK_users_TO_news_analysis_levels"
+FOREIGN KEY ("user_id") REFERENCES "users" ("id")
+ON DELETE CASCADE;
+
+-- 3. [중요] 기존의 "뉴스+레벨" 유니크 제약조건 삭제
+-- (이게 있으면 한 뉴스당 한 명만 분석 가능하므로 삭제해야 함)
+ALTER TABLE "news_analysis_levels"
+DROP CONSTRAINT IF EXISTS "UQ_NEWS_ANALYSIS_LEVELS_NEWS_LEVEL";
+
+-- 4. 새로운 "뉴스+레벨+유저" 유니크 제약조건 추가
+-- (이제 유저마다 각자 분석을 가질 수 있음)
+ALTER TABLE "news_analysis_levels"
+ADD CONSTRAINT "UQ_NEWS_LEVEL_USER" UNIQUE ("news_id", "level", "user_id");
+
+-- 5. 변경사항 즉시 반영
+NOTIFY pgrst, 'reload schema';
+
+-- 1. 아까 만든 '유저별 유니크 규칙' 삭제
+ALTER TABLE "news_analysis_levels"
+DROP CONSTRAINT IF EXISTS "UQ_NEWS_LEVEL_USER";
+
+-- 2. 유저 테이블과의 연결 고리 삭제
+ALTER TABLE "news_analysis_levels"
+DROP CONSTRAINT IF EXISTS "FK_users_TO_news_analysis_levels";
+
+-- 3. 문제가 되는 user_id 컬럼 삭제 (깨끗하게 지우기)
+ALTER TABLE "news_analysis_levels"
+DROP COLUMN IF EXISTS "user_id";
+
+-- 4. 원래 규칙 복구 (뉴스 1개당 레벨 1,2,3은 딱 하나씩만 존재)
+ALTER TABLE "news_analysis_levels"
+ADD CONSTRAINT "UQ_NEWS_ANALYSIS_LEVELS_NEWS_LEVEL" UNIQUE ("news_id", "level");
+
+-- 변경사항 반영 알림
+NOTIFY pgrst, 'reload schema';

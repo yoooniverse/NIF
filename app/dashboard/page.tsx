@@ -114,6 +114,9 @@ export default function DashboardV2Page() {
 
 
   useEffect(() => {
+    // 클라이언트 사이드에서만 리다이렉트 실행 (Hydration mismatch 방지)
+    if (typeof window === 'undefined') return;
+
     // 핵심 기능 로그: 온보딩 상태에 따른 리다이렉트
     if (!isLoaded) return;
     if (!user) return;
@@ -149,12 +152,26 @@ export default function DashboardV2Page() {
   }, [isLoaded, user, router]);
 
 
-  if (!isLoaded || !user) {
+  // Hydration mismatch 방지를 위해 초기 로딩 상태에서는 항상 로딩 화면 표시
+  if (!isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100">
         <div className="text-center">
           <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-slate-900 border-t-transparent" />
           <p className="text-slate-700">로딩 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 인증되지 않은 사용자는 로그인 페이지로 리다이렉트 (클라이언트 사이드에서만)
+  if (!user) {
+    router.push('/login');
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-slate-900 border-t-transparent" />
+          <p className="text-slate-700">로그인 중...</p>
         </div>
       </div>
     );

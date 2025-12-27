@@ -4,7 +4,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, LogIn } from "lucide-react";
-import { SignInButton } from "@clerk/nextjs";
+import { SignInButton, useUser, SignOutButton } from "@clerk/nextjs";
 
 const SpaceBackground = dynamic(
   () => import("@/components/landing/space-background").then((mod) => mod.SpaceBackground),
@@ -25,6 +25,8 @@ const LazyEarth = dynamic(
 export default function LandingPage() {
   console.log("🌍 랜딩 페이지 로드됨 - Hero Section Only");
 
+  const { isSignedIn, user } = useUser();
+
   return (
     <div className="h-screen overflow-hidden">
       {/* Hero Section - In-Flight Entertainment 스타일 3D 지구 */}
@@ -35,19 +37,47 @@ export default function LandingPage() {
         {/* 3D 지구 컴포넌트 - Lazy Loading으로 성능 최적화 */}
         <LazyEarth />
 
-        {/* 우측 상단 로그인 버튼 */}
+        {/* 우측 상단 인증 버튼 */}
         <div className="absolute top-6 right-6 z-20">
-          <SignInButton mode="modal" forceRedirectUrl="/dashboard">
-            <Button
-              variant="outline"
-              size="default"
-              className="bg-black/20 backdrop-blur-md border-white/20 text-white hover:bg-black/40 hover:border-white/40 transition-all duration-300 px-4 py-2 text-sm font-medium"
-              onClick={() => console.log("🔐 랜딩페이지 로그인 버튼 클릭됨")}
-            >
-              <LogIn className="w-5 h-5 mr-2" />
-              로그인
-            </Button>
-          </SignInButton>
+          {isSignedIn ? (
+            // 로그인된 경우: 대시보드로 이동하거나 로그아웃
+            <div className="flex gap-2">
+              <Link href="/dashboard">
+                <Button
+                  variant="outline"
+                  size="default"
+                  className="bg-black/20 backdrop-blur-md border-white/20 text-white hover:bg-black/40 hover:border-white/40 transition-all duration-300 px-4 py-2 text-sm font-medium"
+                  onClick={() => console.log("🏠 대시보드로 이동")}
+                >
+                  <ArrowRight className="w-5 h-5 mr-2" />
+                  대시보드
+                </Button>
+              </Link>
+              <SignOutButton>
+                <Button
+                  variant="outline"
+                  size="default"
+                  className="bg-red-500/20 backdrop-blur-md border-red-500/30 text-red-300 hover:bg-red-500/30 hover:border-red-500/50 transition-all duration-300 px-4 py-2 text-sm font-medium"
+                  onClick={() => console.log("🚪 로그아웃 버튼 클릭됨")}
+                >
+                  로그아웃
+                </Button>
+              </SignOutButton>
+            </div>
+          ) : (
+            // 로그인되지 않은 경우: 로그인 모달
+            <SignInButton mode="modal" forceRedirectUrl="/dashboard">
+              <Button
+                variant="outline"
+                size="default"
+                className="bg-black/20 backdrop-blur-md border-white/20 text-white hover:bg-black/40 hover:border-white/40 transition-all duration-300 px-4 py-2 text-sm font-medium"
+                onClick={() => console.log("🔐 랜딩페이지 로그인 버튼 클릭됨")}
+              >
+                <LogIn className="w-5 h-5 mr-2" />
+                로그인
+              </Button>
+            </SignInButton>
+          )}
         </div>
 
         {/* 메인 카피 (화면 중앙에 부유) */}
