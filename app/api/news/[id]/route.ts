@@ -82,9 +82,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     console.log("[API][NEWS_DETAIL] News found");
 
     // 4. 응답 데이터 구성
-    const analysis = Array.isArray(newsData?.news_analysis_levels)
-      ? newsData.news_analysis_levels[0]
-      : newsData.news_analysis_levels;
+// 안전하게 데이터 꺼내기 (수정된 코드)
+    const levels = newsData?.news_analysis_levels;
+    const analysis = Array.isArray(levels) ? levels[0] : levels;
 
     const categorySlug = analysis?.interest?.[0] || 'stock';
     const categoryName = SLUG_TO_KOREAN[categorySlug] || categorySlug;
