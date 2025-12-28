@@ -1,170 +1,194 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
-import type {
-  NewsListResponse,
-  NewsListItem
-} from "@/types/news";
+import { createClient } from "@supabase/supabase-js";
 
-// 구독 상태 확인 함수
-async function checkSubscription(userId: string) {
-  const { data } = await supabase
-    .from("subscriptions")
-    .select("plan, active, ends_at")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .single();
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-  if (!data) {
-    // 구독 정보가 없으면 무료 체험으로 간주
-    return { active: false, days_remaining: 0 };
-  }
+// Supabase interests 테이블의 UUID → slug 매핑
+const INTEREST_UUID_TO_SLUG: Record<string, string> = {
+  '5cbe5b84-2555-4b09-8b7d-a7ea1cde2a5e': 'real-estate',
+  'cc5eb1d7-2fcd-4767-b2c5-5b4ae10af787': 'etf',
+  '89f6d7da-e48c-4251-a50a-38819f252a2e': 'crypto',
+  'ac07734f-bbf9-42fa-b2fa-4de04c5c072d': 'stock',
+  '3c4b8119-67a5-41ab-9459-0582066b8934': 'exchange-rate'
+};
 
-  const now = new Date();
-  const endsAt = new Date(data.ends_at);
-  const isActive = data.active && endsAt > now;
+const SLUG_TO_KOREAN: Record<string, string> = {
+  'stock': '주식',
+  'crypto': '가상화폐',
+  'real-estate': '부동산',
+  'etf': 'ETF',
+  'exchange-rate': '환율'
+};
 
-  return {
-    active: isActive,
-    days_remaining: isActive ? Math.ceil((endsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : 0,
-  };
-}
-
-// GET /api/news - 뉴스 목록 조회
-async function handleGet(request: NextRequest, userId: string): Promise<Response> {
-  console.log(`[API] 뉴스 목록 조회 요청 - userId: ${userId}`);
-
+export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    console.log("[API][NEWS_TODAY] Request started");
+    const { userId } = await auth();
 
-    // 쿼리 파라미터 파싱
-    const date = searchParams.get("date") || new Date().toISOString().split("T")[0];
-    const category = searchParams.get("category");
-    const limit = Math.min(parseInt(searchParams.get("limit") || "5"), 20); // 최대 20개
-
-    console.log(`[API] 쿼리 파라미터 - date: ${date}, category: ${category}, limit: ${limit}`);
-
-    // 1. 독립적인 데이터 병렬 조회 (Promise.all)
-    const [
-      { data: profile, error: profileError },
-      { data: userInterests },
-      subscription
-    ] = await Promise.all([
-      // A. 사용자 레벨 조회
-      supabase
-        .from("user_profiles")
-        .select("level")
-        .eq("user_id", userId)
-        .single(),
-
-      // B. 사용자 관심사 조회
-      supabase
-        .from("user_interests")
-        .select(`
-          interests!inner(slug)
-        `)
-        .eq("user_id", userId),
-
-      // C. 구독 상태 확인
-      checkSubscription(userId)
-    ]);
-
-    if (profileError) {
-      console.error("사용자 프로필 조회 실패:", profileError);
-      // 프로필이 없으면 기본 레벨 2로 처리
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userLevel = profile?.level || 2;
+    const url = new URL(req.url);
+    const categoryParam = url.searchParams.get("category");
+    const limitParam = url.searchParams.get("limit");
+    const limit = Math.min(parseInt(limitParam || "20"), 50);
 
-    // 관심사 슬러그 목록 추출
-    const interestSlugs = userInterests?.map(ui => (ui.interests as any).slug) || [];
+    // 최근 3일 날짜 범위 (한국 시간과 UTC 차이 고려)
+    const today = new Date();
+    const threeDaysAgo = new Date(today);
+    threeDaysAgo.setDate(today.getDate() - 3);
+    const startOfDay = new Date(threeDaysAgo.getFullYear(), threeDaysAgo.getMonth(), threeDaysAgo.getDate(), 0, 0, 0);
+    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
 
-    // 뉴스 조회 쿼리 구성
+    console.log("[API][NEWS_TODAY] Query params:", {
+      userId,
+      category: categoryParam || 'all',
+      limit,
+      dateRange: `${startOfDay.toISOString()} ~ ${endOfDay.toISOString()}`
+    });
+
+    // 1. 사용자 정보 조회
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('level, onboarded_at')
+      .eq('clerk_id', userId)
+      .single();
+
+    if (userError || !userData) {
+      console.error("[API][NEWS_TODAY] User not found:", userError);
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const userLevel = userData.level || 2;
+    const onboardedAt = new Date(userData.onboarded_at);
+    const now = new Date();
+
+    // 무료 체험 기간 확인 (가입 후 30일 이내)
+    const isTrialPeriod = (now.getTime() - onboardedAt.getTime()) < (30 * 24 * 60 * 60 * 1000);
+
+    // 2. 사용자 관심사 조회
+    const { data: userInterests, error: interestsError } = await supabase
+      .from('user_interests')
+      .select('interest_id')
+      .eq('clerk_id', userId);
+
+    if (interestsError) {
+      console.error("[API][NEWS_TODAY] Failed to fetch interests:", interestsError);
+    }
+
+    // interest_id (UUID) → slug 변환
+    const interestSlugs = (userInterests || [])
+      .map(ui => INTEREST_UUID_TO_SLUG[ui.interest_id])
+      .filter(Boolean);
+
+    console.log("[API][NEWS_TODAY] User interests:", interestSlugs);
+
+    // 필터링할 관심사 결정
+    let shouldFilterByInterest = true;
+    let allowedInterests = interestSlugs;
+
+    if (categoryParam === 'all' || !categoryParam) {
+      // "전체" 선택 시 관심사 필터링 안 함
+      shouldFilterByInterest = false;
+      console.log("[API][NEWS_TODAY] Showing all news (no interest filter)");
+    } else if (categoryParam && categoryParam !== 'all') {
+      // 특정 카테고리 선택 시
+      allowedInterests = interestSlugs.includes(categoryParam) ? [categoryParam] : [];
+      if (allowedInterests.length === 0) {
+        console.log("[API][NEWS_TODAY] Category not in user interests");
+        return NextResponse.json({
+          news: [],
+          subscription: { active: true, days_remaining: 30 }
+        });
+      }
+    }
+
+    // slug → 한글명 변환 (Supabase의 interest 필드는 한글로 저장됨)
+    const allowedInterestsKorean = shouldFilterByInterest
+      ? allowedInterests.map(slug => SLUG_TO_KOREAN[slug] || slug)
+      : [];
+
+    // 3. 레벨별 컬럼 선택
+    const levelColumns = {
+      1: { title: 'easy_title', content: 'easy_content', worst: 'easy_worst', action: 'easy_action' },
+      2: { title: 'normal_title', content: 'normal_content', worst: 'normal_worst', action: 'normal_action' },
+      3: { title: 'hard_title', content: 'hard_content', worst: 'hard_worst', action: 'hard_action' }
+    };
+
+    const cols = levelColumns[userLevel as 1 | 2 | 3] || levelColumns[2];
+
+    // 4. 뉴스 조회
     let query = supabase
-      .from("news")
+      .from('news')
       .select(`
         id,
         title,
         published_at,
-        metadata,
         news_analysis_levels!inner(
-          level,
-          easy_title,
-          summary,
-          worst_scenario
+          ${cols.title},
+          ${cols.content},
+          ${cols.worst},
+          ${cols.action},
+          interest,
+          action_blurred
         )
       `)
-      .eq("news_analysis_levels.level", userLevel)
-      .gte("published_at", `${date}T00:00:00`)
-      .lte("published_at", `${date}T23:59:59`)
-      .eq("metadata->>is_curated", "true")
-      .order("published_at", { ascending: false })
+      .gte('published_at', startOfDay.toISOString())
+      .lte('published_at', endOfDay.toISOString())
+      .order('published_at', { ascending: false })
       .limit(limit);
 
-    // 관심사 필터 적용
-    if (category) {
-      // 특정 카테고리가 지정된 경우 해당 카테고리만
-      query = query.eq("metadata->>category", category);
-    } else if (interestSlugs.length > 0) {
-      // 사용자의 관심사 기반 필터링
-      query = query.in("metadata->>category", interestSlugs);
+    // interest 필터링 (shouldFilterByInterest가 true이고 allowedInterestsKorean이 있을 때만)
+    if (shouldFilterByInterest && allowedInterestsKorean.length > 0) {
+      // JSONB 배열에 한글 관심사가 포함되어 있는지 확인
+      query = query.overlaps('news_analysis_levels.interest', allowedInterestsKorean);
     }
-    // 관심사가 없거나 카테고리가 지정되지 않은 경우 모든 뉴스 조회
 
     const { data: newsData, error: newsError } = await query;
 
     if (newsError) {
-      console.error("뉴스 조회 실패:", newsError);
-      // 오류 발생 시 빈 배열 반환
-      const emptyResponse: NewsListResponse = {
-        news: [],
-        subscription // 이미 조회됨
-      };
-      return Response.json(emptyResponse);
+      console.error("[API][NEWS_TODAY] Query error:", newsError);
+      return NextResponse.json({ error: "Failed to fetch news" }, { status: 500 });
     }
 
-    // 응답 데이터 구성
-    const news: NewsListItem[] = (newsData || []).map(item => ({
-      id: item.id,
-      title: item.title,
-      category: item.metadata?.category || "기타",
-      published_at: item.published_at,
-      analysis: item.news_analysis_levels && item.news_analysis_levels[0] ? {
-        level: item.news_analysis_levels[0].level,
-        easy_title: item.news_analysis_levels[0].easy_title,
-        summary: item.news_analysis_levels[0].summary,
-        worst_scenario: item.news_analysis_levels[0].worst_scenario,
-        should_blur: !subscription.active // 무료 체험 중이 아니면 블러 처리
-      } : undefined
-    }));
+    console.log("[API][NEWS_TODAY] News fetched:", newsData?.length || 0);
 
-    const response: NewsListResponse = {
+    // 5. 응답 데이터 구성
+    const news = (newsData || []).map((item: any) => {
+      const analysis = Array.isArray(item.news_analysis_levels)
+        ? item.news_analysis_levels[0]
+        : item.news_analysis_levels;
+
+      // interest 배열에서 첫 번째 값을 카테고리로 사용
+      const categorySlug = analysis?.interest?.[0] || 'stock';
+      const categoryName = SLUG_TO_KOREAN[categorySlug] || categorySlug;
+
+      return {
+        id: item.id,
+        title: analysis?.[cols.title] || item.title,
+        category: categoryName,
+        published_at: item.published_at,
+        analysis: {
+          level: userLevel,
+          easy_title: analysis?.[cols.title] || '',
+          summary: analysis?.[cols.content] || '',
+          worst_scenario: analysis?.[cols.worst] || '',
+          should_blur: isTrialPeriod ? false : (analysis?.action_blurred !== false)
+        }
+      };
+    });
+
+    return NextResponse.json({
       news,
-      subscription
-    };
+      subscription: { active: true, days_remaining: 30 }
+    });
 
-    return Response.json(response);
-
-  } catch (error) {
-    console.error("뉴스 목록 조회 중 오류 발생:", error);
-    return Response.json(
-      { error: "서버 오류가 발생했습니다" },
-      { status: 500 }
-    );
+  } catch (error: any) {
+    console.error("[API][NEWS_TODAY] Unexpected error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-}
-
-export async function GET(request: NextRequest) {
-  const { userId } = await auth();
-
-  if (!userId) {
-    return NextResponse.json(
-      { error: "로그인이 필요합니다" },
-      { status: 401 },
-    );
-  }
-
-  return handleGet(request, userId);
 }

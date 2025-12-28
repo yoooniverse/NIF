@@ -9,6 +9,8 @@ const isPublicRoute = createRouteMatcher([
   "/about(.*)",
   "/terms(.*)",
   "/privacy(.*)",
+  // 임시: 디버깅을 위해 뉴스 경로 공개
+  "/news(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

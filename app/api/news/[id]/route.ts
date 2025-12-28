@@ -1,182 +1,115 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
-import type {
-  NewsDetailResponse
-} from "@/types/news";
+import { createClient } from "@supabase/supabase-js";
 
-interface SourceData {
-  source_id: string;
-  homepage_url: string;
-}
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-// 구독 상태 확인 함수
-async function checkSubscription(userId: string) {
-  const { data } = await supabase
-    .from("subscriptions")
-    .select("plan, active, ends_at")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .single();
+const SLUG_TO_KOREAN: Record<string, string> = {
+  'stock': '주식',
+  'crypto': '가상화폐',
+  'real-estate': '부동산',
+  'etf': 'ETF',
+  'exchange-rate': '환율'
+};
 
-  if (!data) {
-    // 구독 정보가 없으면 무료 체험으로 간주
-    return { active: false, days_remaining: 0 };
-  }
-
-  const now = new Date();
-  const endsAt = new Date(data.ends_at);
-  const isActive = data.active && endsAt > now;
-
-  return {
-    active: isActive,
-    days_remaining: isActive ? Math.ceil((endsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : 0,
-  };
-}
-
-// GET /api/news/[id] - 뉴스 상세 조회
-async function handleGet(request: NextRequest, userId: string): Promise<Response> {
-  const newsId = request.nextUrl.pathname.split('/').pop(); // URL에서 news ID 추출
-  console.log(`[API] 뉴스 상세 조회 요청 - userId: ${userId}, newsId: ${newsId}`);
-
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    if (!newsId) {
-      console.log(`[API] 뉴스 ID 누락`);
-      return Response.json(
-        { error: "뉴스 ID가 필요합니다" },
-        { status: 400 }
-      );
+    const { userId } = await auth();
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // 사용자 프로필 조회 (AI 레벨 확인)
-    const { data: profile, error: profileError } = await supabase
-      .from("user_profiles")
-      .select("level")
-      .eq("user_id", userId)
+    const { id: newsId } = await params;
+    console.log("[API][NEWS_DETAIL] Request:", { userId, newsId });
+
+    // 1. 사용자 정보 조회 (레벨 및 온보딩 날짜)
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('level, onboarded_at')
+      .eq('clerk_id', userId)
       .single();
 
-    if (profileError) {
-      console.error("사용자 프로필 조회 실패:", profileError);
-      // 프로필이 없으면 기본 레벨 2로 처리
+    if (userError || !userData) {
+      console.error("[API][NEWS_DETAIL] User not found:", userError);
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const userLevel = profile?.level || 2;
+    const userLevel = userData.level || 2;
+    const onboardedAt = new Date(userData.onboarded_at);
+    const now = new Date();
 
-    // 뉴스 기본 데이터 조회
-    const { data: newsBasic, error: newsError } = await supabase
-      .from("news")
+    // 무료 체험 기간 확인 (가입 후 30일 이내)
+    const isTrialPeriod = (now.getTime() - onboardedAt.getTime()) < (30 * 24 * 60 * 60 * 1000);
+
+    // 2. 레벨별 컬럼 선택
+    const levelColumns = {
+      1: { title: 'easy_title', content: 'easy_content', worst: 'easy_worst', action: 'easy_action' },
+      2: { title: 'normal_title', content: 'normal_content', worst: 'normal_worst', action: 'normal_action' },
+      3: { title: 'hard_title', content: 'hard_content', worst: 'hard_worst', action: 'hard_action' }
+    };
+
+    const cols = levelColumns[userLevel as 1 | 2 | 3] || levelColumns[2];
+
+    // 3. 뉴스 조회
+    const { data: newsData, error: newsError } = await supabase
+      .from('news')
       .select(`
         id,
         title,
         url,
-        content,
         published_at,
-        metadata,
-        source_id
+        news_analysis_levels!inner(
+          ${cols.title},
+          ${cols.content},
+          ${cols.worst},
+          ${cols.action},
+          interest,
+          action_blurred
+        ),
+        sources(name)
       `)
-      .eq("id", newsId)
+      .eq('id', newsId)
       .single();
 
-    if (newsError || !newsBasic) {
-      console.error("뉴스 기본 데이터 조회 실패:", newsError);
-      return Response.json(
-        { error: "뉴스를 찾을 수 없습니다" },
-        { status: 404 }
-      );
+    if (newsError || !newsData) {
+      console.error("[API][NEWS_DETAIL] News not found:", newsError);
+      return NextResponse.json({ error: "News not found" }, { status: 404 });
     }
 
-    // 출처 정보 조회
-    const { data: sourceData } = await supabase
-      .from("sources")
-      .select("source_id, homepage_url")
-      .eq("id", newsBasic.source_id)
-      .single();
+    console.log("[API][NEWS_DETAIL] News found");
 
-    // 타입 안전성을 위한 검증
-    const typedSourceData: SourceData | null = sourceData;
+    // 4. 응답 데이터 구성
+    const analysis = Array.isArray(newsData.news_analysis_levels)
+      ? newsData.news_analysis_levels[0]
+      : newsData.news_analysis_levels;
 
-    if (newsError) {
-      console.error("뉴스 상세 조회 실패:", newsError);
-      return Response.json(
-        { error: "뉴스를 찾을 수 없습니다" },
-        { status: 404 }
-      );
-    }
+    const categorySlug = analysis?.interest?.[0] || 'stock';
+    const categoryName = SLUG_TO_KOREAN[categorySlug] || categorySlug;
 
-    if (!newsBasic) {
-      // 데이터가 없는 경우 (실제로는 아직 뉴스가 없음)
-      console.log(`[API] 뉴스 데이터 없음 - newsId: ${newsId}`);
-      return Response.json(
-        { error: "뉴스를 찾을 수 없습니다" },
-        { status: 404 }
-      );
-    }
+    // 무료 체험 기간이면 블러 처리 해제, 아니면 데이터베이스 설정값 사용
+    const shouldBlur = isTrialPeriod ? false : (analysis?.action_blurred !== false);
 
-    // 분석 데이터 조회 (별도 테이블에서)
-    const { data: analysisData, error: analysisError } = await supabase
-      .from("news_analysis_levels")
-      .select("*")
-      .eq("news_id", newsId)
-      .eq("level", userLevel)
-      .single();
-
-    if (analysisError || !analysisData) {
-      console.log(`[API] 뉴스 분석 데이터 없음 - newsId: ${newsId}, level: ${userLevel}`);
-      return Response.json(
-        { error: "해당 레벨의 뉴스 분석을 찾을 수 없습니다" },
-        { status: 404 }
-      );
-    }
-
-    // 구독 상태 확인
-    const subscription = await checkSubscription(userId);
-
-    // 출처 정보 구성
-    const sourceName = typedSourceData?.source_id || "알 수 없음";
-
-    // 응답 데이터 구성
-    const response: NewsDetailResponse = {
-      id: newsBasic.id,
-      title: newsBasic.title,
-      url: newsBasic.url,
-      content: newsBasic.content,
-      published_at: newsBasic.published_at,
-      source: sourceName,
-      category: newsBasic.metadata?.category || "기타",
+    const response = {
+      id: newsData.id,
+      title: analysis?.[cols.title] || newsData.title,
+      source: newsData.sources?.name || 'Unknown',
+      url: newsData.url || '',
       analysis: {
-        level: analysisData.level,
-        easy_title: analysisData.easy_title,
-        summary: analysisData.summary,
-        worst_scenario: analysisData.worst_scenario,
-        user_action_tip: analysisData.user_action_tip,
-        should_blur: !subscription.active // 무료 체험 중이 아니면 블러 처리
-      },
-      subscription
+        easy_title: analysis?.[cols.title] || '',
+        summary: analysis?.[cols.content] || '',
+        worst_scenario: analysis?.[cols.worst] || '',
+        user_action_tip: analysis?.[cols.action] || '',
+        should_blur: shouldBlur
+      }
     };
 
-    return Response.json(response);
+    return NextResponse.json(response);
 
-  } catch (error) {
-    console.error("뉴스 상세 조회 중 오류 발생:", error);
-    return Response.json(
-      { error: "서버 오류가 발생했습니다" },
-      { status: 500 }
-    );
+  } catch (error: any) {
+    console.error("[API][NEWS_DETAIL] Error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function GET(request: NextRequest, _params: { params: Promise<{ id: string }> }) {
-  const { userId } = await auth();
-
-  if (!userId) {
-    return NextResponse.json(
-      { error: "로그인이 필요합니다" },
-      { status: 401 },
-    );
-  }
-
-  return handleGet(request, userId);
 }

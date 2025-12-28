@@ -2,14 +2,27 @@
 
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Ticket } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import NewsSummary from "../../../components/news/news-summary";
 import WorstScenario from "../../../components/news/worst-scenario";
 import ActionItem from "../../../components/news/action-item";
 import NewsFooter from "../../../components/news/news-footer";
 import BoardingPassModal from "../../../components/news/BoardingPassModal";
-import { getMockNewsById } from "../../../lib/mock/news";
 import { FlightViewBackground } from '@/components/landing/FlightViewBackground';
+
+interface NewsDetail {
+  id: string;
+  title: string;
+  source: string;
+  url: string;
+  analysis: {
+    easy_title: string;
+    summary: string;
+    worst_scenario: string;
+    user_action_tip: string;
+    should_blur: boolean;
+  };
+}
 
 export default function NewsDetailPage() {
   const router = useRouter();
@@ -17,10 +30,40 @@ export default function NewsDetailPage() {
   const searchParams = useSearchParams();
   const id = params?.id;
   const [isBoardingPassOpen, setIsBoardingPassOpen] = useState(false);
+  const [news, setNews] = useState<NewsDetail | null>(null);
+  const [loading, setLoading] = useState(true);
 
   // URL 파라미터에서 정보 가져오기
   const fromPage = searchParams.get('from') as 'today' | 'monthly' | null;
   const category = searchParams.get('category');
+
+  useEffect(() => {
+    if (!id) return;
+
+    const fetchNews = async () => {
+      try {
+        console.info("[NEWS_DETAIL] fetching news", { id, fromPage, category });
+
+        // API에서 뉴스 상세 정보 가져오기
+        const response = await fetch(`/api/news/${id}`);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch news');
+        }
+
+        const data = await response.json();
+        console.info("[NEWS_DETAIL] news loaded", data);
+        setNews(data);
+      } catch (error) {
+        console.error("[NEWS_DETAIL] fetch error", error);
+        setNews(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNews();
+  }, [id, fromPage, category]);
 
   // 동적 제목 생성
   const getPageTitle = () => {
@@ -37,9 +80,13 @@ export default function NewsDetailPage() {
     return '뉴스 해설을 확인해보세요';
   };
 
-  const news = typeof id === "string" ? getMockNewsById(id) : null;
-
-  console.info("[NEWS_DETAIL] page load", { id, found: Boolean(news), fromPage, category });
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#050814] flex items-center justify-center">
+        <div className="text-white text-lg">뉴스를 불러오는 중...</div>
+      </div>
+    );
+  }
 
   if (!news) {
     return (
@@ -149,4 +196,3 @@ export default function NewsDetailPage() {
     </div>
   );
 }
-

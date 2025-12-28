@@ -1,5 +1,23 @@
 export type NewsCategory = "부동산" | "주식" | "환율" | "ETF" | "가상화폐";
 
+// 카테고리 한글명 → 영문 slug 매핑
+export const CATEGORY_TO_SLUG: Record<NewsCategory, string> = {
+  "주식": "stock",
+  "가상화폐": "crypto",
+  "부동산": "real-estate",
+  "ETF": "etf",
+  "환율": "exchange-rate"
+};
+
+// 영문 slug → 카테고리 한글명 매핑 (역방향)
+export const SLUG_TO_CATEGORY: Record<string, NewsCategory> = {
+  "stock": "주식",
+  "crypto": "가상화폐",
+  "real-estate": "부동산",
+  "etf": "ETF",
+  "exchange-rate": "환율"
+};
+
 export interface NewsItem {
   id: string;
   title: string;
@@ -20,6 +38,11 @@ export interface NewsItem {
     active: boolean;
     days_remaining: number;
   };
+}
+
+// 카테고리를 slug로 변환하는 헬퍼 함수
+export function getCategorySlug(category: NewsCategory): string {
+  return CATEGORY_TO_SLUG[category];
 }
 
 // 목 뉴스 데이터 (UI 개발/데모용)

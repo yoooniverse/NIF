@@ -1,74 +1,71 @@
-import { SupabaseClient } from '@supabase/supabase-js';
-import { News } from '@/types/news';
+import { NewsListResponse, NewsListItem, News } from '@/types/news';
 
 /**
- * 뉴스 데이터를 Supabase에서 가져오는 함수들
+ * 뉴스 데이터를 API에서 가져오는 함수들
  */
 
 /**
- * 오늘의 뉴스 가져오기 (최신순)
- * @param supabase Supabase 클라이언트
+ * 오늘의 뉴스 가져오기 (API 호출)
  * @param limit 가져올 뉴스 개수 (기본값: 10)
  * @returns 뉴스 배열
  */
-export async function fetchTodayNews(
-  supabase: SupabaseClient,
-  limit: number = 10
-): Promise<News[]> {
+export async function fetchTodayNews(limit: number = 10): Promise<News[]> {
   console.info('[NEWS_LIB] fetchTodayNews called, limit:', limit);
 
-  const today = new Date();
-  const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+  try {
+    const response = await fetch(`/api/news?limit=${limit}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-  const { data, error } = await supabase
-    .from('news')
-    .select('*')
-    .gte('published_at', startOfDay.toISOString())
-    .lte('published_at', endOfDay.toISOString())
-    .order('published_at', { ascending: false })
-    .limit(limit);
+    if (!response.ok) {
+      throw new Error(`API 요청 실패: ${response.status}`);
+    }
 
-  if (error) {
+    const data: NewsListResponse = await response.json();
+    console.info('[NEWS_LIB] fetchTodayNews success, count:', data.news.length);
+
+    // NewsListItem[]을 News[]로 변환
+    const news: News[] = data.news.map(convertNewsListItemToNews);
+    return news;
+  } catch (error) {
     console.error('[NEWS_LIB] fetchTodayNews error:', error);
     throw error;
   }
-
-  console.info('[NEWS_LIB] fetchTodayNews success, count:', data?.length || 0);
-  return data || [];
 }
 
 /**
- * 이달의 뉴스 가져오기 (최신순)
- * @param supabase Supabase 클라이언트
+ * 이달의 뉴스 가져오기 (API 호출)
  * @param limit 가져올 뉴스 개수 (기본값: 20)
  * @returns 뉴스 배열
  */
-export async function fetchMonthlyNews(
-  supabase: SupabaseClient,
-  limit: number = 20
-): Promise<News[]> {
+export async function fetchMonthlyNews(limit: number = 20): Promise<News[]> {
   console.info('[NEWS_LIB] fetchMonthlyNews called, limit:', limit);
 
-  const today = new Date();
-  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59);
+  try {
+    const response = await fetch(`/api/news/monthly?limit=${limit}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-  const { data, error } = await supabase
-    .from('news')
-    .select('*')
-    .gte('published_at', startOfMonth.toISOString())
-    .lte('published_at', endOfMonth.toISOString())
-    .order('published_at', { ascending: false })
-    .limit(limit);
+    if (!response.ok) {
+      throw new Error(`API 요청 실패: ${response.status}`);
+    }
 
-  if (error) {
+    const data = await response.json();
+    console.info('[NEWS_LIB] fetchMonthlyNews success, count:', data.news?.length || 0);
+
+    // 월간 뉴스 API 응답을 News[]로 변환
+    const news: News[] = (data.news || []).map(convertMonthlyNewsItemToNews);
+    return news;
+  } catch (error) {
     console.error('[NEWS_LIB] fetchMonthlyNews error:', error);
     throw error;
   }
-
-  console.info('[NEWS_LIB] fetchMonthlyNews success, count:', data?.length || 0);
-  return data || [];
 }
 
 /**
@@ -118,5 +115,59 @@ export function transformNewsForCard(news: News) {
     summary: news.metadata?.level1?.content, // 레벨1 내용
     tags: news.metadata?.tags || [], // 관심분야 태그들
     targets: news.metadata?.targets || [], // 타겟 사용자 그룹들
+  };
+}
+
+/**
+ * NewsListItem을 News 타입으로 변환
+ */
+function convertNewsListItemToNews(item: NewsListItem): News {
+  return {
+    id: item.id,
+    source_id: '', // API에서 제공하지 않음
+    title: item.analysis?.easy_title || item.title,
+    url: '', // API에서 제공하지 않음
+    content: item.analysis?.summary || '',
+    published_at: item.published_at,
+    ingested_at: item.published_at, // 동일하게 설정
+    metadata: {
+      tags: [item.category],
+      targets: [],
+      level1: item.analysis ? {
+        title: item.analysis.easy_title,
+        content: item.analysis.summary,
+        worst: item.analysis.worst_scenario,
+        action: '',
+      } : undefined,
+      level2: undefined,
+      level3: undefined,
+    },
+  };
+}
+
+/**
+ * 월간 뉴스 API 응답 아이템을 News 타입으로 변환
+ */
+function convertMonthlyNewsItemToNews(item: any): News {
+  return {
+    id: item.id,
+    source_id: item.source || '',
+    title: item.analysis?.easy_title || item.title,
+    url: item.url || '',
+    content: item.analysis?.summary || '',
+    published_at: item.published_at,
+    ingested_at: item.published_at,
+    metadata: {
+      tags: [item.category],
+      targets: [],
+      level1: item.analysis ? {
+        title: item.analysis.easy_title,
+        content: item.analysis.summary,
+        worst: item.analysis.worst_scenario,
+        action: item.analysis.user_action_tip || '',
+      } : undefined,
+      level2: undefined,
+      level3: undefined,
+    },
   };
 }

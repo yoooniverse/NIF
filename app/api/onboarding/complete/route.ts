@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
       if (clerkResponse.ok) {
         const clerkUser = await clerkResponse.json();
 
-        // Supabase에 사용자 정보 업데이트
+        // 1. users 테이블에 기본 정보 저장
         const { error: upsertError } = await supabase
           .from('users')
           .upsert({
@@ -128,23 +128,89 @@ export async function POST(request: NextRequest) {
               ? `${clerkUser.first_name} ${clerkUser.last_name}`.trim()
               : clerkUser.first_name || clerkUser.last_name || clerkUser.username || null,
             email: clerkUser.email_addresses?.[0]?.email_address || null,
+            level: level, // 레벨 추가
+            onboarded_at: new Date().toISOString(),
           }, {
             onConflict: 'clerk_id',
             ignoreDuplicates: false
           });
 
         if (upsertError) {
-          console.warn('[ONBOARDING_COMPLETE_API] Supabase 업데이트 경고:', upsertError);
-          // Supabase 업데이트 실패는 치명적이지 않으므로 계속 진행
-        } else {
-          console.log('[ONBOARDING_COMPLETE_API] Supabase 사용자 동기화 성공');
+          console.error('[ONBOARDING_COMPLETE_API] users 테이블 업데이트 실패:', upsertError);
+          throw upsertError;
         }
+
+        console.log('[ONBOARDING_COMPLETE_API] users 테이블 업데이트 성공');
+
+        // 2. 기존 user_interests 삭제 (재온보딩 대비)
+        const { error: deleteInterestsError } = await supabase
+          .from('user_interests')
+          .delete()
+          .eq('clerk_id', clerkUserId);
+
+        if (deleteInterestsError) {
+          console.warn('[ONBOARDING_COMPLETE_API] 기존 user_interests 삭제 경고:', deleteInterestsError);
+        }
+
+        // 3. user_interests 저장
+        if (interests.length > 0) {
+          const interestsData = interests.map(interestId => ({
+            clerk_id: clerkUserId,
+            interest_id: interestId,
+            created_at: new Date().toISOString(),
+          }));
+
+          const { error: interestsError } = await supabase
+            .from('user_interests')
+            .insert(interestsData);
+
+          if (interestsError) {
+            console.error('[ONBOARDING_COMPLETE_API] user_interests 저장 실패:', interestsError);
+            throw interestsError;
+          }
+
+          console.log('[ONBOARDING_COMPLETE_API] user_interests 저장 성공:', interests.length, '개');
+        }
+
+        // 4. 기존 user_contexts 삭제 (재온보딩 대비)
+        const { error: deleteContextsError } = await supabase
+          .from('user_contexts')
+          .delete()
+          .eq('clerk_id', clerkUserId);
+
+        if (deleteContextsError) {
+          console.warn('[ONBOARDING_COMPLETE_API] 기존 user_contexts 삭제 경고:', deleteContextsError);
+        }
+
+        // 5. user_contexts 저장
+        if (contexts.length > 0) {
+          const contextsData = contexts.map(contextId => ({
+            clerk_id: clerkUserId,
+            context_id: contextId,
+            created_at: new Date().toISOString(),
+          }));
+
+          const { error: contextsError } = await supabase
+            .from('user_contexts')
+            .insert(contextsData);
+
+          if (contextsError) {
+            console.error('[ONBOARDING_COMPLETE_API] user_contexts 저장 실패:', contextsError);
+            throw contextsError;
+          }
+
+          console.log('[ONBOARDING_COMPLETE_API] user_contexts 저장 성공:', contexts.length, '개');
+        }
+
+        console.log('[ONBOARDING_COMPLETE_API] Supabase 전체 동기화 성공');
       } else {
         console.warn('[ONBOARDING_COMPLETE_API] Clerk 사용자 정보 조회 실패, Supabase 동기화 스킵');
+        throw new Error('Clerk 사용자 정보 조회 실패');
       }
     } catch (supabaseError) {
-      console.warn('[ONBOARDING_COMPLETE_API] Supabase 동기화 실패:', supabaseError);
-      // Supabase 동기화 실패는 치명적이지 않으므로 계속 진행
+      console.error('[ONBOARDING_COMPLETE_API] Supabase 동기화 실패:', supabaseError);
+      // Supabase 동기화 실패는 치명적이므로 에러 반환
+      throw supabaseError;
     }
 
     console.log('[ONBOARDING_COMPLETE_API] 온보딩 완료 처리 성공');

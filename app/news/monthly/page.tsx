@@ -6,7 +6,6 @@ import { useEffect, useState, useCallback, Suspense } from 'react';
 import { ArrowLeft, Filter } from 'lucide-react';
 import NewsCard from '@/components/dashboard/NewsCard';
 import { FlightViewBackground } from '@/components/landing/FlightViewBackground';
-import { useClerkSupabaseClient } from '@/lib/supabase/clerk-client';
 import { fetchMonthlyNews, filterNewsByCategory, transformNewsForCard } from '@/lib/news';
 import { News } from '@/types/news';
 
@@ -142,7 +141,6 @@ function MonthlyNewsContent() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const supabase = useClerkSupabaseClient();
 
   // URL에서 카테고리 읽기 (뒤로가기 시 유지됨)
   const categoryFromUrl = searchParams.get('category') || 'all';
@@ -172,7 +170,7 @@ function MonthlyNewsContent() {
         setLoading(true);
         setError(null);
 
-        const newsData = await fetchMonthlyNews(supabase, 30); // 이달의 뉴스는 최대 30개
+        const newsData = await fetchMonthlyNews(30); // 이달의 뉴스는 최대 30개
         setNews(newsData);
 
         console.info('[MONTHLY_NEWS] news data loaded successfully, count:', newsData.length);
@@ -185,7 +183,7 @@ function MonthlyNewsContent() {
     }
 
     loadNews();
-  }, [isLoaded, user, supabase]);
+  }, [isLoaded, user]);
 
   // 인증 체크
   useEffect(() => {
