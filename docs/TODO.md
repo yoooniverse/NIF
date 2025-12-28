@@ -1,8 +1,8 @@
 # News In Flight - Development TODO List
 
 > 개발 기간: 33일 (2025.12.11 ~ 2026.01.13)
-> 현재: 2025.12.27 (Week 2, Day 14) - 버그 수정 및 디버깅 중
-> 진행률: Week 1 100% 완료, Week 2 98% 진행 중 (크리티컬 버그 2건 잔존), Week 3 20% 진행 중
+> 현재: 2025.12.28 (Week 3, Day 17) - 경제 순환기 지도 개발 시작
+> 진행률: Week 1 90% 완료 (AI 뉴스 파이프라인 1차 구현), Week 2 100% 완료 (버그 수정 완료), Week 3 40% 진행 중 (FRED API credential 완료)
 > 우선순위: v1 (필수) → v2 (선택) → v3 (Post-Launch)
 
 ---
@@ -104,37 +104,39 @@
     - [x] Textarea
     - [x] Accordion
 
-### Day 3-5: AI 뉴스 파이프라인 (F3) - 다음 단계 준비
+### Day 3-5: AI 뉴스 파이프라인 (F3) 🔄 1차 구현 완료 (최적화 진행 중)
 
-- [ ] **Claude API 연동**
+- [x] **Gemini 2.5 Flash API 연동** ✅ **Google Cloud Console 연동 완료**
 
-  - [ ] Anthropic SDK 설치
-  - [ ] 환경 변수 설정 (`ANTHROPIC_API_KEY`)
-  - [ ] API 클라이언트 래퍼 생성 (`lib/claude.ts`)
-  - [ ] 뉴스 분석 프롬프트 작성
-    - [ ] Lv.1 (초보자용)
-    - [ ] Lv.2 (일반용)
-    - [ ] Lv.3 (전문가용)
+  - [x] Google Cloud Console에서 Gemini 2.5 Flash API 설정 ✅ 완료
+  - [x] 환경 변수 설정 (`GEMINI_API_KEY`) ✅ 완료
+  - [x] API 클라이언트 래퍼 생성 (`lib/gemini.ts`) ✅ 완료
+  - [x] 뉴스 분석 프롬프트 작성 ✅ 완료
+    - [x] Lv.1 (초보자용) ✅ 완료
+    - [x] Lv.2 (일반용) ✅ 완료
+    - [x] Lv.3 (전문가용) ✅ 완료
 
-- [ ] **뉴스 수집 시스템**
+- [x] **뉴스 수집 시스템** ✅ **n8n RSS 노드 연동 완료**
 
-  - [ ] RSS/News API 연동
-  - [ ] 뉴스 수집 스크립트 작성
-  - [ ] 카테고리별 소스 정의
-  - [ ] `sources` 테이블 초기 데이터 입력
+  - [x] n8n RSS 노드로 뉴스 URL 추출 ✅ 완료
+  - [x] 뉴스 수집 자동화 워크플로우 구축 ✅ 완료
+  - [x] 카테고리별 소스 정의 ✅ 완료
+  - [x] `sources` 테이블 초기 데이터 입력 ✅ 완료
 
-- [ ] **뉴스 분석 파이프라인**
+- [x] **뉴스 분석 파이프라인** ✅ **AI 해설 DB 저장 완료**
 
-  - [ ] Server Action: 뉴스 수집 (`actions/news/ingest-news.ts`)
-  - [ ] Server Action: AI 분석 (`actions/news/analyze-news.ts`)
-  - [ ] 레벨별 분석 생성 (1개 뉴스 → 3개 레코드)
-  - [ ] `news`, `news_analysis_levels` 테이블 저장 로직
-  - [ ] 에러 핸들링 (Claude API 할당량 초과 등)
+  - [x] Server Action: 뉴스 수집 (`actions/news/ingest-news.ts`) ✅ 완료
+  - [x] Server Action: AI 분석 (`actions/news/analyze-news.ts`) ✅ 완료
+  - [x] 레벨별 분석 생성 (1개 뉴스 → 3개 레코드) ✅ 완료
+  - [x] `news`, `news_analysis_levels` 테이블 저장 로직 ✅ 완료
+  - [x] 에러 핸들링 (Gemini API 할당량 초과 등) ✅ 완료
 
-- [ ] **테스트**
-  - [ ] 뉴스 수집 테스트 (최소 15개/일)
-  - [ ] AI 분석 품질 검증
-  - [ ] DB 저장 확인
+- [ ] **테스트 및 최적화 진행 중**
+  - [x] 뉴스 수집 테스트 (1개 뉴스) ✅ 완료
+  - [ ] 뉴스 수집 확장 테스트 (50개 뉴스 대량 처리)
+  - [ ] AI 분석 품질 검증 (프롬프트 1차 버전)
+  - [x] DB 저장 확인 ✅ 완료
+  - [ ] 프롬프트 최적화 (2차 버전) - 출시 후 수정 가능
 
 ### Day 6-7: 인증 및 온보딩 UI (F1, F2)
 
@@ -171,8 +173,9 @@
 
   - [x] `hooks/use-sync-user.ts` 생성
   - [x] `components/providers/sync-user-provider.tsx` 생성
-  - [x] `app/api/sync-user/route.ts` 생성
+  - [x] `app/api/sync-user/route.ts` 생성 및 디버깅 완료
   - [x] Clerk → Supabase `users` 테이블 자동 동기화 ✅ **사용자 데이터 DB 저장 완료**
+  - [x] 레벨 정보 필수 필드 추가 (기본값 Lv.1) ✅ **2025.12.28 디버깅 완료**
 
 - [x] **온보딩 플로우 (F2)**
 
@@ -366,7 +369,8 @@
   - [x] 에러 메시지
   - [x] 빈 상태 (Empty State)
 
-- [ ] **버그 수정 및 디버깅**
+- [x] **버그 수정 및 디버깅 완료**
+  - [x] 사용자 동기화 API 디버깅 완료 (레벨 정보 누락 문제 해결)
   - [ ] 발견된 버그 목록 작성
   - [ ] 우선순위 분류
   - [ ] 크리티컬 버그 즉시 수정
@@ -377,7 +381,7 @@
 
 ---
 
-## Week 3: v1 완성 및 v2 시작 (Day 15-21: 12/25 ~ 12/31) - 진행 중 (D-19~D-13)
+## Week 3: 경제 순환기 지도 개발 (Day 15-21: 12/25 ~ 12/31) - 진행 중 (D-19~D-13)
 
 ### Day 15-16: v1 통합 테스트 및 버그 수정
 
@@ -409,16 +413,23 @@
 
 ### Day 17-19: 경제 순환기 지도 (F7 - v2)
 
-- [ ] **FRED API 연동** 🔄 진행 중 (오늘 완료 목표)
+- [x] **FRED API 연동** ✅ n8n 워크플로우 완성 (2025.12.28 완료)
 
-  - [ ] 환경 변수 설정 (`FRED_API_KEY`) 🔄 진행 중
-  - [ ] FRED API 클라이언트 생성 (`lib/fred.ts`) 🔄 진행 중
-  - [ ] 3개 지표 수집 함수 🔄 진행 중
-    - [ ] 장단기 금리차 (T10Y2Y)
-    - [ ] 미국 실업률 (UNRATE)
-    - [ ] 원/달러 환율 (DEXKOUS)
+- [ ] **AI 뉴스 파이프라인 최적화** 🔄 병행 진행
 
-- [ ] **신호등 색상 로직** 🔄 진행 중 (오늘 완료 목표)
+  - [ ] 50개 뉴스 대량 처리 워크플로우 테스트
+  - [ ] 프롬프트 2차 버전 개발 및 검증
+  - [ ] 성능 최적화 (API 호출 효율화)
+  - [ ] 에러 핸들링 강화 (Gemini API 제한 대응)
+
+  - [x] 환경 변수 설정 (`FRED_API_KEY`) ✅ n8n에서 Query Auth credential 적용 완료
+  - [x] FRED API 클라이언트 생성 ✅ n8n 워크플로우에서 구현됨
+  - [x] 3개 지표 수집 함수 ✅ n8n 워크플로우에서 구현됨
+    - [x] 장단기 금리차 (T10Y2Y) ✅ HTTP Request 노드 구현
+    - [x] 미국 실업률 (UNRATE) ✅ HTTP Request 노드 구현
+    - [x] 원/달러 환율 (DEXKOUS) ✅ HTTP Request 노드 구현
+
+- [ ] **신호등 색상 로직** 🔄 진행 중 (2025.12.29 완료 목표)
 
   - [ ] `lib/cycle/determine-status.ts` 생성 🔄 진행 중
   - [ ] `determineStatusColor()` 함수 구현 🔄 진행 중
@@ -446,7 +457,7 @@
   - [ ] DB 저장 로직
   - [ ] 이전 레코드 `is_latest=false` 업데이트
 
-- [ ] **n8n 워크플로우** 🔄 진행 중 (기본 구조 완료, 테스트 및 자동화 진행 중)
+- [ ] **n8n 워크플로우** 🔄 진행 중 (2025.12.30 ~ 2026.01.02 완료 목표)
 
   - [x] n8n 설치 및 설정 ✅ 완료
   - [x] 워크플로우 생성 ✅ 기본 구조 완료
@@ -680,6 +691,14 @@
 
 ### Day 32: 최종 버그 수정 및 배포 준비
 
+- [ ] **선택적 개선 작업** (시간이 여유로울 경우)
+
+  - [ ] 랜딩페이지 기능소개 섹션 디자인 개선
+    - [ ] 현재 기능 소개 레이아웃 검토
+    - [ ] 사용자 피드백 기반 UI/UX 개선
+    - [ ] 모바일 반응형 디자인 최적화
+    - [ ] 시각적 요소 (아이콘, 이미지) 개선
+
 - [ ] **최종 버그 수정**
 
   - [ ] QA에서 발견된 모든 버그 수정
@@ -858,15 +877,18 @@
 ### ✅ 완료된 API
 
 - `app/api/news/route.ts` - 뉴스 목록 API
-- `app/api/news/[id]/route.ts` - 뉴스 상세 API ✅ **AI 해설 DB 저장 완료**
+- `app/api/news/[id]/route.ts` - 뉴스 상세 API ✅ **AI 해설 DB 저장 완료 (news_analysis_levels 테이블)**
 - `app/api/onboarding/complete/route.ts` - 온보딩 완료 API
-- `app/api/sync-user/route.ts` - 사용자 동기화 API ✅ **사용자 데이터 DB 저장 완료**
+- `app/api/sync-user/route.ts` - 사용자 동기화 API ✅ **사용자 데이터 DB 저장 완료 및 디버깅 완료 (users 테이블)**
 
 ### 🔄 다음 단계 (Week 3)
 
-- AI 뉴스 파이프라인 구축
-- 뉴스 상세 페이지 구현
-- 경제 순환기 지도 (FRED API 연동)
+- 뉴스 상세 페이지 구현 ✅ **완료**
+- 경제 순환기 지도 (FRED API 연동) 🔄 **진행 중**
+- AI 뉴스 파이프라인 최적화 🔄 **병행 진행**
+  - 50개 뉴스 대량 처리 테스트
+  - 프롬프트 2차 버전 개발
+- 구독 시스템 구현 🔄 **Week 4 예정**
 
 ---
 
