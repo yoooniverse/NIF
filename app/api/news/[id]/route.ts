@@ -82,7 +82,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     console.log("[API][NEWS_DETAIL] News found");
 
     // 4. 응답 데이터 구성
-    const analysis = Array.isArray(newsData.news_analysis_levels)
+    const analysis = Array.isArray(newsData?news_analysis_levels)
       ? newsData.news_analysis_levels[0]
       : newsData.news_analysis_levels;
 
