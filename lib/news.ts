@@ -165,7 +165,7 @@ function convertMonthlyNewsItemToNews(item: any): News {
         content: item.analysis.summary,
         worst: item.analysis.worst_scenario,
         action: item.analysis.user_action_tip || '',
-      } : undefined,
+      } as any : undefined,
       level2: undefined,
       level3: undefined,
     },
