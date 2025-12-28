@@ -40,8 +40,8 @@ export async function POST(request: NextRequest) {
     );
 
     if (!clerkResponse.ok) {
-      console.error('[SYNC_USER_API] Clerk API 호출 실패:', clerkResponse.status, await clerkResponse.text());
-      throw new Error(`Failed to fetch user from Clerk: ${clerkResponse.status}`);
+      console.error('[SYNC_USER_API] Clerk API 호출 실패:', clerkResponse.status);
+      throw new Error('Failed to fetch user from Clerk');
     }
 
     const clerkUser = await clerkResponse.json();
@@ -56,14 +56,15 @@ export async function POST(request: NextRequest) {
     // Supabase 클라이언트 생성 (Clerk 인증 포함)
     const supabase = createClerkSupabaseClient();
 
-    // 사용자 데이터 준비 (level 기본값 설정)
+    // 사용자 데이터 준비
     const userData: Database['public']['Tables']['users']['Insert'] = {
       clerk_id: clerkUser.id,
       name: clerkUser.first_name && clerkUser.last_name
         ? `${clerkUser.first_name} ${clerkUser.last_name}`.trim()
-        : clerkUser.first_name || clerkUser.last_name || clerkUser.username || null,
-      email: clerkUser.email_addresses?.[0]?.email_address || null,
+        : clerkUser.first_name || clerkUser.last_name || clerkUser.username || '',
+      email: clerkUser.email_addresses?.[0]?.email_address || '',
       level: 1, // 기본 레벨 설정
+      // onboarded_at은 자동으로 현재 시간으로 설정됨 (옵셔널 필드)
     };
 
     console.log('[SYNC_USER_API] Supabase에 저장할 데이터:', userData);
