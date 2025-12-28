@@ -83,7 +83,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     // 4. 응답 데이터 구성
 // 안전하게 데이터 꺼내기 (수정된 코드)
-    const levels = newsData?.news_analysis_levels;
+    const levels = (newsData as any)?.news_analysis_levels;
     const analysis = Array.isArray(levels) ? levels[0] : levels;
 
     const categorySlug = analysis?.interest?.[0] || 'stock';
