@@ -93,10 +93,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const shouldBlur = isTrialPeriod ? false : (analysis?.action_blurred !== false);
 
     const response = {
-      id: newsData.id,
-      title: analysis?.[cols.title] || newsData.title,
-      source: newsData.sources?.name || 'Unknown',
-      url: newsData.url || '',
+  id: (newsData as any).id,
+      title: analysis?.[cols.title] || (newsData as any).title,
+      source: (newsData as any).sources?.name || 'Unknown',
+      url: (newsData as any).url || '',
       analysis: {
         easy_title: analysis?.[cols.title] || '',
         summary: analysis?.[cols.content] || '',
