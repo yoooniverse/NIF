@@ -148,7 +148,7 @@ export async function GET(req: NextRequest) {
     // 필터링을 JS에서 수행하기 위해 limit보다 충분히 많은 양을 가져옴
     const dbLimit = shouldFilter ? 200 : limit;
 
-    let query = (supabase
+    const query = (supabase
       .from('news')
       .select(`
         id,
