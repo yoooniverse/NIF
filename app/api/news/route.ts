@@ -238,5 +238,7 @@ export async function GET(req: NextRequest) {
     }, { status: 500 });
   }
 }
+// ... 기존 코드들 ...
 
+// 배포 트리거용 주석 (이 줄을 추가하세요)
 
