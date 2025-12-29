@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import GlobeCanvas from '@/components/dashboard/GlobeCanvas';
 import BoardingPassModal from '@/components/news/BoardingPassModal';
+import { getSubscriptionStatus } from '@/lib/subscription';
 
 type PanelKey = 'today' | 'monthly' | 'cycle';
 
@@ -104,7 +105,7 @@ export default function DashboardV2Page() {
 
   useEffect(() => {
     console.info('[DASHBOARD] page loaded');
-    
+
     // 🚀 페이지 미리 로드 (Prefetch) - 버튼 클릭 시 빠른 전환을 위해
     console.info('[DASHBOARD] prefetching pages for faster navigation');
     router.prefetch('/news/today');
@@ -202,15 +203,7 @@ export default function DashboardV2Page() {
                     'PREMIUM MEMBER'
                   ) : 'PREMIUM MEMBER';
 
-                  const subscriptionStatus =
-                    (user?.publicMetadata as Record<string, any>)?.subscription === 'premium' ||
-                    (user?.publicMetadata as Record<string, any>)?.userProfiles?.level === 'premium' ||
-                    (user?.unsafeMetadata as Record<string, any>)?.subscription === 'premium' ||
-                    (user?.unsafeMetadata as Record<string, any>)?.level === 'premium' ||
-                    ((user?.publicMetadata as Record<string, any>)?.trialEnds && new Date((user.publicMetadata as Record<string, any>).trialEnds) > new Date()) ||
-                    ((user?.unsafeMetadata as Record<string, any>)?.trialEnds && new Date((user.unsafeMetadata as Record<string, any>).trialEnds) > new Date())
-                      ? 'first_class'
-                      : 'economy';
+                  const subscriptionStatus = getSubscriptionStatus(user);
 
                   console.info('[DASHBOARD] click: boarding pass', {
                     passengerName,
@@ -352,9 +345,8 @@ export default function DashboardV2Page() {
                           <div className="flex items-center justify-between">
                             <div className="text-sm font-medium text-white/85">{it.name}</div>
                             <div
-                              className={`text-xs ${
-                                it.delta >= 0 ? 'text-emerald-200' : 'text-rose-200'
-                              }`}
+                              className={`text-xs ${it.delta >= 0 ? 'text-emerald-200' : 'text-rose-200'
+                                }`}
                             >
                               {it.delta >= 0 ? '+' : ''}
                               {it.delta}

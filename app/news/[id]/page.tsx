@@ -3,12 +3,14 @@
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Ticket } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useUser } from "@clerk/nextjs";
 import NewsSummary from "../../../components/news/news-summary";
 import WorstScenario from "../../../components/news/worst-scenario";
 import ActionItem from "../../../components/news/action-item";
 import NewsFooter from "../../../components/news/news-footer";
 import BoardingPassModal from "../../../components/news/BoardingPassModal";
 import { FlightViewBackground } from '@/components/landing/FlightViewBackground';
+import { getSubscriptionStatus } from '@/lib/subscription';
 
 interface NewsDetail {
   id: string;
@@ -25,6 +27,7 @@ interface NewsDetail {
 }
 
 export default function NewsDetailPage() {
+  const { user } = useUser();
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const searchParams = useSearchParams();
@@ -36,6 +39,7 @@ export default function NewsDetailPage() {
   // URL 파라미터에서 정보 가져오기
   const fromPage = searchParams.get('from') as 'today' | 'monthly' | null;
   const category = searchParams.get('category');
+
 
   useEffect(() => {
     if (!id) return;
@@ -151,7 +155,8 @@ export default function NewsDetailPage() {
           <button
             type="button"
             onClick={() => {
-              console.info("[NEWS_DETAIL] click: boarding pass");
+              const status = getSubscriptionStatus(user);
+              console.log("[NEWS_DETAIL] Click Boarding Pass. User:", user?.id, "FullUser:", user, "Status:", status);
               setIsBoardingPassOpen(true);
             }}
             className="
@@ -179,7 +184,7 @@ export default function NewsDetailPage() {
             </div>
           </div>
 
-          <NewsSummary easyTitle={news.analysis.easy_title} summary={news.analysis.summary} />
+          <NewsSummary summary={news.analysis.summary} />
           <WorstScenario text={news.analysis.worst_scenario} />
           <ActionItem text={news.analysis.user_action_tip} shouldBlur={news.analysis.should_blur} />
           <NewsFooter source={news.source} url={news.url} />
@@ -190,8 +195,18 @@ export default function NewsDetailPage() {
       <BoardingPassModal
         isOpen={isBoardingPassOpen}
         onClose={() => setIsBoardingPassOpen(false)}
-        newsTitle={news.title}
-        economicIndex="NASDAQ 100"
+        newsTitle="News Insight"
+        economicIndex="NIF-001"
+        passengerName={
+          user ? (
+            user.fullName ||
+            `${user.firstName || ''} ${user.lastName || ''}`.trim() ||
+            user.username ||
+            user.emailAddresses?.[0]?.emailAddress?.split('@')[0] ||
+            'PREMIUM MEMBER'
+          ) : 'PREMIUM MEMBER'
+        }
+        subscriptionStatus={getSubscriptionStatus(user)}
       />
     </div>
   );

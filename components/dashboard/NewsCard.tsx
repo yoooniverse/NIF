@@ -33,13 +33,13 @@ export default function NewsCard({
   const handleClick = () => {
     // 뉴스 상세 페이지로 이동 (카테고리 slug 포함하여 뒤로가기 시 유지)
     console.info('[NEWS_CARD] click:', { id, title, fromPage, category, categorySlug });
-    
+
     // URL 쿼리 파라미터 구성
     const params = new URLSearchParams();
     if (fromPage) params.set('from', fromPage);
     if (categorySlug) params.set('categorySlug', categorySlug);
     if (category) params.set('category', category);
-    
+
     const queryString = params.toString();
     const url = queryString ? `/news/${id}?${queryString}` : `/news/${id}`;
     router.push(url);
@@ -75,28 +75,15 @@ export default function NewsCard({
           </h3>
 
           {/* 태그와 타겟 배지들 */}
-          {(tags.length > 0 || targets.length > 0) && (
+          {targets.length > 0 && (
             <div className="flex flex-wrap gap-1 mb-3">
-              {tags.map((tag, index) => (
-                <span
-                  key={`tag-${index}`}
-                  className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${
-                    isWhite
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-blue-900/50 text-blue-200 border border-blue-700/50'
-                  }`}
-                >
-                  #{tag}
-                </span>
-              ))}
               {targets.map((target, index) => (
                 <span
                   key={`target-${index}`}
-                  className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${
-                    isWhite
+                  className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${isWhite
                       ? 'bg-green-100 text-green-800'
                       : 'bg-green-900/50 text-green-200 border border-green-700/50'
-                  }`}
+                    }`}
                 >
                   {target}
                 </span>

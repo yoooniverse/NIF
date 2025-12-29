@@ -54,7 +54,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const cols = levelColumns[userLevel as 1 | 2 | 3] || levelColumns[2];
 
     // 3. 뉴스 조회
-    const { data: newsData, error: newsError } = await supabase
+    const { data: newsData, error: newsError } = await (supabase
       .from('news')
       .select(`
         id,
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           action_blurred
         ),
         sources(name)
-      `)
+      `) as any)
       .eq('id', newsId)
       .single();
 
