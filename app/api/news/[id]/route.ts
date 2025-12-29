@@ -25,10 +25,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const { id: newsId } = await params;
     console.log("[API][NEWS_DETAIL] Request:", { userId, newsId });
 
-    // 1. 사용자 정보 조회 (레벨 및 온보딩 날짜)
+    // 1. 사용자 정보 조회 (레벨, 온보딩 날짜, 상황, 관심사)
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('level, onboarded_at')
+      .select(`
+        level, 
+        onboarded_at,
+        user_contexts(context_id),
+        user_interests(interest_id)
+      `)
       .eq('clerk_id', userId)
       .single();
 
@@ -39,6 +44,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const userLevel = userData.level || 2;
     const onboardedAt = new Date(userData.onboarded_at);
+    // 사용자 태그 수집 (상황 + 관심사)
+    const userContexts = (userData.user_contexts as any[])?.map(uc => uc.context_id) || [];
+    const userInterests = (userData.user_interests as any[])?.map(ui => ui.interest_id) || [];
+    const userTags = new Set([...userContexts, ...userInterests]);
+
+    console.log("[API][NEWS_DETAIL] User Tags:", Array.from(userTags));
+
     const now = new Date();
 
     // 무료 체험 기간 확인 (가입 후 30일 이내)
@@ -82,18 +94,33 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     console.log("[API][NEWS_DETAIL] News found");
 
     // 4. 응답 데이터 구성
-// 안전하게 데이터 꺼내기 (수정된 코드)
+    // 사용자 상황에 맞는 분석 선택 로직
     const levels = (newsData as any)?.news_analysis_levels;
-    const analysis = Array.isArray(levels) ? levels[0] : levels;
+    const analysisLevels = Array.isArray(levels) ? levels : [levels];
+
+    // 사용자의 태그와 일치하는 분석 찾기
+    let analysis = analysisLevels.find((level: any) => {
+      if (!level.interest || !Array.isArray(level.interest)) return false;
+      return level.interest.some((tag: string) => userTags.has(tag));
+    });
+
+    // 일치하는 것이 없으면 기본값 (첫 번째) 사용
+    if (!analysis) {
+      console.log("[API][NEWS_DETAIL] No matching analysis found, using default.");
+      analysis = analysisLevels[0];
+    } else {
+      console.log("[API][NEWS_DETAIL] Matching analysis found:", analysis.interest);
+    }
 
     const categorySlug = analysis?.interest?.[0] || 'stock';
-    const categoryName = SLUG_TO_KOREAN[categorySlug] || categorySlug;
+    // unused
+    // const categoryName = SLUG_TO_KOREAN[categorySlug] || categorySlug;
 
     // 무료 체험 기간이면 블러 처리 해제, 아니면 데이터베이스 설정값 사용
     const shouldBlur = isTrialPeriod ? false : (analysis?.action_blurred !== false);
 
     const response = {
-  id: (newsData as any).id,
+      id: (newsData as any).id,
       title: analysis?.[cols.title] || (newsData as any).title,
       source: (newsData as any).sources?.name || 'Unknown',
       url: (newsData as any).url || '',
