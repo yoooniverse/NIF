@@ -18,10 +18,11 @@ interface NewsDetail {
   source: string;
   url: string;
   analysis: {
-    easy_title: string;
-    summary: string;
-    worst_scenario: string;
-    user_action_tip: string;
+    level: 1 | 2 | 3;
+    title: string;
+    content: string;
+    worst_scenarios: string[];
+    action_tips: string[];
     should_blur: boolean;
   };
 }
@@ -71,17 +72,19 @@ export default function NewsDetailPage() {
 
   // 동적 제목 생성
   const getPageTitle = () => {
+    if (fromPage === 'today') return '오늘의 뉴스';
+    if (fromPage === 'monthly') return '이달의 뉴스';
     if (category) {
       return `${category} 뉴스`;
     }
-    return '오늘의 뉴스';
+    return '뉴스 센터';
   };
 
   const getPageSubtitle = () => {
     if (category) {
       return '카테고리 뉴스 해설을 확인해보세요';
     }
-    return '뉴스 해설을 확인해보세요';
+    return '당신을 위한 실전 뉴스 해설';
   };
 
   if (loading) {
@@ -94,20 +97,20 @@ export default function NewsDetailPage() {
 
   if (!news) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50">
+      <div className="min-h-screen bg-[#050814]">
         <div className="mx-auto max-w-3xl px-6 py-10">
           <button
             type="button"
             onClick={() => router.back()}
-            className="h-12 w-12 rounded-2xl border border-amber-200/80 bg-white/50 backdrop-blur flex items-center justify-center"
+            className="h-12 w-12 rounded-2xl border border-white/20 bg-white/10 backdrop-blur flex items-center justify-center"
             aria-label="뒤로가기"
           >
-            <ArrowLeft className="h-5 w-5 text-amber-900" />
+            <ArrowLeft className="h-5 w-5 text-white" />
           </button>
-          <div className="mt-6 text-2xl font-bold text-amber-950">
+          <div className="mt-6 text-2xl font-bold text-white">
             뉴스를 찾지 못했어요
           </div>
-          <div className="mt-2 text-amber-900/70">
+          <div className="mt-2 text-white/70">
             잠시 후 다시 시도해주세요.
           </div>
         </div>
@@ -156,7 +159,7 @@ export default function NewsDetailPage() {
             type="button"
             onClick={() => {
               const status = getSubscriptionStatus(user);
-              console.log("[NEWS_DETAIL] Click Boarding Pass. User:", user?.id, "FullUser:", user, "Status:", status);
+              console.log("[NEWS_DETAIL] Click Boarding Pass. User:", user?.id, "Status:", status);
               setIsBoardingPassOpen(true);
             }}
             className="
@@ -177,16 +180,16 @@ export default function NewsDetailPage() {
         </div>
 
         <div className="mt-10 space-y-6">
-          <div className="rounded-3xl border border-gray-200 bg-white px-7 py-6">
-            <div className="text-sm text-gray-600">{news.source}</div>
-            <div className="mt-3 text-2xl sm:text-3xl font-bold text-gray-900">
-              {news.title}
+          <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur px-7 py-6">
+            <div className="text-sm text-white/60">{news.source}</div>
+            <div className="mt-3 text-2xl sm:text-3xl font-bold text-white">
+              {news.analysis.title}
             </div>
           </div>
 
-          <NewsSummary summary={news.analysis.summary} />
-          <WorstScenario text={news.analysis.worst_scenario} />
-          <ActionItem text={news.analysis.user_action_tip} shouldBlur={news.analysis.should_blur} />
+          <NewsSummary summary={news.analysis.content} />
+          <WorstScenario scenarios={news.analysis.worst_scenarios} />
+          <ActionItem tips={news.analysis.action_tips} shouldBlur={news.analysis.should_blur} />
           <NewsFooter source={news.source} url={news.url} />
         </div>
       </div>
@@ -195,7 +198,7 @@ export default function NewsDetailPage() {
       <BoardingPassModal
         isOpen={isBoardingPassOpen}
         onClose={() => setIsBoardingPassOpen(false)}
-        newsTitle="News Insight"
+        newsTitle={news.analysis.title}
         economicIndex="NIF-001"
         passengerName={
           user ? (

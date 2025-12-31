@@ -57,13 +57,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const isTrialPeriod = (now.getTime() - onboardedAt.getTime()) < (30 * 24 * 60 * 60 * 1000);
 
     // 2. 레벨별 컬럼 선택
-    const levelColumns = {
-      1: { title: 'easy_title', content: 'easy_content', worst: 'easy_worst', action: 'easy_action' },
-      2: { title: 'normal_title', content: 'normal_content', worst: 'normal_worst', action: 'normal_action' },
-      3: { title: 'hard_title', content: 'hard_content', worst: 'hard_worst', action: 'hard_action' }
+    const levelPrefix = userLevel === 1 ? 'easy' : userLevel === 2 ? 'normal' : 'hard';
+    const cols = {
+      title: `${levelPrefix}_title`,
+      content: `${levelPrefix}_content`,
+      worst_all: `${levelPrefix}_worst_all`,
+      action_all: `${levelPrefix}_action_all`
     };
-
-    const cols = levelColumns[userLevel as 1 | 2 | 3] || levelColumns[2];
 
     // 3. 뉴스 조회
     const { data: newsData, error: newsError } = await (supabase
@@ -76,8 +76,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         news_analysis_levels!inner(
           ${cols.title},
           ${cols.content},
-          ${cols.worst},
-          ${cols.action},
+          ${cols.worst_all},
+          ${cols.action_all},
           interest,
           action_blurred
         ),
@@ -94,41 +94,35 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     console.log("[API][NEWS_DETAIL] News found");
 
     // 4. 응답 데이터 구성
-    // 사용자 상황에 맞는 분석 선택 로직
-    const levels = (newsData as any)?.news_analysis_levels;
-    const analysisLevels = Array.isArray(levels) ? levels : [levels];
+    const analysis = (newsData as any)?.news_analysis_levels;
 
-    // 사용자의 태그와 일치하는 분석 찾기
-    let analysis = analysisLevels.find((level: any) => {
-      if (!level.interest || !Array.isArray(level.interest)) return false;
-      return level.interest.some((tag: string) => userTags.has(tag));
-    });
+    // 사용자가 선택한 상황(Contexts)들에 맞는 데이터 추출
+    // userContexts: ['직장인', '대출보유'] 등
+    const worstScenarios = userContexts
+      .map(ctx => analysis?.[cols.worst_all]?.[ctx])
+      .filter(Boolean); // 존재하는 데이터만 추출
 
-    // 일치하는 것이 없으면 기본값 (첫 번째) 사용
-    if (!analysis) {
-      console.log("[API][NEWS_DETAIL] No matching analysis found, using default.");
-      analysis = analysisLevels[0];
-    } else {
-      console.log("[API][NEWS_DETAIL] Matching analysis found:", analysis.interest);
-    }
+    const actionTips = userContexts
+      .map(ctx => analysis?.[cols.action_all]?.[ctx])
+      .filter(Boolean);
 
-    const categorySlug = analysis?.interest?.[0] || 'stock';
-    // unused
-    // const categoryName = SLUG_TO_KOREAN[categorySlug] || categorySlug;
+    // 상황별 데이터가 하나도 없으면 기본값(첫 번째 키의 값)이라도 넣어주거나 빈 배열 유지
+    // 현재 기획상 6개 상황이 다 있다고 했으므로 filter(Boolean)으로 충분
 
     // 무료 체험 기간이면 블러 처리 해제, 아니면 데이터베이스 설정값 사용
     const shouldBlur = isTrialPeriod ? false : (analysis?.action_blurred !== false);
 
     const response = {
       id: (newsData as any).id,
-      title: analysis?.[cols.title] || (newsData as any).title,
+      title: (newsData as any).title,
       source: (newsData as any).sources?.name || 'Unknown',
       url: (newsData as any).url || '',
       analysis: {
-        easy_title: analysis?.[cols.title] || '',
-        summary: analysis?.[cols.content] || '',
-        worst_scenario: analysis?.[cols.worst] || '',
-        user_action_tip: analysis?.[cols.action] || '',
+        level: userLevel,
+        title: analysis?.[cols.title] || '',
+        content: analysis?.[cols.content] || '',
+        worst_scenarios: worstScenarios,
+        action_tips: actionTips,
         should_blur: shouldBlur
       }
     };

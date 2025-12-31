@@ -95,6 +95,14 @@ function TodayNewsLoading() {
   );
 }
 
+const CATEGORY_NAME_TO_SLUG: { [key: string]: string } = {
+  '주식': 'stock',
+  '가상화폐': 'crypto',
+  '부동산': 'real-estate',
+  'ETF': 'etf',
+  '환율': 'exchange-rate',
+};
+
 function TodayNewsContent() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
@@ -106,16 +114,13 @@ function TodayNewsContent() {
 
   // 뉴스 데이터 상태
   const [news, setNews] = useState<News[]>([]);
+  const [userInterests, setUserInterests] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // URL 파라미터 변경 시 state 동기화
   useEffect(() => {
     setSelectedCategory(categoryFromUrl);
-  }, [categoryFromUrl]);
-
-  useEffect(() => {
-    console.info('[TODAY_NEWS] page loaded, category:', categoryFromUrl);
   }, [categoryFromUrl]);
 
   // 뉴스 데이터 로딩
@@ -128,10 +133,19 @@ function TodayNewsContent() {
         setLoading(true);
         setError(null);
 
-        const newsData = await fetchTodayNews(20); // 오늘의 뉴스는 최대 20개
-        setNews(newsData);
+        const response = await fetch('/api/news?limit=20');
+        if (!response.ok) throw new Error('Failed to fetch news');
 
-        console.info('[TODAY_NEWS] news data loaded successfully, count:', newsData.length);
+        const data = await response.json();
+        // NewsListItem[]을 News[]로 변환 (lib/news.ts의 도움 없이 직접 해도 되지만 여기선 구조에 맞춤)
+        setNews(data.news.map((item: any) => ({
+          ...item,
+          published_at: item.published_at,
+          metadata: { tags: item.tags || [], targets: [] }
+        })));
+        setUserInterests(data.user_interests || []);
+
+        console.info('[TODAY_NEWS] news data loaded successfully');
       } catch (err) {
         console.error('[TODAY_NEWS] failed to load news:', err);
         setError('뉴스를 불러오는 중 오류가 발생했습니다.');
@@ -156,7 +170,7 @@ function TodayNewsContent() {
   const handleCategoryChange = useCallback((slug: string) => {
     console.info('[TODAY_NEWS] category filter:', slug);
     setSelectedCategory(slug);
-    
+
     // URL 쿼리 파라미터 업데이트 (뒤로가기 시 유지되도록)
     if (slug === 'all') {
       router.replace('/news/today', { scroll: false });
@@ -170,17 +184,30 @@ function TodayNewsContent() {
     router.push('/dashboard');
   };
 
-  const filteredNews = filterNewsByCategory(news, selectedCategory);
+  // 필터링된 뉴스 (API에서 이미 필터링되어 오지만, 전체탭에서 특정 카테고리 선택시 client filtering)
+  const filteredNews = selectedCategory === 'all'
+    ? news
+    : news.filter(item => {
+      const catName = CATEGORY_SLUG_TO_NAME[selectedCategory];
+      return item.metadata?.tags?.includes(catName);
+    });
 
-  // 카테고리별 배경 설정 - 카테고리 버튼의 배경을 전체 버튼에서도 동일하게 사용
-  const earthSize = selectedCategory === 'all' ? 2.5 : 2.5; // 모두 동일한 크기로 통일
+  // 동적 카테고리 목록 생성
+  const categories = [
+    { id: 'all', name: '전체', slug: 'all' },
+    ...userInterests.map(name => ({
+      id: CATEGORY_NAME_TO_SLUG[name] || name,
+      name,
+      slug: CATEGORY_NAME_TO_SLUG[name] || name
+    }))
+  ];
 
   if (!isLoaded || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      <div className="min-h-screen flex items-center justify-center bg-[#050814]">
         <div className="text-center">
-          <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-slate-900 border-t-transparent" />
-          <p className="text-slate-700">로딩 중...</p>
+          <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-white border-t-transparent" />
+          <p className="text-white">로딩 중...</p>
         </div>
       </div>
     );
@@ -189,8 +216,8 @@ function TodayNewsContent() {
   return (
     <div className="relative min-h-screen bg-[#050814] text-white overflow-hidden">
       {/* 우주 배경 (비행기 뷰) */}
-      <FlightViewBackground earthSize={earthSize} />
-      
+      <FlightViewBackground earthSize={2.5} />
+
       <div className="relative z-10 mx-auto w-full max-w-[1100px] px-6 pt-8 pb-16">
         <div className="flex items-start gap-4">
           <button
@@ -215,7 +242,10 @@ function TodayNewsContent() {
               오늘의 뉴스
             </h1>
             <p className="mt-1 text-white/70 text-base sm:text-lg">
-              관심분야별 주요 헤드라인을 확인해보세요
+              {userInterests.length > 0
+                ? `${userInterests.join(', ')} 분야의 뉴스를 확인해보세요`
+                : '관심분야별 주요 헤드라인을 확인해보세요'
+              }
             </p>
           </div>
         </div>
@@ -228,15 +258,14 @@ function TodayNewsContent() {
               <span className="text-sm font-medium text-white/80">관심분야</span>
             </div>
             <div className="flex flex-wrap gap-2">
-              {INTEREST_CATEGORIES.map((category) => (
+              {categories.map((category) => (
                 <button
                   key={category.id}
                   onClick={() => handleCategoryChange(category.slug)}
-                  className={`px-5 py-3 rounded-full text-base font-semibold transition ${
-                    selectedCategory === category.slug
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-[#050814] text-white hover:bg-[#0a0f29] border border-white/20'
-                  }`}
+                  className={`px-5 py-3 rounded-full text-base font-semibold transition ${selectedCategory === category.slug
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40'
+                      : 'bg-white/5 text-white/80 hover:bg-white/10 border border-white/10 backdrop-blur'
+                    }`}
                 >
                   {category.name}
                 </button>

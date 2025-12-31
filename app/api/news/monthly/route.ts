@@ -136,19 +136,17 @@ export async function GET(req: NextRequest) {
     console.log("[API][NEWS_MONTHLY] Final filter criteria:", filterValues);
 
     // 3. 레벨별 컬럼 선택
-    const levelColumns = {
-      1: { title: 'easy_title', content: 'easy_content', worst: 'easy_worst', action: 'easy_action' },
-      2: { title: 'normal_title', content: 'normal_content', worst: 'normal_worst', action: 'normal_action' },
-      3: { title: 'hard_title', content: 'hard_content', worst: 'hard_worst', action: 'hard_action' }
+    const levelPrefix = userLevel === 1 ? 'easy' : userLevel === 2 ? 'normal' : 'hard';
+    const cols = {
+      title: `${levelPrefix}_title`,
+      content: `${levelPrefix}_content`,
     };
 
-    const cols = levelColumns[userLevel as 1 | 2 | 3] || levelColumns[2];
-
     // 4. 뉴스 조회
-    // 필터링을 JS에서 수행하기 위해 limit보다 충분히 많은 양을 가져옴
+    // 복잡한 DB 레벨 필터링 대신 안정적인 JS 레벨 필터링을 사용합니다.
     const dbLimit = shouldFilter ? 200 : limit;
 
-    const query = (supabase
+    const { data: newsData, error: newsError } = await (supabase
       .from('news')
       .select(`
         id,
@@ -158,25 +156,15 @@ export async function GET(req: NextRequest) {
         news_analysis_levels!inner(
           ${cols.title},
           ${cols.content},
-          ${cols.worst},
-          ${cols.action},
-          easy_title,
-          easy_content,
-          easy_worst,
-          easy_action,
           interest,
           action_blurred
         ),
         sources(name)
-      `) as any)
+      `)
       .gte('published_at', startIso)
       .lt('published_at', endIso)
       .order('published_at', { ascending: false })
-      .limit(dbLimit);
-
-    // DB 레벨 필터링 제거 (500 에러 호환성 및 정확한 JS 필터링을 위해)
-
-    const { data: newsData, error: newsError } = await query;
+      .limit(dbLimit) as any);
 
     if (newsError) {
       console.error("[API][NEWS_MONTHLY] Query error:", newsError);
@@ -186,40 +174,31 @@ export async function GET(req: NextRequest) {
     console.log("[API][NEWS_MONTHLY] News fetched:", newsData?.length || 0);
 
     // 5. 응답 데이터 구성 및 JS 필터링
-    const rawNews = (newsData || []).map((item: any) => {
+    const allProcessedNews = (newsData || []).map((item: any) => {
       const analysis = Array.isArray(item.news_analysis_levels)
         ? item.news_analysis_levels[0]
         : item.news_analysis_levels;
 
-      // 원본 태그 목록
       const originalTags = (analysis?.interest || []) as string[];
 
-      // [핵심 변경] 태그 Allowlist 적용: Context(직장인, 달러보유 등)는 제거하고 Interest(주식, ETF 등)만 남김
-      const DisplayableTags = originalTags.filter(tag => allowedTagNames.includes(tag));
+      // 태그 Allowlist 적용
+      const displayableTags = originalTags.filter(tag => allowedTagNames.includes(tag));
 
       // 대표 카테고리 설정
-      let primaryCategory = DisplayableTags[0];
+      const requestedCategoryName = categoryParam ? (SLUG_TO_KOREAN[categoryParam] || categoryParam) : null;
+      let primaryCategory = '';
 
-      if (!primaryCategory && filterValues.length > 0) {
-        const match = originalTags.find(tag => filterValues.includes(tag));
-        if (match) primaryCategory = match;
-        else primaryCategory = '일반';
-      } else if (!primaryCategory) {
-        primaryCategory = '일반';
+      if (requestedCategoryName && displayableTags.includes(requestedCategoryName)) {
+        primaryCategory = requestedCategoryName;
+      } else {
+        primaryCategory = displayableTags[0] || '일반';
       }
 
-      // Fallback Logic: 선택된 레벨의 데이터가 없으면 Level 1(easy) 데이터를 사용
-      const levelTitle = analysis?.[cols.title] || analysis?.easy_title || item.title;
-      const levelContent = analysis?.[cols.content] || analysis?.easy_content || '';
-      const levelWorst = analysis?.[cols.worst] || analysis?.easy_worst || '';
-      const levelAction = analysis?.[cols.action] || analysis?.easy_action || '';
-
-      // 태그가 없으면 Primary Category라도 보여줌 (Context는 절대 노출 금지)
-      const finalTags = DisplayableTags.length > 0 ? DisplayableTags : [primaryCategory];
+      const finalTags = displayableTags.length > 0 ? displayableTags : [primaryCategory];
 
       return {
         id: item.id,
-        title: levelTitle,
+        title: analysis?.[cols.title] || item.title,
         url: item.url,
         published_at: item.published_at,
         category: primaryCategory,
@@ -227,25 +206,24 @@ export async function GET(req: NextRequest) {
         tags: finalTags,
         analysis: {
           level: userLevel,
-          easy_title: levelTitle,
-          summary: levelContent,
-          worst_scenario: levelWorst,
-          user_action_tip: levelAction,
+          easy_title: analysis?.[cols.title] || '',
+          summary: analysis?.[cols.content] || '',
+          worst_scenarios: [],
           should_blur: isTrialPeriod ? false : (analysis?.action_blurred !== false)
-        }
+        },
+        originalTags
       };
     });
 
-    // 필터링 적용 (유효한 태그가 하나라도 있는 뉴스만 표시)
-    let filteredNews = rawNews;
+    // JS 레벨 필터링
+    let filteredNews = allProcessedNews;
     if (shouldFilter && filterValues.length > 0) {
-      filteredNews = rawNews.filter((item: any) => {
-        return item.tags.some((tag: string) => filterValues.includes(tag));
+      filteredNews = allProcessedNews.filter((item: any) => {
+        return item.originalTags.some((tag: string) => filterValues.includes(tag));
       });
-      console.log("[API][NEWS_MONTHLY] After JS filtering:", filteredNews.length);
     }
 
-    const news = filteredNews;
+    const news = filteredNews.slice(0, limit);
 
     return NextResponse.json({
       month: monthKey,

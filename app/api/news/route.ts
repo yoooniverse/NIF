@@ -120,10 +120,11 @@ export async function GET(req: NextRequest) {
     const cols = levelColumns[userLevel as 1 | 2 | 3] || levelColumns[2];
 
     // 4. 뉴스 조회
-    // 필터링을 JS에서 수행하기 위해 limit보다 충분히 많은 양을 가져옴
+    // 조인된 테이블에 대한 복잡한 DB 레벨 OR 필터링(JSONB)이 오류가 발생할 수 있으므로,
+    // 넉넉하게 데이터를 가져온 후 JS 레벨에서 필터링을 수행하여 안정성을 확보합니다.
     const dbLimit = shouldFilter ? 100 : limit;
 
-    const query = (supabase
+    const { data: newsData, error: newsError } = await (supabase
       .from('news')
       .select(`
         id,
@@ -132,90 +133,70 @@ export async function GET(req: NextRequest) {
         news_analysis_levels!inner(
           ${cols.title},
           ${cols.content},
-          ${cols.worst},
-          ${cols.action},
           interest,
           action_blurred
         )
-      `) as any)
+      `)
       .gte('published_at', startOfDay.toISOString())
       .lte('published_at', endOfDay.toISOString())
       .order('published_at', { ascending: false })
-      .limit(dbLimit);
-
-    // DB 레벨에서의 필터링은 제거하고 (500 에러 방지), 대신 JS에서 수행
-    const { data: newsData, error: newsError } = await query;
+      .limit(dbLimit) as any);
 
     if (newsError) {
-      console.error("[API][NEWS_TODAY] Query error detailed:", {
-        message: newsError.message,
-        details: newsError.details,
-        hint: newsError.hint,
-        code: newsError.code
-      });
+      console.error("[API][NEWS_TODAY] Query error detailed:", newsError);
       return NextResponse.json({ error: "Failed to fetch news", message: newsError.message }, { status: 500 });
     }
 
     console.log("[API][NEWS_TODAY] News fetched from DB:", newsData?.length || 0);
 
-    // 5. JS 레벨에서 필터링 및 응답 데이터 구성
-    const allNews = (newsData || []).map((item: any) => {
+    // 5. 응답 데이터 구성 및 JS 필터링
+    const allProcessedNews = (newsData || []).map((item: any) => {
+      // 조인 결과가 배열로 올 수 있으므로 처리
       const analysis = Array.isArray(item.news_analysis_levels)
         ? item.news_analysis_levels[0]
         : item.news_analysis_levels;
 
-      // 원본 태그 목록
       const originalTags = (analysis?.interest || []) as string[];
 
-      // [핵심 변경] 태그 Allowlist 적용: Context(직장인, 달러보유 등)는 제거하고 Interest(주식, ETF 등)만 남김
-      const DisplayableTags = originalTags.filter(tag => allowedTagNames.includes(tag));
+      // 태그 Allowlist 적용
+      const displayableTags = originalTags.filter(tag => allowedTagNames.includes(tag));
 
-      // 대표 카테고리 설정: 표시 가능한 태그 중 첫 번째
-      // 만약 표시 가능한 태그가 없다면, 사용자가 필터링하려는 값 중 하나라도 포함되어 있는지 확인하여 대체
-      let primaryCategory = DisplayableTags[0];
+      // 대표 카테고리 설정
+      const requestedCategoryName = categoryParam ? (SLUG_TO_KOREAN[categoryParam] || categoryParam) : null;
+      let primaryCategory = '';
 
-      if (!primaryCategory && filterValues.length > 0) {
-        // 태그가 없더라도 사용자가 관심있어하는 주제라면 그 주제를 태그로 표시 (fallback)
-        const match = originalTags.find(tag => filterValues.includes(tag));
-        if (match) primaryCategory = match;
-        else primaryCategory = '일반';
-      } else if (!primaryCategory) {
-        primaryCategory = '일반';
+      if (requestedCategoryName && displayableTags.includes(requestedCategoryName)) {
+        primaryCategory = requestedCategoryName;
+      } else {
+        primaryCategory = displayableTags[0] || '일반';
       }
+
+      const finalTags = displayableTags.length > 0 ? displayableTags : [primaryCategory];
 
       return {
         id: item.id,
         title: analysis?.[cols.title] || item.title,
         category: primaryCategory,
         published_at: item.published_at,
-        tags: DisplayableTags.length > 0 ? DisplayableTags : originalTags, // UI에는 허용된 태그만 전달
+        tags: finalTags,
         analysis: {
           level: userLevel,
           easy_title: analysis?.[cols.title] || '',
           summary: analysis?.[cols.content] || '',
-          worst_scenario: analysis?.[cols.worst] || '',
+          worst_scenarios: [],
           should_blur: isTrialPeriod ? false : (analysis?.action_blurred !== false)
-        }
+        },
+        originalTags // 필터링용
       };
     });
 
-    // 필터링 적용
-    // 조건: 뉴스에 달린 태그(originalTags) 중 하나라도 사용자의 필터 기준(filterValues)에 포함되면 합격
-    // 주의: UI에 보여주는 태그(DisplayableTags)가 없더라도, 원본 태그가 관심사와 일치하면 가져와야 함
-    // (예: 뉴스에 '주식', '달러보유'가 있고 내 관심사가 '주식'이면 -> 가져옴. 단 UI에는 '주식'만 표시)
-    let filteredNews = allNews;
+    // JS 레벨 필터링 적용
+    let filteredNews = allProcessedNews;
     if (shouldFilter && filterValues.length > 0) {
-      filteredNews = allNews.filter((item: any) => {
-        // allNews를 만들 때 원본 데이터를 상실했으므로 다시 매핑하거나, 위에서 originalTags를 참조해야 함.
-        // 편의상 map 내부에서 logic을 처리하는게 좋지만, 구조상 분리되어 있으므로
-        // newsData를 참조하여 필터링 하는 것이 정확함.
-        // 하지만 여기서는 allNews에 `tags`가 이미 sanitizing 되었음.
-        // 따라서 `tags` (DisplayableTags) 체크만으로 충분한지 고민 필요.
-        // "사용자 관심사"는 무조건 "Allowed List"에 포함되므로 (Interest니까), 
-        // DisplayableTags에 내 관심사가 포함되어 있는지 확인하면 됨.
-        return item.tags.some((tag: string) => filterValues.includes(tag));
+      filteredNews = allProcessedNews.filter((item: any) => {
+        return item.originalTags.some((tag: string) => filterValues.includes(tag));
       });
-      console.log("[API][NEWS_TODAY] After JS filtering:", filteredNews.length);
+      console.log("[API][NEWS_TODAY] After JS filtering, count:", filteredNews.length);
     }
 
     // 최종적으로 사용자가 요청한 limit만큼만 반환
@@ -223,6 +204,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       news: finalNews,
+      user_interests: userInterestNames,
       subscription: { active: true, days_remaining: 30 }
     });
 

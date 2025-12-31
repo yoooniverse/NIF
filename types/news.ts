@@ -30,11 +30,23 @@ export interface NewsAnalysisLevel {
 export interface NewsAnalysisLevel {
   id: string;
   news_id: string;
-  level: 1 | 2 | 3;
+  interest: string[]; // JSONB array
+
   easy_title: string;
-  summary: string;
-  worst_scenario: string;
-  user_action_tip: string;
+  easy_content: string;
+  easy_worst_all: Record<string, string>; // JSONB
+  easy_action_all: Record<string, string>; // JSONB
+
+  normal_title: string;
+  normal_content: string;
+  normal_worst_all: Record<string, string>; // JSONB
+  normal_action_all: Record<string, string>; // JSONB
+
+  hard_title: string;
+  hard_content: string;
+  hard_worst_all: Record<string, string>; // JSONB
+  hard_action_all: Record<string, string>; // JSONB
+
   action_blurred: boolean;
   created_at: string;
 }
@@ -66,12 +78,13 @@ export interface NewsListItem {
   id: string;
   title: string;
   category: string;
+  tags: string[];
   published_at: string;
   analysis?: {
     level: 1 | 2 | 3;
     easy_title: string;
     summary: string;
-    worst_scenario: string;
+    worst_scenarios: string[]; // 여러 개 지원
     should_blur: boolean;
   } | null;
 }
@@ -81,21 +94,14 @@ export interface NewsDetailResponse {
   id: string;
   title: string;
   url: string;
-  content: string;
-  published_at: string;
   source: string;
-  category: string;
   analysis: {
     level: 1 | 2 | 3;
-    easy_title: string;
-    summary: string;
-    worst_scenario: string;
-    user_action_tip: string;
+    title: string; // 현재 레벨의 제목
+    content: string; // 현재 레벨의 내용
+    worst_scenarios: string[]; // 현재 상황들에 맞는 시나리오들
+    action_tips: string[]; // 현재 상황들에 맞는 액션 팁들
     should_blur: boolean;
-  };
-  subscription: {
-    active: boolean;
-    days_remaining: number;
   };
 }
 

@@ -4,6 +4,34 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Activity, TrendingUp, TrendingDown, DollarSign, Eye } from 'lucide-react';
 
+interface EconomicData {
+  status_color: 'Red' | 'Yellow' | 'Green';
+  summary_text: string;
+  historical_pattern: string;
+  indicators_snapshot: {
+    yield_curve: {
+      value: number;
+      unit: string;
+      date: string;
+      source: string;
+    };
+    unemployment_rate: {
+      value: number;
+      unit: string;
+      mom_change: number;
+      date: string;
+      source: string;
+    };
+    usd_krw: {
+      value: number;
+      unit: string;
+      mom_change: number;
+      date: string;
+      source: string;
+    };
+  };
+}
+
 // Mock 데이터 - 실제로는 API에서 가져올 예정
 const ECONOMIC_DATA = {
   spread: "-0.15%",
@@ -69,10 +97,9 @@ const EconomicBlips = () => {
       {blips.map((blip, index) => (
         <motion.div
           key={index}
-          className={`absolute rounded-full bg-green-400 opacity-70 ${
-            blip.size === 'small' ? 'w-1 h-1' :
+          className={`absolute rounded-full bg-green-400 opacity-70 ${blip.size === 'small' ? 'w-1 h-1' :
             blip.size === 'medium' ? 'w-2 h-2' : 'w-3 h-3'
-          }`}
+            }`}
           style={{
             left: `${blip.x}%`,
             top: `${blip.y}%`,
@@ -95,17 +122,52 @@ const EconomicBlips = () => {
 interface EconomicRadarSectionProps {
   onViewCycleFeatures: () => void;
   onViewCurrentStatus: () => void;
+  data: EconomicData | null;
 }
 
 export default function EconomicRadarSection({
   onViewCycleFeatures,
-  onViewCurrentStatus
+  onViewCurrentStatus,
+  data
 }: EconomicRadarSectionProps) {
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    // 핵심 기능 로그: 경제 레이더 섹션 로드
+    if (data) setIsLoaded(true);
     console.info('[ECONOMIC_RADAR] radar section loaded');
-  }, []);
+  }, [data]);
+
+  if (!data) {
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center">
+        <div className="text-green-400 font-mono animate-pulse">Initializing Economic Radar System...</div>
+      </div>
+    );
+  }
+
+  const metrics = [
+    {
+      key: 'yield_curve',
+      label: '장단기 금리차 (10년-2년)',
+      value: data.indicators_snapshot.yield_curve.value,
+      unit: '%p',
+      trend: data.indicators_snapshot.yield_curve.value < 0 ? 'down' : 'up'
+    },
+    {
+      key: 'unemployment',
+      label: '미국 실업률',
+      value: data.indicators_snapshot.unemployment_rate.value,
+      unit: '%',
+      trend: data.indicators_snapshot.unemployment_rate.mom_change > 0 ? 'up' : 'down'
+    },
+    {
+      key: 'exchange',
+      label: '원/달러 환율',
+      value: data.indicators_snapshot.usd_krw.value,
+      unit: ' KRW',
+      trend: data.indicators_snapshot.usd_krw.mom_change > 0 ? 'up' : 'down'
+    }
+  ];
 
   return (
     <div className="min-h-screen bg-[#020617] text-white relative overflow-hidden">
@@ -166,8 +228,8 @@ export default function EconomicRadarSection({
               <h3 className="text-green-400 font-mono text-sm uppercase tracking-wider mb-4">
                 경제 상황 브리핑
               </h3>
-              <div className="font-mono text-green-300 text-sm leading-relaxed">
-                <TypewriterText text={ECONOMIC_DATA.currentPhase} delay={80} />
+              <div className="font-mono text-green-300 text-sm leading-relaxed min-h-[4em]">
+                {isLoaded && <TypewriterText text={data.summary_text} delay={40} />}
               </div>
             </motion.div>
 
@@ -178,8 +240,8 @@ export default function EconomicRadarSection({
               transition={{ duration: 0.6, delay: 0.6 }}
               className="space-y-4"
             >
-              {Object.entries(ECONOMIC_DATA.metrics).map(([key, metric], index) => (
-                <div key={key} className="backdrop-blur-md bg-black/40 border border-white/10 rounded-xl p-4">
+              {metrics.map((metric, index) => (
+                <div key={metric.key} className="backdrop-blur-md bg-black/40 border border-white/10 rounded-xl p-4">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-green-400 font-mono text-xs uppercase tracking-wider">
                       {metric.label}
@@ -191,12 +253,7 @@ export default function EconomicRadarSection({
                     )}
                   </div>
                   <div className="text-2xl font-mono font-bold text-white mb-1">
-                    {key === 'exchange'
-                      ? `${metric.value.toLocaleString()} KRW`
-                      : key === 'unemployment'
-                      ? `${metric.value}%`
-                      : `${metric.value}%`
-                    }
+                    {metric.value.toLocaleString()}{metric.unit}
                   </div>
                   {/* 간단한 스파크라인 효과 */}
                   <div className="flex items-end gap-1 h-8">

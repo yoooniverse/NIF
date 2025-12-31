@@ -103,18 +103,18 @@ export function filterNewsByCategory(news: News[], categorySlug: string): News[]
 
 /**
  * 뉴스 데이터를 NewsCard 컴포넌트에서 사용할 형식으로 변환
- * @param news Supabase에서 가져온 뉴스 데이터
+ * @param news API에서 가져온 뉴스 데이터
  * @returns NewsCard에서 사용할 데이터 형식
  */
 export function transformNewsForCard(news: News) {
   return {
     id: news.id,
-    title: news.metadata?.level1?.title || news.title, // 레벨1 제목 우선, 없으면 기본 제목
-    category: news.metadata?.tags?.[0] || '일반', // 첫 번째 태그를 카테고리로 사용
+    title: news.title,
+    category: news.metadata?.tags?.[0] || '일반',
     publishedAt: news.published_at,
-    summary: news.metadata?.level1?.content, // 레벨1 내용
-    tags: news.metadata?.tags || [], // 관심분야 태그들
-    targets: news.metadata?.targets || [], // 타겟 사용자 그룹들
+    summary: news.content,
+    tags: news.metadata?.tags || [],
+    targets: news.metadata?.targets || [],
   };
 }
 
@@ -124,23 +124,23 @@ export function transformNewsForCard(news: News) {
 function convertNewsListItemToNews(item: NewsListItem): News {
   return {
     id: item.id,
-    source_id: '', // API에서 제공하지 않음
+    source_id: '',
     title: item.analysis?.easy_title || item.title,
-    url: '', // API에서 제공하지 않음
+    url: '',
     content: item.analysis?.summary || '',
     published_at: item.published_at,
-    ingested_at: item.published_at, // 동일하게 설정
+    ingested_at: item.published_at,
     metadata: {
-      tags: [item.category],
+      tags: item.tags || [item.category],
       targets: [],
-      level1: item.analysis ? {
-          title: item.analysis.easy_title,
-          content: item.analysis.summary,
-          worst: item.analysis.worst_scenario,
-          action: '',
-        } as any : undefined,
-      level2: undefined,
-      level3: undefined,
+      level1: {
+        title: item.analysis?.easy_title || '',
+        content: item.analysis?.summary || '',
+        worst: item.analysis?.worst_scenarios?.[0] || '',
+        action: '',
+      } as any,
+      level2: {} as any,
+      level3: {} as any,
     },
   };
 }
@@ -158,16 +158,16 @@ function convertMonthlyNewsItemToNews(item: any): News {
     published_at: item.published_at,
     ingested_at: item.published_at,
     metadata: {
-      tags: [item.category],
+      tags: item.tags || [item.category],
       targets: [],
-      level1: item.analysis ? {
-        title: item.analysis.easy_title,
-        content: item.analysis.summary,
-        worst: item.analysis.worst_scenario,
-        action: item.analysis.user_action_tip || '',
-      } as any : undefined,
-      level2: undefined,
-      level3: undefined,
+      level1: {
+        title: item.analysis?.easy_title || '',
+        content: item.analysis?.summary || '',
+        worst: item.analysis?.worst_scenarios?.[0] || '',
+        action: '',
+      } as any,
+      level2: {} as any,
+      level3: {} as any,
     },
   };
 }
