@@ -149,23 +149,23 @@ export default function EconomicRadarSection({
     {
       key: 'yield_curve',
       label: '장단기 금리차 (10년-2년)',
-      value: data.indicators_snapshot.yield_curve.value,
+      value: data.indicators_snapshot?.yield_curve?.value ?? 0,
       unit: '%p',
-      trend: data.indicators_snapshot.yield_curve.value < 0 ? 'down' : 'up'
+      trend: (data.indicators_snapshot?.yield_curve?.value ?? 0) < 0 ? 'down' : 'up'
     },
     {
       key: 'unemployment',
       label: '미국 실업률',
-      value: data.indicators_snapshot.unemployment_rate.value,
+      value: data.indicators_snapshot?.unemployment_rate?.value ?? 0,
       unit: '%',
-      trend: data.indicators_snapshot.unemployment_rate.mom_change > 0 ? 'up' : 'down'
+      trend: (data.indicators_snapshot?.unemployment_rate?.mom_change ?? 0) > 0 ? 'up' : 'down'
     },
     {
       key: 'exchange',
       label: '원/달러 환율',
-      value: data.indicators_snapshot.usd_krw.value,
+      value: data.indicators_snapshot?.usd_krw?.value ?? 0,
       unit: ' KRW',
-      trend: data.indicators_snapshot.usd_krw.mom_change > 0 ? 'up' : 'down'
+      trend: (data.indicators_snapshot?.usd_krw?.mom_change ?? 0) > 0 ? 'up' : 'down'
     }
   ];
 

@@ -300,15 +300,15 @@ export default function CyclePage() {
                   {/* 주요 지표 요약 */}
                   <div className="grid grid-cols-3 gap-4 p-6 bg-black/40 border border-green-400/20 rounded-xl backdrop-blur-md rounded-xl">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-green-400 font-mono">{cycleData?.indicators_snapshot.yield_curve.value}%p</div>
+                      <div className="text-2xl font-bold text-green-400 font-mono">{cycleData?.indicators_snapshot?.yield_curve?.value ?? 0}%p</div>
                       <div className="text-green-300/70 font-mono text-xs uppercase tracking-wider">금리차</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-green-400 font-mono">{cycleData?.indicators_snapshot.unemployment_rate.value}%</div>
+                      <div className="text-2xl font-bold text-green-400 font-mono">{cycleData?.indicators_snapshot?.unemployment_rate?.value ?? 0}%</div>
                       <div className="text-green-300/70 font-mono text-xs uppercase tracking-wider">실업률</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-green-400 font-mono">{cycleData?.indicators_snapshot.usd_krw.value.toLocaleString()}</div>
+                      <div className="text-2xl font-bold text-green-400 font-mono">{cycleData?.indicators_snapshot?.usd_krw?.value?.toLocaleString() ?? 0}</div>
                       <div className="text-green-300/70 font-mono text-xs uppercase tracking-wider">원/달러</div>
                     </div>
                   </div>

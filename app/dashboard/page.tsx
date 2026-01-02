@@ -62,6 +62,11 @@ export default function DashboardV2Page() {
 
   const [activePanel, setActivePanel] = useState<PanelKey | null>(null);
   const [isBoardingPassOpen, setIsBoardingPassOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
 
   const openPanel = (key: PanelKey) => {
@@ -116,7 +121,7 @@ export default function DashboardV2Page() {
 
   useEffect(() => {
     // 클라이언트 사이드에서만 리다이렉트 실행 (Hydration mismatch 방지)
-    if (typeof window === 'undefined') return;
+    if (!mounted || typeof window === 'undefined') return;
 
     // 핵심 기능 로그: 온보딩 상태에 따른 리다이렉트
     if (!isLoaded) return;
@@ -150,11 +155,11 @@ export default function DashboardV2Page() {
       console.info('[DASHBOARD] onboarding incomplete (new user) -> redirect to /onboarding/interests');
       router.push('/onboarding/interests');
     }
-  }, [isLoaded, user, router]);
+  }, [isLoaded, user, router, mounted]);
 
 
-  // Hydration mismatch 방지를 위해 초기 로딩 상태에서는 항상 로딩 화면 표시
-  if (!isLoaded) {
+  // Hydration mismatch 방지를 위해 mounted가 false이거나 로딩 중일 때는 로딩 화면 표시
+  if (!mounted || !isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100">
         <div className="text-center">

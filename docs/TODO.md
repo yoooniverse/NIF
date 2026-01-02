@@ -1,8 +1,8 @@
 # News In Flight - Development TODO List
 
 > 개발 기간: 33일 (2025.12.11 ~ 2026.01.13)
-> 현재: 2025.12.29 (Week 3, Day 18) - 경제 순환기 지도 개발 중
-> 진행률: Week 1 90% 완료 (AI 뉴스 파이프라인 1차 구현), Week 2 100% 완료 (버그 수정 완료), Week 3 50% 진행 중 (뉴스 필터링 및 온보딩 디버깅 완료)
+> 현재: 2026.01.02 (Week 3, Day 22) - 경제순환기 지도 n8n 워크플로우 완료
+> 진행률: Week 1 90% 완료, Week 2 100% 완료, Week 3 95% 진행 중 (경제순환기 지도 데이터 연동 완료)
 > 우선순위: v1 (필수) → v2 (선택) → v3 (Post-Launch)
 
 ---
@@ -429,15 +429,15 @@
     - [x] 미국 실업률 (UNRATE) ✅ HTTP Request 노드 구현
     - [x] 원/달러 환율 (DEXKOUS) ✅ HTTP Request 노드 구현
 
-- [ ] **신호등 색상 로직** 🔄 진행 중 (2025.12.29 완료 목표)
+- [x] **신호등 색상 로직** ✅ 완료
 
-  - [ ] `lib/cycle/determine-status.ts` 생성 🔄 진행 중
-  - [ ] `determineStatusColor()` 함수 구현 🔄 진행 중
-    - [ ] 점수 계산 로직
-    - [ ] Red/Yellow/Green 결정
-  - [ ] 단위 테스트 작성 🔄 진행 중
+  - [x] `lib/cycle/determine-status.ts` 생성 ✅ 완료
+  - [x] `determineStatusColor()` 함수 구현 ✅ 완료
+    - [x] 점수 계산 로직
+    - [x] Red/Yellow/Green 결정
+  - [x] 단위 테스트 작성 ✅ 완료
 
-- [ ] **뉴스 해설 DB 및 워크플로우 업데이트** (2025.12.30 오후)
+- [ ] **뉴스 해설 DB 및 워크플로우 업데이트** 🔄 **최우선 진행 중** (2026.01.02) - 관심분야별 RSS 전략 적용
 
   📋 **작업 순서**
   ✅ **올바른 순서**
@@ -460,37 +460,38 @@
 
   - DB 구조 + 쿼리 로직 + 요구사항 전달
 
-- [ ] **경제순환기 DB 스키마 (cycle_explanations)**
+- [x] **경제순환기 DB 스키마 (cycle_explanations)** ✅ 완료
 
-  - [ ] 마이그레이션 파일 생성
-  - [ ] 테이블 생성
-    - [ ] `status_color` (Red/Yellow/Green)
-    - [ ] `summary_text` (AI 작성)
-    - [ ] `historical_pattern` (AI 작성)
-    - [ ] `indicators_snapshot` (JSONB)
-    - [ ] `is_latest` (최신 버전 플래그)
-  - [ ] 인덱스 생성
+  - [x] 마이그레이션 파일 생성
+  - [x] 테이블 생성
+    - [x] `status_color` (Red/Yellow/Green)
+    - [x] `summary_text` (AI 작성)
+    - [x] `historical_pattern` (AI 작성)
+    - [x] `indicators_snapshot` (JSONB)
+    - [x] `is_latest` (최신 버전 플래그)
+  - [x] 인덱스 생성
 
-- [ ] **경제순환기 AI 분석 (Claude API)**
+- [x] **경제순환기 AI 분석 (Claude API)** ✅ 완료
 
-  - [ ] 프롬프트 작성
-    - [ ] Input: status_color + indicators_snapshot
-    - [ ] Output: summary_text + historical_pattern
-  - [ ] Server Action: `actions/cycle/analyze-cycle.ts`
-  - [ ] DB 저장 로직
-  - [ ] 이전 레코드 `is_latest=false` 업데이트
+  - [x] 프롬프트 작성
+    - [x] Input: status_color + indicators_snapshot
+    - [x] Output: summary_text + historical_pattern
+  - [x] Server Action: `actions/cycle/analyze-cycle.ts` (n8n에서 직접 처리로 대체)
+  - [x] DB 저장 로직
+  - [x] 이전 레코드 `is_latest=false` 업데이트
 
-- [ ] **경제순환기 n8n 워크플로우** 🔄 진행 중 (2025.12.30 ~ 2026.01.02 완료 목표)
+- [x] **경제순환기 n8n 워크플로우** ✅ 완료 (2026.01.02)
 
   - [x] n8n 설치 및 설정 ✅ 완료
-  - [x] 워크플로우 생성 ✅ 기본 구조 완료
+  - [x] 워크플로우 생성 ✅ 완료
     - [x] Cron Trigger (매일 09:00) ✅ 설정 완료
-    - [ ] FRED API 호출 🔄 진행 중
-    - [ ] 신호등 색상 계산 🔄 진행 중
-    - [ ] Claude API 호출 🔄 진행 중
-    - [ ] Supabase에 저장 🔄 진행 중
-  - [ ] 에러 핸들링 및 재시도 로직 🔄 진행 중
-  - [ ] 관리자 이메일 알림 (실패 시) 🔄 진행 중
+    - [x] FRED API 호출 ✅ 완료
+    - [x] 신호등 색상 계산 ✅ 완료
+    - [x] Claude API 호출 ✅ 완료
+    - [x] Supabase에 저장 ✅ 완료
+  - [x] 에러 핸들링 및 재시도 로직 ✅ 완료
+  - [x] 관리자 이메일 알림 (실패 시) ✅ 완료
+  - [ ] (v3) 분석 프롬프트 고도화 (데이터 품질 향상)
 
 - [ ] **경제 순환기 API**
   - [ ] GET `/api/cycle/current` (최신 데이터)
@@ -524,7 +525,7 @@
 
 ---
 
-## Week 4: 구독 시스템 및 QA (Day 22-28: 2026.01/01 ~ 01/07)
+## Week 4: 구독 시스템 및 QA (Day 22-28: 2026.01/02 ~ 01/08)
 
 ### Day 22-23: 토스페이먼츠 결제 시스템 (F6)
 
@@ -586,31 +587,17 @@
     - [ ] 매일 00:00 실행
     - [ ] `ends_at < NOW()` 조건으로 `active=false` 업데이트
 
-### Day 24-25: 프로필 설정 페이지
+### Day 24-25: 프로필 설정 기능 ✅ **Boarding Pass에서 이미 구현됨**
 
-- [ ] **설정 페이지**
+- [x] **프로필 설정 통합 (Boarding Pass Modal)**
 
-  - [ ] `app/settings/page.tsx` 생성
-  - [ ] 레이아웃 (탭 또는 섹션)
+  - [x] Boarding Pass의 "환경설정" 버튼으로 온보딩 플로우 재진입
+  - [x] 관심사/상황/AI 레벨 재설정 가능
+  - [x] 별도 설정 페이지 불필요 → UX 최적화
 
-- [ ] **관심사/상황 수정**
-
-  - [ ] 현재 선택된 항목 표시
-  - [ ] 멀티 선택 UI
-  - [ ] API: `app/api/user/update-interests/route.ts`
-  - [ ] API: `app/api/user/update-contexts/route.ts`
-
-- [ ] **AI 레벨 변경**
-
-  - [ ] 현재 레벨 표시
-  - [ ] 라디오 버튼 (Lv.1/2/3)
-  - [ ] API: `app/api/user/update-level/route.ts`
-
-- [ ] **구독 관리**
-  - [ ] 현재 구독 상태 표시
-  - [ ] 결제 수단 관리 (토스페이먼츠 빌링키 관리)
-  - [ ] 구독 취소 버튼
-  - [ ] API: `app/api/subscription/cancel/route.ts`
+- [ ] **구독 관리 기능 (토스페이먼츠 제외)**
+  - [ ] 현재 구독 상태 표시 (무료 체험 남은 기간)
+  - [ ] 구독 취소 기능 (토스페이먼츠 제외)
 
 ### Day 26-27: 전체 QA 1차
 
@@ -920,3 +907,29 @@
 - PRD: `workplace/docs/PRD.md`
 - DB 스키마: `workplace/supabase/migrations/update_setup_newsinflight_schema.sql`
 - 개발 가이드: `workplace/AGENTS.md`
+
+---
+
+## ⏰ **시간 분배 추천 (프로필 설정 제거 후 재조정)**
+
+### **12/30 (월) ~ 1/1 (목): Week 3 완료**
+
+- **오전**: 신호등 로직 완성
+- **오후**: DB 스키마 + AI 분석 구현
+- **저녁**: n8n 워크플로우 마무리
+
+### **1/2 (금) ~ 1/6 (화): n8n 워크플로우 완성 (최우선)**
+
+- **1/2-3**: n8n 워크플로우 디버깅 및 관심분야별 RSS 적용 🔄 **진행 중**
+- **1/4-6**: 구독 관리 기능 + QA 준비 (워크플로우 완료 후)
+
+### **1/7 (수) ~ 1/12 (월): Week 5 완료**
+
+- **1/7-9**: 법적 문서 + QA 2차
+- **1/10-12**: 배포 준비 + 런칭
+
+### **추가 이점**
+
+- **2일 절약**: 프로필 설정 페이지 작업 제거
+- **리스크 감소**: 이미 검증된 Boarding Pass UX 활용
+- **시간 버퍼**: QA와 최적화에 더 집중 가능
