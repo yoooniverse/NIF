@@ -4,10 +4,19 @@ import { useUser } from '@clerk/nextjs';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, useCallback, Suspense } from 'react';
 import { ArrowLeft, Filter } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import NewsCard from '@/components/dashboard/NewsCard';
-import { FlightViewBackground } from '@/components/landing/FlightViewBackground';
 import { fetchTodayNews, filterNewsByCategory, transformNewsForCard } from '@/lib/news';
 import { News } from '@/types/news';
+
+// FlightViewBackground를 dynamic import로 변경 (SSR 비활성화)
+const FlightViewBackground = dynamic(
+  () => import('@/components/landing/FlightViewBackground').then(mod => ({ default: mod.FlightViewBackground })),
+  { 
+    ssr: false,
+    loading: () => <div className="absolute inset-0 z-0 h-full w-full bg-[#030308]" />
+  }
+);
 
 // 관심분야 카테고리
 const INTEREST_CATEGORIES = [
@@ -137,12 +146,42 @@ function TodayNewsContent() {
         if (!response.ok) throw new Error('Failed to fetch news');
 
         const data = await response.json();
-        // NewsListItem[]을 News[]로 변환 (lib/news.ts의 도움 없이 직접 해도 되지만 여기선 구조에 맞춤)
-        setNews(data.news.map((item: any) => ({
-          ...item,
+        
+        console.info('[TODAY_NEWS] raw API response:', {
+          newsCount: data.news?.length || 0,
+          firstNews: data.news?.[0],
+          userInterests: data.user_interests
+        });
+
+        // API 응답을 News 타입으로 변환
+        const transformedNews = data.news.map((item: any) => ({
+          id: item.id,
+          source_id: '',
+          title: item.title,
+          url: '',
+          content: item.analysis?.summary || '',
           published_at: item.published_at,
-          metadata: { tags: item.tags || [], targets: [] }
-        })));
+          ingested_at: item.published_at,
+          metadata: { 
+            tags: item.tags || [], 
+            targets: [],
+            level1: {
+              title: item.title,
+              content: item.analysis?.summary || '',
+              worst: '',
+              action: ''
+            },
+            level2: {},
+            level3: {}
+          }
+        }));
+        
+        console.info('[TODAY_NEWS] transformed news:', {
+          count: transformedNews.length,
+          firstItem: transformedNews[0]
+        });
+        
+        setNews(transformedNews);
         setUserInterests(data.user_interests || []);
 
         console.info('[TODAY_NEWS] news data loaded successfully');
@@ -189,8 +228,20 @@ function TodayNewsContent() {
     ? news
     : news.filter(item => {
       const catName = CATEGORY_SLUG_TO_NAME[selectedCategory];
-      return item.metadata?.tags?.includes(catName);
+      const hasCategory = item.metadata?.tags?.includes(catName);
+      console.info('[TODAY_NEWS] filtering:', {
+        category: catName,
+        itemTags: item.metadata?.tags,
+        hasCategory
+      });
+      return hasCategory;
     });
+
+  console.info('[TODAY_NEWS] filter result:', {
+    selectedCategory,
+    totalNews: news.length,
+    filteredCount: filteredNews.length
+  });
 
   // 동적 카테고리 목록 생성
   const categories = [

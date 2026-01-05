@@ -26,11 +26,11 @@ type HubDatum = {
 };
 
 const EARTH_TEXTURES = {
-  day: 'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg',
-  night: 'https://unpkg.com/three-globe/example/img/earth-night.jpg',
-  bump: 'https://unpkg.com/three-globe/example/img/earth-topology.png',
-  specular: 'https://unpkg.com/three-globe/example/img/earth-water.png',
-  stars: 'https://unpkg.com/three-globe/example/img/night-sky.png',
+  day: '/earth/textures/earth-blue-marble.jpg',
+  night: '/earth/textures/earth-night.jpg',
+  bump: '/earth/textures/earth-topology.png',
+  specular: '/earth/textures/earth-water.png',
+  stars: '/earth/textures/night-sky.png',
 } as const;
 
 interface GlobeCanvasProps {
