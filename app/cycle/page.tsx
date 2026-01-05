@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ArrowLeft, X } from 'lucide-react';
-import Link from 'next/link';
+import { X } from 'lucide-react';
 import EconomicRadarSection from '@/components/cycle/EconomicRadarSection';
 
 // 경제 순환기 단계별 특징 데이터
@@ -170,29 +169,7 @@ export default function CyclePage() {
         }
       `}</style>
       <div className="min-h-screen bg-[#020617] text-white">
-        {/* 헤더 - Military HUD 스타일 */}
-        <div className="border-b border-green-400/20 bg-black/40 backdrop-blur-md">
-          <div className="mx-auto max-w-7xl px-4 py-4">
-            <div className="flex items-center gap-2">
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-2 rounded-lg border border-green-400/30 bg-black/20 px-4 py-2 text-green-400 hover:bg-green-400/10 transition-all duration-300 font-mono text-sm uppercase tracking-wider"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                <span>대시보드로 돌아가기</span>
-              </Link>
-              <div className="flex items-center gap-3">
-                <div className="text-green-400 font-mono text-lg uppercase tracking-wider font-bold">
-                  Economic Radar System
-                </div>
-                <div className="text-green-300/70 font-mono text-xs uppercase tracking-wider">
-                  Real-time Economic Analysis
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
+        
         {/* 메인 컨텐츠 - Military Economic Radar System */}
         <EconomicRadarSection
           onViewCycleFeatures={() => setShowCycleModal(true)}

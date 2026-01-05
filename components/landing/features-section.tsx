@@ -9,8 +9,8 @@ const EconomicCyclePreview = dynamic(
   { 
     ssr: false,
     loading: () => (
-      <div className="w-full aspect-video rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 flex items-center justify-center">
-        <div className="text-gray-500">경제 순환기를 불러오는 중...</div>
+      <div className="w-full aspect-video rounded-xl bg-[#020617] border border-green-400/20 flex items-center justify-center">
+        <div className="text-green-400/50 font-mono animate-pulse">SYSTEM LOADING...</div>
       </div>
     )
   }
@@ -23,7 +23,7 @@ export function FeaturesSection() {
     {
       icon: Sparkles,
       title: "AI가 쉽게 해석해줍니다",
-      description: "Claude Sonnet 4.5가 어려운 경제 뉴스를 당신의 수준에 맞춰 쉽게 풀어드립니다.",
+      description: "AI가 어려운 경제 뉴스를 당신의 수준에 맞춰 쉽게 풀어드립니다.",
       gradient: "from-blue-500 to-cyan-500",
     },
     {
@@ -85,7 +85,7 @@ export function FeaturesSection() {
             왜 News In Flight일까요?
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            경제 뉴스를 당신만의 언어로 번역해드립니다
+            경제뉴스를 내 일상과 연결지어서 설명해줍니다
           </p>
         </div>
 
@@ -218,55 +218,55 @@ export function FeaturesSection() {
               </div>
 
               {/* 경제 순환기 애니메이션 */}
-              <div className="aspect-[16/10] rounded-xl overflow-hidden relative">
+              <div className="aspect-[16/10] rounded-xl overflow-hidden relative border border-green-400/20">
                 <EconomicCyclePreview />
               </div>
 
-              {/* 지도 아래 설명 */}
-              <div className="mt-6 bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+              {/* 지도 아래 설명 - Military HUD 스타일 */}
+              <div className="mt-6 bg-black/40 rounded-xl p-6 border border-green-400/20 backdrop-blur-md">
                 <div className="mb-4">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    경제 순환기의 4단계
+                  <h3 className="text-xl font-bold text-green-400 mb-2 font-mono tracking-wider">
+                    CYCLE PHASES ANALYSIS
                   </h3>
-                  <p className="text-gray-600 leading-relaxed">
+                  <p className="text-green-300/70 leading-relaxed font-mono text-sm">
                     경제는 회복기 → 확장기 → 둔화기 → 침체기를 반복하며 순환합니다.
                     각 단계마다 다른 경제 지표와 투자 전략이 필요합니다.
                   </p>
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                  <div className="p-3 rounded-lg bg-green-50 border border-green-200">
-                    <div className="text-sm font-bold text-green-700 mb-1">회복기</div>
-                    <div className="text-xs text-green-600">Recovery</div>
+                  <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+                    <div className="text-sm font-bold text-emerald-400 mb-1 font-mono">회복기</div>
+                    <div className="text-xs text-emerald-500/70 font-mono">Recovery</div>
                   </div>
-                  <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
-                    <div className="text-sm font-bold text-blue-700 mb-1">확장기</div>
-                    <div className="text-xs text-blue-600">Expansion</div>
+                  <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
+                    <div className="text-sm font-bold text-blue-400 mb-1 font-mono">확장기</div>
+                    <div className="text-xs text-blue-500/70 font-mono">Expansion</div>
                   </div>
-                  <div className="p-3 rounded-lg bg-yellow-50 border border-yellow-200">
-                    <div className="text-sm font-bold text-yellow-700 mb-1">둔화기</div>
-                    <div className="text-xs text-yellow-600">Slowdown</div>
+                  <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
+                    <div className="text-sm font-bold text-yellow-400 mb-1 font-mono">둔화기</div>
+                    <div className="text-xs text-yellow-500/70 font-mono">Slowdown</div>
                   </div>
-                  <div className="p-3 rounded-lg bg-red-50 border border-red-200">
-                    <div className="text-sm font-bold text-red-700 mb-1">침체기</div>
-                    <div className="text-xs text-red-600">Recession</div>
+                  <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30">
+                    <div className="text-sm font-bold text-red-400 mb-1 font-mono">침체기</div>
+                    <div className="text-xs text-red-500/70 font-mono">Recession</div>
                   </div>
                 </div>
 
                 {/* 추가 정보 */}
-                <div className="pt-4 border-t border-gray-100">
+                <div className="pt-4 border-t border-green-400/20">
                   <div className="grid grid-cols-3 gap-6 text-center">
                     <div>
-                      <div className="text-sm text-gray-500 mb-1">지표 수집</div>
-                      <div className="text-lg font-bold text-green-600">실시간</div>
+                      <div className="text-xs text-green-500/50 mb-1 font-mono">DATA SOURCE</div>
+                      <div className="text-lg font-bold text-green-400 font-mono">REAL-TIME</div>
                     </div>
                     <div>
-                      <div className="text-sm text-gray-500 mb-1">AI 분석</div>
-                      <div className="text-lg font-bold text-blue-600">자동화</div>
+                      <div className="text-xs text-green-500/50 mb-1 font-mono">ANALYSIS</div>
+                      <div className="text-lg font-bold text-blue-400 font-mono">AI-DRIVEN</div>
                     </div>
                     <div>
-                      <div className="text-sm text-gray-500 mb-1">업데이트</div>
-                      <div className="text-lg font-bold text-purple-600">매일</div>
+                      <div className="text-xs text-green-500/50 mb-1 font-mono">UPDATE</div>
+                      <div className="text-lg font-bold text-purple-400 font-mono">DAILY</div>
                     </div>
                   </div>
                 </div>
