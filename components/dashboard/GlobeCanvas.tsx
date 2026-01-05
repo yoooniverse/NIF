@@ -7,7 +7,34 @@ import * as THREE from 'three';
 
 // NOTE: react-globe.gl의 TS 타입 정의가 controls 관련/일부 props를 완전히 반영하지 못하는 경우가 있어
 // 런타임 동작을 우선하기 위해 any로 래핑합니다.
-const Globe = dynamic(() => import('react-globe.gl'), { ssr: false }) as unknown as React.ComponentType<any>;
+const Globe = dynamic(
+  () => {
+    console.info('[GLOBE_CANVAS] Starting dynamic import of react-globe.gl');
+    return import('react-globe.gl')
+      .then((mod) => {
+        console.info('[GLOBE_CANVAS] react-globe.gl successfully imported');
+        return mod;
+      })
+      .catch((err) => {
+        console.error('[GLOBE_CANVAS] Failed to import react-globe.gl', err);
+        throw err;
+      });
+  },
+  {
+    ssr: false,
+    loading: () => {
+      console.info('[GLOBE_CANVAS] Dynamic import loading...');
+      return (
+        <div className="flex h-full items-center justify-center">
+          <div className="text-center">
+            <div className="mx-auto h-16 w-16 animate-spin rounded-full border-4 border-sky-200 border-t-transparent" />
+            <div className="mt-4 text-sm text-white/60">3D 지구 라이브러리 로딩 중...</div>
+          </div>
+        </div>
+      );
+    },
+  }
+) as unknown as React.ComponentType<any>;
 
 type ArcDatum = {
   startLat: number;
@@ -41,6 +68,15 @@ export default function GlobeCanvas({ className = '' }: GlobeCanvasProps) {
   const globeRef = useRef<any>(null);
   const [globeError, setGlobeError] = useState<string | null>(null);
   const [globeLoading, setGlobeLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    console.info('[GLOBE_CANVAS] GlobeCanvas component mounted');
+    setMounted(true);
+    return () => {
+      console.info('[GLOBE_CANVAS] GlobeCanvas component unmounted');
+    };
+  }, []);
 
   const arcsData: ArcDatum[] = useMemo(
     () => [
@@ -109,18 +145,37 @@ export default function GlobeCanvas({ className = '' }: GlobeCanvasProps) {
     [hubs]
   );
 
+  // Check WebGL support
+  useEffect(() => {
+    if (!mounted) return;
+
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    
+    if (!gl) {
+      console.error('[GLOBE_CANVAS] WebGL not supported');
+      setGlobeError('WebGL을 지원하지 않는 브라우저입니다');
+      setGlobeLoading(false);
+      return;
+    }
+
+    console.info('[GLOBE_CANVAS] WebGL is supported');
+  }, [mounted]);
+
   // Globe loading timeout
   useEffect(() => {
+    if (!mounted) return;
+
     const timeout = setTimeout(() => {
       if (globeLoading && !globeError) {
-        console.warn('[GLOBE_CANVAS] Globe loading timeout');
-        setGlobeError('Globe loading timeout - please refresh the page');
+        console.warn('[GLOBE_CANVAS] Globe loading timeout after 15 seconds');
+        setGlobeError('3D 지구 로딩 타임아웃 - 페이지를 새로고침해주세요');
         setGlobeLoading(false);
       }
-    }, 10000); // 10 seconds timeout
+    }, 15000); // 15 seconds timeout (increased from 10)
 
     return () => clearTimeout(timeout);
-  }, [globeLoading, globeError]);
+  }, [globeLoading, globeError, mounted]);
 
   const setupControlsAndMaterial = useCallback(() => {
     const globe = globeRef.current;
@@ -176,29 +231,29 @@ export default function GlobeCanvas({ className = '' }: GlobeCanvasProps) {
 
       const nightTex = loader.load(
         EARTH_TEXTURES.night,
-        undefined,
+        () => console.info('[GLOBE_CANVAS] ✅ Night texture loaded'),
         undefined,
         (err) => {
-          console.error('[GLOBE_CANVAS] failed to load night texture', { url: EARTH_TEXTURES.night, err });
-          setGlobeError('Failed to load night texture (network blocked?)');
+          console.error('[GLOBE_CANVAS] ❌ Failed to load night texture', { url: EARTH_TEXTURES.night, err });
+          setGlobeError('야간 조명 텍스처 로딩 실패');
         }
       );
       const bumpTex = loader.load(
         EARTH_TEXTURES.bump,
-        undefined,
+        () => console.info('[GLOBE_CANVAS] ✅ Bump texture loaded'),
         undefined,
         (err) => {
-          console.error('[GLOBE_CANVAS] failed to load bump texture', { url: EARTH_TEXTURES.bump, err });
-          setGlobeError('Failed to load bump texture (network blocked?)');
+          console.error('[GLOBE_CANVAS] ❌ Failed to load bump texture', { url: EARTH_TEXTURES.bump, err });
+          setGlobeError('지형 텍스처 로딩 실패');
         }
       );
       const specularTex = loader.load(
         EARTH_TEXTURES.specular,
-        undefined,
+        () => console.info('[GLOBE_CANVAS] ✅ Specular texture loaded'),
         undefined,
         (err) => {
-          console.error('[GLOBE_CANVAS] failed to load specular texture', { url: EARTH_TEXTURES.specular, err });
-          setGlobeError('Failed to load specular texture (network blocked?)');
+          console.error('[GLOBE_CANVAS] ❌ Failed to load specular texture', { url: EARTH_TEXTURES.specular, err });
+          setGlobeError('물 반사 텍스처 로딩 실패');
         }
       );
 
@@ -221,6 +276,20 @@ export default function GlobeCanvas({ className = '' }: GlobeCanvasProps) {
     }
   }, []);
 
+  // Don't render Globe until mounted (avoid SSR issues)
+  if (!mounted) {
+    return (
+      <div className={`absolute inset-0 z-0 ${className}`}>
+        <div className="flex h-full items-center justify-center">
+          <div className="text-center">
+            <div className="mx-auto h-16 w-16 animate-spin rounded-full border-4 border-sky-200 border-t-transparent" />
+            <div className="mt-4 text-sm text-white/60">초기화 중...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`absolute inset-0 z-0 ${className}`}>
       {globeError ? (
@@ -234,10 +303,17 @@ export default function GlobeCanvas({ className = '' }: GlobeCanvasProps) {
             <div className="mt-2 text-xs text-white/30">
               {globeError}
             </div>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-4 rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/20 transition"
+            >
+              새로고침
+            </button>
           </div>
         </div>
       ) : (
         <>
+        {console.info('[GLOBE_CANVAS] Rendering Globe component')}
         <Globe
           ref={globeRef}
           // Globe look & feel
@@ -276,9 +352,14 @@ export default function GlobeCanvas({ className = '' }: GlobeCanvasProps) {
           ringPropagationSpeed={2.0}
           ringRepeatPeriod={1600}
           onGlobeReady={() => {
-            console.info('[GLOBE_CANVAS] globe ready');
+            console.info('[GLOBE_CANVAS] ✅ globe ready - initializing controls and materials');
             setGlobeLoading(false);
-            setupControlsAndMaterial();
+            
+            // Delay setup to ensure globe is fully initialized
+            setTimeout(() => {
+              console.info('[GLOBE_CANVAS] Setting up controls and materials...');
+              setupControlsAndMaterial();
+            }, 100);
           }}
           onGlobeClick={() => console.info('[GLOBE_CANVAS] globe click')}
           onPointClick={(d: HubDatum) =>
