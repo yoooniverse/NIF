@@ -15,8 +15,8 @@ const Navbar = () => {
     setMounted(true);
   }, []);
 
-  // 랜딩 페이지 + 대시보드에서는 Navbar를 숨김
-  if (pathname === "/" || pathname.startsWith("/dashboard")) {
+  // 랜딩 페이지 + 대시보드 + 온보딩에서는 Navbar를 숨김
+  if (pathname === "/" || pathname.startsWith("/dashboard") || pathname.startsWith("/onboarding")) {
     return null;
   }
 

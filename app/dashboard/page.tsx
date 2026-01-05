@@ -252,7 +252,7 @@ export default function DashboardV2Page() {
                       <Newspaper className="h-5 w-5 text-sky-200 group-hover:text-sky-100" />
                       <div>
                         <div className="text-lg md:text-xl font-semibold">오늘의 뉴스</div>
-                        <div className="mt-1 text-sm md:text-base text-white/60">주요 헤드라인 요약</div>
+                        <div className="mt-1 text-sm md:text-base text-white/60">데일리 브리핑</div>
                       </div>
                     </div>
                     <span className="text-sm text-white/45">열기</span>

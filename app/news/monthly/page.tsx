@@ -256,22 +256,13 @@ function MonthlyNewsContent() {
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
               이달의 뉴스
             </h1>
-            <p className="mt-1 text-white/70 text-base sm:text-lg">
-              월간 뉴스 브리핑을 확인해보세요
+            <p className="mt-1 text-white text-base sm:text-lg">
+              이달의 뉴스를 모아보세요
             </p>
           </div>
         </div>
 
         <div className="mt-10 space-y-6">
-          {/* 월간 요약 */}
-          <div className="rounded-3xl border border-white/20 bg-white/10 backdrop-blur px-7 py-6">
-            <h2 className="text-lg font-semibold text-white mb-3">12월 뉴스 브리핑</h2>
-            <p className="text-white/80 leading-relaxed">
-              이번 달은 &quot;리스크 온/오프&quot;가 빠르게 교차했습니다. 금리/환율/유가의 동시 변동이 커져 포트폴리오 분산이 중요합니다.
-              미국 경제지표 호조와 함께 아시아 시장의 회복세가 두드러졌습니다.
-            </p>
-          </div>
-
           {/* 관심분야 카테고리 필터 */}
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-3">

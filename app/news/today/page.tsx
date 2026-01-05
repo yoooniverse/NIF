@@ -292,11 +292,8 @@ function TodayNewsContent() {
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
               오늘의 뉴스
             </h1>
-            <p className="mt-1 text-white/70 text-base sm:text-lg">
-              {userInterests.length > 0
-                ? `${userInterests.join(', ')} 분야의 뉴스를 확인해보세요`
-                : '관심분야별 주요 헤드라인을 확인해보세요'
-              }
+            <p className="mt-1 text-white text-base sm:text-lg">
+              당신의 관심분야의 최신 뉴스를 확인하세요
             </p>
           </div>
         </div>
