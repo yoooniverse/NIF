@@ -135,14 +135,6 @@ export default function PassportModal({
                }} 
           />
 
-          {/* Close Button */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 z-50 p-2 bg-black/5 hover:bg-black/10 rounded-full transition-colors"
-          >
-            <X className="w-5 h-5 text-gray-600" />
-          </button>
-
           <div className="flex flex-col md:flex-row h-full">
             
             {/* Left Page (Photo & Identity) */}
@@ -152,11 +144,6 @@ export default function PassportModal({
               <div className="text-center space-y-1 mb-8">
                 <div className="text-sm font-serif font-bold tracking-widest text-gray-800">REPUBLIC OF KOREA</div>
                 <div className="text-3xl font-serif font-black tracking-wider text-gray-900">PASSPORT</div>
-                <div className="flex justify-between items-end px-2 mt-6">
-                    <div className="text-xs font-bold text-gray-500">Type / 종류<br/><span className="text-lg text-black">P</span></div>
-                    <div className="text-xs font-bold text-gray-500">Country code / 발행국<br/><span className="text-lg text-black">KOR</span></div>
-                    <div className="text-xs font-bold text-gray-500">Passport No. / 여권번호<br/><span className="text-lg text-black">{passportNumber}</span></div>
-                </div>
               </div>
 
               {/* Photo & Details Layout */}
@@ -202,17 +189,16 @@ export default function PassportModal({
                         <div className="text-md font-bold text-black">{formatDate(joinDate || new Date())}</div>
                     </div>
                   </div>
-                  <div>
-                    <div className="text-[10px] text-gray-500 font-bold uppercase">Date of expiration / 기간만료일</div>
-                    <div className="text-md font-bold text-black">{formatDate(new Date(new Date().setFullYear(new Date().getFullYear() + 10)))}</div>
-                  </div>
                 </div>
               </div>
               
-               {/* Signature */}
-               <div className="mt-4 absolute bottom-6 right-8 opacity-70 rotate-[-5deg]">
-                 <span className="font-script text-2xl text-gray-800">{givenNames}</span>
-               </div>
+              {/* MRZ (Machine Readable Zone) for Left Page */}
+              <div className="absolute bottom-2 left-0 right-0 px-4">
+                <div className="bg-white/80 backdrop-blur-sm p-2 font-mono text-[8px] md:text-[10px] tracking-[0.15em] leading-tight text-black overflow-hidden whitespace-nowrap select-none uppercase border-t border-gray-300">
+                  <div>P&lt;KOR{surname}&lt;&lt;{givenNames}&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;</div>
+                  <div>{passportNumber}&lt;0KOR{new Date().getFullYear().toString().slice(2)}01015M{new Date(new Date().setFullYear(new Date().getFullYear() + 10)).getFullYear().toString().slice(2)}01018&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;02</div>
+                </div>
+              </div>
             </div>
 
             {/* Right Page (Settings / Amendments) */}
@@ -307,13 +293,15 @@ export default function PassportModal({
                         Log out
                     </button>
                 </div>
+                
+                {/* MRZ (Machine Readable Zone) for Right Page */}
+                <div className="absolute bottom-2 left-0 right-0 px-4">
+                  <div className="bg-white/80 backdrop-blur-sm p-2 font-mono text-[8px] md:text-[10px] tracking-[0.15em] leading-tight text-black overflow-hidden whitespace-nowrap select-none uppercase border-t border-gray-300">
+                    <div>P&lt;KOR{surname}&lt;&lt;{givenNames}&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;</div>
+                    <div>{passportNumber}&lt;0KOR{new Date().getFullYear().toString().slice(2)}01015M{new Date(new Date().setFullYear(new Date().getFullYear() + 10)).getFullYear().toString().slice(2)}01018&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;02</div>
+                  </div>
+                </div>
             </div>
-          </div>
-
-          {/* Machine Readable Zone (MRZ) */}
-          <div className="bg-white p-4 pt-6 border-t border-gray-200 font-mono text-lg tracking-[0.2em] leading-relaxed text-black overflow-hidden whitespace-nowrap select-all uppercase">
-            <div>P&lt;KOR{surname}&lt;&lt;{givenNames}&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;</div>
-            <div>{passportNumber}&lt;0KOR{new Date().getFullYear().toString().slice(2)}01015M{new Date(new Date().setFullYear(new Date().getFullYear() + 10)).getFullYear().toString().slice(2)}01018&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;02</div>
           </div>
 
         </div>
