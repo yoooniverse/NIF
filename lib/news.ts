@@ -18,6 +18,8 @@ export async function fetchTodayNews(limit: number = 10): Promise<News[]> {
       headers: {
         'Content-Type': 'application/json',
       },
+      // 캐싱 비활성화: 항상 최신 데이터를 가져옵니다
+      cache: 'no-store',
     });
 
     if (!response.ok) {
@@ -50,6 +52,8 @@ export async function fetchMonthlyNews(limit: number = 20): Promise<News[]> {
       headers: {
         'Content-Type': 'application/json',
       },
+      // 캐싱 비활성화: 항상 최신 데이터를 가져옵니다
+      cache: 'no-store',
     });
 
     if (!response.ok) {

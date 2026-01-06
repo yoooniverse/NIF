@@ -135,14 +135,27 @@ function TodayNewsContent() {
   // 뉴스 데이터 로딩
   useEffect(() => {
     async function loadNews() {
-      if (!isLoaded || !user) return;
+      // 개발 환경: 로그인 없이도 뉴스 로드 가능
+      // 프로덕션 환경: 로그인 필수 (미들웨어에서 차단됨)
+      if (!isLoaded) return;
 
       try {
-        console.info('[TODAY_NEWS] loading news data...');
+        console.info('[TODAY_NEWS] loading news data...', { 
+          isLoaded, 
+          hasUser: !!user 
+        });
         setLoading(true);
         setError(null);
 
-        const response = await fetch('/api/news?limit=20');
+        // cache: 'no-store' 옵션으로 브라우저 캐싱 비활성화
+        const response = await fetch('/api/news?limit=20', {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
         if (!response.ok) throw new Error('Failed to fetch news');
 
         const data = await response.json();
@@ -194,16 +207,16 @@ function TodayNewsContent() {
     }
 
     loadNews();
-  }, [isLoaded, user]);
+  }, [isLoaded, user]); // user가 변경되면 다시 로드 (로그인/로그아웃 시)
 
-  // 인증 체크
-  useEffect(() => {
-    if (!isLoaded) return;
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-  }, [isLoaded, user, router]);
+  // 인증 체크 (제거 - 뉴스 페이지는 공개 페이지)
+  // useEffect(() => {
+  //   if (!isLoaded) return;
+  //   if (!user) {
+  //     router.push('/login');
+  //     return;
+  //   }
+  // }, [isLoaded, user, router]);
 
   // 카테고리 변경 시 URL 업데이트
   const handleCategoryChange = useCallback((slug: string) => {
@@ -240,7 +253,9 @@ function TodayNewsContent() {
   console.info('[TODAY_NEWS] filter result:', {
     selectedCategory,
     totalNews: news.length,
-    filteredCount: filteredNews.length
+    filteredCount: filteredNews.length,
+    isLoaded,
+    hasUser: !!user
   });
 
   // 동적 카테고리 목록 생성
@@ -253,7 +268,10 @@ function TodayNewsContent() {
     }))
   ];
 
-  if (!isLoaded || !user) {
+  // Clerk 로딩이 완료될 때까지만 대기
+  // 개발 환경: 로그인 여부와 무관하게 페이지 렌더링
+  // 프로덕션 환경: 미들웨어가 비로그인 사용자를 홈으로 리다이렉트
+  if (!isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#050814]">
         <div className="text-center">
@@ -349,7 +367,6 @@ function TodayNewsContent() {
                     category={cardData.category}
                     categorySlug={selectedCategory !== 'all' ? selectedCategory : undefined}
                     publishedAt={cardData.publishedAt}
-                    summary={cardData.summary}
                     tags={cardData.tags}
                     targets={cardData.targets}
                     isWhite={true}

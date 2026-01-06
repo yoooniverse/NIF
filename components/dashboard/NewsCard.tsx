@@ -91,11 +91,6 @@ export default function NewsCard({
             </div>
           )}
 
-          {summary && (
-            <p className={`text-base leading-relaxed mb-3 ${isWhite ? 'text-gray-600' : 'text-white/80'}`}>
-              {summary}
-            </p>
-          )}
           <div className="flex items-center gap-2">
             <Clock className={`h-4 w-4 ${isWhite ? 'text-gray-400' : 'text-white/50'}`} />
             <span className={`text-sm ${isWhite ? 'text-gray-500' : 'text-white/60'}`}>

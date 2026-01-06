@@ -17,6 +17,7 @@ interface NewsDetail {
   title: string;
   source: string;
   url: string;
+  category: string; // 관심분야 (주식, 가상화폐, 부동산 등)
   analysis: {
     level: 1 | 2 | 3;
     title: string;
@@ -49,15 +50,52 @@ export default function NewsDetailPage() {
       try {
         console.info("[NEWS_DETAIL] fetching news", { id, fromPage, category });
 
-        // API에서 뉴스 상세 정보 가져오기
-        const response = await fetch(`/api/news/${id}`);
+        // API에서 뉴스 상세 정보 가져오기 (캐싱 비활성화)
+        const response = await fetch(`/api/news/${id}`, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
 
         if (!response.ok) {
           throw new Error('Failed to fetch news');
         }
 
         const data = await response.json();
-        console.info("[NEWS_DETAIL] news loaded", data);
+        console.group("[NEWS_DETAIL] 🔍 뉴스 데이터 로드");
+        console.log("📦 전체 API 응답:", JSON.stringify(data, null, 2));
+        console.log("📰 뉴스 ID:", data.id);
+        console.log("📝 뉴스 제목:", data.title);
+        console.log("🏢 출처:", data.source);
+        console.log("🏷️ 카테고리:", data.category);
+        console.log("🔗 URL:", data.url);
+        console.log("---");
+        console.log("📊 Analysis 객체:", data.analysis);
+        console.log("📌 제목:", data.analysis?.title);
+        console.log("📄 내용:", data.analysis?.content);
+        console.log("⚠️ 최악의 시나리오:", data.analysis?.worst_scenarios);
+        console.log("🎯 액션팁:", data.analysis?.action_tips);
+        console.log("📊 레벨:", data.analysis?.level);
+        console.log("🔒 블러:", data.analysis?.should_blur);
+        console.groupEnd();
+        
+        // 데이터 검증
+        if (!data.analysis?.content) {
+          console.error("[NEWS_DETAIL] ❌ 뉴스 내용이 없습니다!");
+          console.error("[NEWS_DETAIL] 받은 content 값:", data.analysis?.content);
+        }
+        if (!data.analysis?.worst_scenarios || data.analysis.worst_scenarios.length === 0) {
+          console.error("[NEWS_DETAIL] ❌ 최악의 시나리오가 없습니다!");
+          console.error("[NEWS_DETAIL] 받은 worst_scenarios:", data.analysis?.worst_scenarios);
+        }
+        if (!data.analysis?.action_tips || data.analysis.action_tips.length === 0) {
+          console.error("[NEWS_DETAIL] ❌ 액션팁이 없습니다!");
+          console.error("[NEWS_DETAIL] 받은 action_tips:", data.analysis?.action_tips);
+        }
+        
         setNews(data);
       } catch (error) {
         console.error("[NEWS_DETAIL] fetch error", error);
@@ -150,7 +188,7 @@ export default function NewsDetailPage() {
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
               {getPageTitle()}
             </h1>
-            <p className="mt-1 text-white/70 text-base sm:text-lg">
+            <p className="mt-1 text-white text-base sm:text-lg">
               {getPageSubtitle()}
             </p>
           </div>
@@ -180,16 +218,28 @@ export default function NewsDetailPage() {
         </div>
 
         <div className="mt-10 space-y-6">
-          <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur px-7 py-6">
-            <div className="text-sm text-white/60">{news.source}</div>
-            <div className="mt-3 text-2xl sm:text-3xl font-bold text-white">
-              {news.analysis.title}
+          {/* 뉴스 제목 카드 */}
+          <div className="rounded-3xl border border-gray-200 bg-white px-7 py-6 shadow-lg">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="inline-block px-3 py-1 text-xs font-semibold text-blue-700 bg-blue-100 rounded-full">
+                {news.category}
+              </span>
             </div>
+            <h2 className="text-2xl sm:text-3xl font-bold text-black leading-tight">
+              {news.analysis.title || news.title || "미 연준, 금리 동결 시사 — 시장은 '인하 시점' 주목"}
+            </h2>
           </div>
 
+          {/* 뉴스 내용 (3문장) */}
           <NewsSummary summary={news.analysis.content} />
+          
+          {/* 최악의 시나리오 */}
           <WorstScenario scenarios={news.analysis.worst_scenarios} />
+          
+          {/* 사용자 액션팁 */}
           <ActionItem tips={news.analysis.action_tips} shouldBlur={news.analysis.should_blur} />
+          
+          {/* 원문 링크 */}
           <NewsFooter source={news.source} url={news.url} />
         </div>
       </div>

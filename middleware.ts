@@ -1,7 +1,11 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-const isPublicRoute = createRouteMatcher([
+// 개발 환경에서만 뉴스 페이지를 공개로 설정 (테스트 용이성)
+// 프로덕션에서는 로그인 필수!
+const isDevelopment = process.env.NODE_ENV === 'development';
+
+const publicRoutes = [
   "/",
   "/login(.*)",
   "/signup(.*)",
@@ -9,9 +13,14 @@ const isPublicRoute = createRouteMatcher([
   "/about(.*)",
   "/terms(.*)",
   "/privacy(.*)",
-  // 임시: 디버깅을 위해 뉴스 경로 공개
-  "/news(.*)",
-]);
+];
+
+// 개발 환경에서만 뉴스 페이지 공개
+if (isDevelopment) {
+  publicRoutes.push("/news(.*)", "/api/news(.*)");
+}
+
+const isPublicRoute = createRouteMatcher(publicRoutes);
 
 export default clerkMiddleware(async (auth, req) => {
   const { pathname } = req.nextUrl;

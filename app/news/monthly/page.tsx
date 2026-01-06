@@ -314,7 +314,6 @@ function MonthlyNewsContent() {
                     category={cardData.category}
                     categorySlug={selectedCategory !== 'all' ? selectedCategory : undefined}
                     publishedAt={cardData.publishedAt}
-                    summary={cardData.summary}
                     tags={cardData.tags}
                     targets={cardData.targets}
                     isWhite={true}

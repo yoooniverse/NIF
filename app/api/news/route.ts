@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@supabase/supabase-js";
 
+// 캐싱 비활성화: 항상 최신 데이터를 가져옵니다
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -28,9 +32,15 @@ export async function GET(req: NextRequest) {
     console.log("[API][NEWS_TODAY] Request started");
     const { userId } = await auth();
 
-    if (!userId) {
+    // 개발 환경이 아니면 로그인 필수 (프로덕션 보안)
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    
+    if (!isDevelopment && !userId) {
+      console.log("[API][NEWS_TODAY] Production mode - login required");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    console.log("[API][NEWS_TODAY] User ID:", userId || 'anonymous (dev mode)');
 
     const url = new URL(req.url);
     const categoryParam = url.searchParams.get("category");
@@ -51,36 +61,43 @@ export async function GET(req: NextRequest) {
       dateRange: `${startOfDay.toISOString()} ~ ${endOfDay.toISOString()}`
     });
 
-    // 1. 사용자 정보 조회
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('level, onboarded_at')
-      .eq('clerk_id', userId)
-      .single();
+    // 1. 사용자 정보 조회 (로그인한 경우에만)
+    let userLevel = 1; // 기본 레벨 (비로그인 사용자)
+    let isTrialPeriod = true; // 비로그인 사용자는 무료 체험 중으로 간주
+    let userInterestIds: string[] = [];
 
-    if (userError || !userData) {
-      console.error("[API][NEWS_TODAY] User not found:", userError);
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    if (userId) {
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('level, onboarded_at')
+        .eq('clerk_id', userId)
+        .single();
+
+      if (userData) {
+        userLevel = userData.level || 1;
+        const onboardedAt = new Date(userData.onboarded_at);
+        const now = new Date();
+        
+        // 무료 체험 기간 확인 (가입 후 30일 이내)
+        isTrialPeriod = (now.getTime() - onboardedAt.getTime()) < (30 * 24 * 60 * 60 * 1000);
+      } else {
+        console.log("[API][NEWS_TODAY] User not found in DB, using defaults");
+      }
     }
-
-    const userLevel = userData.level || 2;
-    const onboardedAt = new Date(userData.onboarded_at);
-    const now = new Date();
-
-    // 무료 체험 기간 확인 (가입 후 30일 이내)
-    const isTrialPeriod = (now.getTime() - onboardedAt.getTime()) < (30 * 24 * 60 * 60 * 1000);
 
     // 2. 마스터 데이터(Interests) 및 사용자 관심사 조회
     const [allInterestsResult, userInterestsResult] = await Promise.all([
       supabase.from('interests').select('name'), // 태그 표시 허용 목록(Allowlist)용
-      supabase.from('user_interests').select('interest_id').eq('clerk_id', userId)
+      userId 
+        ? supabase.from('user_interests').select('interest_id').eq('clerk_id', userId)
+        : Promise.resolve({ data: [], error: null })
     ]);
+
+    // 사용자 관심사 ID 목록 (로그인한 경우에만)
+    userInterestIds = (userInterestsResult.data || []).map(i => i.interest_id);
 
     // 태그 허용 목록 (Contexts 제외, 오직 Interests만 표시)
     const allowedTagNames = (allInterestsResult.data || []).map(i => i.name);
-
-    // 사용자 관심사 ID 목록
-    const userInterestIds = (userInterestsResult.data || []).map(i => i.interest_id);
 
     // 사용자 관심사 한글명 조회 (뉴스 필터링용)
     const userInterestNamesResult = userInterestIds.length > 0

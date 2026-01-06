@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { useClerk } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import PassportModal from '@/components/dashboard/PassportModal';
 
 interface BoardingPassModalProps {
   isOpen: boolean;
@@ -26,6 +27,7 @@ export default function BoardingPassModal({
   const { signOut } = useClerk();
   const router = useRouter();
   const [isNavigating, setIsNavigating] = useState(false);
+  const [isPassportOpen, setIsPassportOpen] = useState(false);
 
   // 모달이 열릴 때 온보딩 페이지를 미리 로드(Prefetch)
   useEffect(() => {
@@ -40,9 +42,8 @@ export default function BoardingPassModal({
   console.info('[BOARDING_PASS_MODAL] opened with passengerName:', passengerName, 'subscriptionStatus:', subscriptionStatus);
 
   const handleSettingsClick = () => {
-    console.info('[BOARDING_PASS] settings button clicked -> navigating to /onboarding/interests');
-    setIsNavigating(true); // 로딩 상태 표시
-    router.push('/onboarding/interests');
+    console.info('[BOARDING_PASS] settings button clicked -> opening PassportModal');
+    setIsPassportOpen(true);
   };
 
   const handleSignOut = () => {
@@ -226,6 +227,12 @@ export default function BoardingPassModal({
           </div>
         </div>
       </div>
+
+      {/* Passport Modal (Nested) */}
+      <PassportModal 
+        isOpen={isPassportOpen} 
+        onClose={() => setIsPassportOpen(false)} 
+      />
     </div>
   );
 }
