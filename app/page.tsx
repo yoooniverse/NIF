@@ -96,16 +96,16 @@ export default function LandingPage() {
 
             {/* 메인 카피 */}
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight drop-shadow-2xl px-4">
-              경제 뉴스는 정보가 아니라
+              경제뉴스가 어렵나요?
               <br />
-              <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent">
-                생존입니다
+              <span className="bg-gradient-to-r from-red-500 via-orange-500 to-red-500 bg-clip-text text-transparent">
+                가난은 더 어렵습니다
               </span>
             </h1>
 
             {/* 서브 카피 */}
             <p className="text-base md:text-xl lg:text-2xl text-white/90 max-w-2xl mx-auto drop-shadow-lg px-4">
-              AI가 당신의 눈높이에 맞춰 경제 뉴스를 해석해드립니다
+              경제 문맹 탈출, News In Flight면 하루 5분으로 끝납니다
             </p>
 
             {/* CTA 버튼 */}
@@ -116,8 +116,7 @@ export default function LandingPage() {
                   variant="outline"
                   className="w-full sm:w-auto text-base md:text-lg px-6 md:px-8 py-5 md:py-6 bg-black/80 backdrop-blur-md border-white/20 text-white hover:bg-black hover:border-white/40 transition-all duration-300 shadow-2xl hover:shadow-blue-500/50 group"
                 >
-                  30일 무료로 시작하기
-                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  회원가입
                 </Button>
               </Link>
               <Link href="/about">
@@ -133,7 +132,7 @@ export default function LandingPage() {
 
             {/* 무료 체험 안내 */}
             <p className="text-xs md:text-sm text-white/60 pt-4 px-4">
-              💳 신용카드 등록 없이 30일 무료 체험
+              💳 신용카드 등록 없이 서비스 이용하기
             </p>
           </div>
         </div>

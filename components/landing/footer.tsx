@@ -17,8 +17,8 @@ export function Footer() {
               News In Flight
             </h3>
             <p className="text-gray-600 leading-relaxed mb-6">
-              경제 뉴스는 정보가 아니라 생존입니다.<br />
-              AI가 당신의 눈높이에 맞춰 경제 뉴스를 해석해드립니다.
+              경제뉴스가 어렵나요? <span className="text-red-600 font-bold">가난은 더 어렵습니다</span><br />
+              경제 문맹 탈출, News In Flight면 하루 5분으로 끝납니다
             </p>
 
             {/* 문의하기 - Apple 스타일 */}

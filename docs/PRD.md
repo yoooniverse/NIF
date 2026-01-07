@@ -4,7 +4,7 @@
 
 **개발 기간:** 33일 (2025.12.11 ~ 2026.01.13, 약 5주)
 
-**현재 진행 상황:** 2025.12.28 (Week 3, Day 17) - 경제 순환기 지도 개발 시작
+**현재 진행 상황:** 2026.01.07 (Week 4, Day 27) - Week 1-3 완료, QA 및 최적화 진행 중
 
 **목표:** AI 기반 경제 뉴스 해석으로 사용자 맞춤 인사이트 제공
 
@@ -30,10 +30,13 @@
 ## 👤 사용자 온보딩
 
 사용자가 회원가입 시 선택:
+
 1. **관심분야** (1~5개 선택 가능)
+
    - 주식, 부동산, ETF, 환율, 가상화폐
 
 2. **상황** (1~6개 선택 가능)
+
    - 직장인, 대출보유, 예적금, 달러보유, 사업가, 해외여행
 
 3. **레벨** (1개 선택)
@@ -61,54 +64,62 @@
 - AI 레벨 선택: Lv.1 (초보자), Lv.2 (일반), Lv.3 (전문가) 중 택1 ✅ 구현 완료
 - user_profiles, user_interests, user_contexts 테이블에 저장 ✅ 구현 완료
 
-**F3. AI 뉴스 파이프라인** 🔄 1차 구현 완료 (최적화 진행 중)
+**F3. AI 뉴스 파이프라인** ✅ 구현 완료 (n8n 워크플로우 정상 작동)
 
-### 🔄 백엔드 작업 (n8n) - 매일 아침 8시 자동 실행:
+### ✅ 백엔드 작업 (n8n) - 매일 자동 실행:
 
 1. **뉴스 수집**
+
    - RSS에서 경제 뉴스 가져오기
    - 어제 날짜 뉴스만 필터링
 
 2. **AI 해설 생성** (관심분야별)
+
    - 뉴스가 "주식"과 관련있으면 → 주식 버전 해설 생성
    - 뉴스가 "부동산"과 관련있으면 → 부동산 버전 해설 생성
    - 관련 없으면 → 그 관심분야로는 저장 안 함
 
 3. **레벨별 해설 생성** (각 뉴스마다)
+
    - 레벨1 제목 + 내용
    - 레벨2 제목 + 내용
    - 레벨3 제목 + 내용
 
 4. **상황별 해설 생성** (6개 전부)
+
    - 최악의 시나리오:
-     * 직장인인 당신은...
-     * 대출보유한 당신은...
-     * 예적금하는 당신은...
-     * 달러보유한 당신은...
-     * 사업가인 당신은...
-     * 해외여행 준비하는 당신은...
+
+     - 직장인인 당신은...
+     - 대출보유한 당신은...
+     - 예적금하는 당신은...
+     - 달러보유한 당신은...
+     - 사업가인 당신은...
+     - 해외여행 준비하는 당신은...
 
    - 액션 팁:
-     * 직장인인 당신은...
-     * 대출보유한 당신은...
-     * (위와 동일하게 6개)
+     - 직장인인 당신은...
+     - 대출보유한 당신은...
+     - (위와 동일하게 6개)
 
 5. **DB 저장**
    - 1개 뉴스 × 관련된 관심분야 개수 = N개 행 저장
    - 예: 주식+부동산 관련 뉴스 → 2개 행
 
 - n8n RSS 노드로 뉴스 수집 ✅ 완료
-- Google Gemini 2.5 Flash로 분석 (현재 1개 뉴스, 50개 확장 예정) 🔄 진행 중
-- 레벨별 분석 생성 (1개 뉴스 → 3개 레코드, 프롬프트 1차 버전) 🔄 진행 중
+- Google Gemini 2.5 Flash로 분석 ✅ 완료 (뉴스 자동 분석 정상 작동)
+- 레벨별 분석 생성 (1개 뉴스 → 3개 레코드) ✅ 완료
 - news, news_analysis_levels 테이블에 저장 ✅ 완료
+- 관심분야별 뉴스 필터링 및 카테고리 분류 ✅ 완료
 
-**F4. 메인 대시보드** ✅ 구현 완료
+**F4. 메인 대시보드 (In Flight Map 컨셉)** ✅ 구현 완료
 
-- "이달의 뉴스" 섹션 ✅ 구현 완료
-- "오늘의 뉴스" 섹션 (클릭 시 관심분야별 TOP 5 목록 표시) ✅ 구현 완료
-- 경제 순환기 지도 (간단 버전) ✅ 구현 완료
-- 뉴스 목록: 제목 + 날짜만 표시 (최신순 정렬) ✅ 구현 완료
-- 3D 지구 기반 인터랙션 시스템 ✅ 구현 완료
+- **3D 지구 기반 배경 시스템** ✅ 구현 완료 (GlobeCanvas 컴포넌트)
+- **좌측 사이드바 레이아웃** ✅ 구현 완료 (유저 정보 + 구독 상태 + 3개 주요 섹션)
+- **"이달의 뉴스" 섹션** ✅ 구현 완료 (카테고리별 필터링)
+- **"오늘의 뉴스" 섹션** ✅ 구현 완료 (관심분야별 필터링)
+- **경제 순환기 지도 모달** ✅ 구현 완료 (중앙 글래스 모달 디자인)
+- **Boarding Pass Modal** ✅ 구현 완료 (프로필 수정 및 구독 정보)
+- **뉴스 카드 컴포넌트** ✅ 구현 완료 (NewsCard.tsx)
 
 **F5. 뉴스 상세** ✅ 구현 완료
 
@@ -117,16 +128,19 @@
 #### 뉴스 목록 페이지
 
 **상단 카테고리 탭:**
+
 - 사용자가 선택한 관심분야만 표시
 - 예: [주식] [부동산] [ETF] 버튼
 
 **동작:**
+
 - [주식] 클릭 → 주식 관련 뉴스만 표시
 - [부동산] 클릭 → 부동산 관련 뉴스만 표시
 
 #### 뉴스 상세 페이지
 
 **사용자 설정:**
+
 - 레벨: 2
 - 관심분야: 주식, 부동산
 - 상황: 직장인, 대출보유
@@ -156,6 +170,7 @@
 ```
 
 **핵심:**
+
 - 6개 상황이 DB에 다 저장되어 있지만
 - **사용자가 선택한 2개만** 화면에 표시
 - 다른 사용자(예: 사업가, 해외여행 선택)는 그 2개만 보임
@@ -167,15 +182,16 @@
   - 31일차 이후: **블러 처리** → 클릭 시 Paywall ✅ 구현 완료
 - 출처 링크, 원문 링크 ✅ 구현 완료
 
-**F6. 구독 시스템** 🔄 부분 구현 (기본 로직 완료, 토스페이먼츠 연동 진행 중)
+**F6. 구독 시스템** ✅ 기본 로직 완료 (토스페이먼츠 연동은 v3: Post-Launch로 연기)
 
 - Supabase에서 subscriptions 테이블 생성 ✅ 완료
-- 가입 시 subscriptions 테이블에 plan='free', ends_at=now()+30일 자동 생성 ✅ 구현 완료
+- 가입 시 Clerk 메타데이터에 plan='free', ends_at=now()+30일 자동 생성 ✅ 구현 완료
 - 31일차 active=false → Paywall (콘텐츠 접근 차단 및 결제 유도) ✅ 구현 완료
-- 토스페이먼츠(Toss Payments) 연동 🔄 Week 4에서 구현 예정
-- 방식: '카드 자동결제(Billing)' 시스템 사용
-- 프로세스: 사용자가 결제창에서 카드 등록 → 빌링키(Billing Key) 발급 및 DB 저장
-- 가격: 월 9,900원 / 얼리버드 5,900원
+- **토스페이먼츠(Toss Payments) 연동** 🔄 **v3: Post-Launch로 연기**
+  - 런칭 후 필수 기능으로 구현 예정
+  - 방식: '카드 자동결제(Billing)' 시스템 사용
+  - 프로세스: 사용자가 결제창에서 카드 등록 → 빌링키(Billing Key) 발급 및 DB 저장
+  - 가격: 월 9,900원 / 얼리버드 5,900원
 
 ```sql
 -- Supabase에서 실행할 SQL
@@ -198,15 +214,17 @@ CREATE INDEX idx_subscriptions_active ON subscriptions(active);
 
 ### v2 기능 (Week 3-4, 선택 - Day 17-28)
 
-**F7. 경제 순환기 지도** 🔄 개발 진행 중 (2025.12.28 ~ 2026.01.02)
+**F7. 경제 순환기 지도** ✅ 구현 완료 (2026.01.06)
 
-- 좌측: 순환기별 특징 표 (정적 데이터 - 회복기, 확장기, 둔화기, 침체기) 🔄 구현 예정
-- 우측: 근거 지표 시각화 🔄 개발 진행 중
-  - **신호등 색상**: 규칙 기반 자동 계산 (Red/Yellow/Green) 🔄 2025.12.29 완료 목표
-  - **현재 상황 요약**: AI 작성 🔄 2025.12.30 완료 목표
-  - **역사적 패턴/팩트**: AI 작성 🔄 2025.12.30 완료 목표
-  - **근거 지표**: FRED API에서 수집 (장단기 금리차, 미국 실업률, 원/달러 환율) 🔄 2025.12.28 완료 목표
-- n8n 워크플로우로 매일 자동 업데이트 🔄 2026.01.02 완료 목표
+- **좌측: 순환기별 특징 표** ✅ 구현 완료 (회복기, 확장기, 둔화기, 침체기)
+- **우측: 근거 지표 시각화** ✅ 구현 완료
+  - **신호등 색상**: 규칙 기반 자동 계산 (Red/Yellow/Green) ✅ 완료
+  - **현재 상황 요약**: AI 작성 ✅ 완료
+  - **역사적 패턴/팩트**: AI 작성 ✅ 완료
+  - **근거 지표**: FRED API에서 수집 (장단기 금리차, 미국 실업률, 원/달러 환율) ✅ 완료
+- **n8n 워크플로우** ✅ 구현 완료 (매일 자동 업데이트)
+- **경제 순환기 페이지** ✅ 완료 (`/cycle`)
+- **경제 순환기 API** ✅ 완료 (`/api/cycle/current`)
 
 **신호등 색상 로직 (규칙 기반):**
 
@@ -245,11 +263,13 @@ function determineStatusColor(indicators) {
 
 ### v3 기능 (Post-Launch)
 
-- n8n 자동화 워크플로우 고도화
+- **토스페이먼츠 결제 시스템** (최우선) - 카드 자동결제(Billing) 연동
+- n8n 자동화 워크플로우 고도화 (프롬프트 최적화, 50개 뉴스 대량 처리)
 - CMS 어드민 대시보드
 - 웹 푸시 알림 (브라우저 알림) 또는 이메일 알림
 - 소셜 공유 기능 (카카오톡, 페이스북, 트위터)
 - PWA (Progressive Web App) 변환 (홈 화면 추가 가능)
+- Lighthouse 성능 최적화 (90점 이상)
 
 ---
 
@@ -277,35 +297,39 @@ function determineStatusColor(indicators) {
 - Step 3: AI 레벨 선택 (`/onboarding/level`)
 - Step 4: 완료 → 대시보드로 리다이렉트
 
-**P4. 메인 대시보드 (`/dashboard`)**
+**P4. 메인 대시보드 (`/dashboard`)** ✅ 구현 완료
 
-- 헤더: 로고, 프로필, 구독 상태 배지
-- "이달의 뉴스" 섹션
-- "오늘의 뉴스" 섹션 (관심분야별 TOP 5 목록)
-- 경제 순환기 지도 (간단 버전)
-- 뉴스 목록: 제목 + 날짜
+- **3D 지구 기반 배경** (GlobeCanvas 컴포넌트)
+- **좌측 사이드바**: 유저 정보, 구독 상태, 3개 주요 섹션 버튼
+- **Boarding Pass Modal**: 프로필 수정 및 구독 정보 확인
+- "이달의 뉴스" 버튼 → `/news/monthly` 페이지 이동
+- "오늘의 뉴스" 버튼 → `/news/today` 페이지 이동
+- 경제 순환기 지도 모달 (중앙 글래스 모달)
 
-**P5. 뉴스 상세 (`/news/[id]`)**
+**P5. 뉴스 상세 (`/news/[id]`)** ✅ 구현 완료
 
-- 뉴스 해설
-- 최악의 시나리오
-- Action Item (무료 체험 중: 전체 공개, 만료 후: 블러)
-- 원문 링크
+- **Block 1: AI 뉴스 해설** (쉬운 제목 + 요약)
+- **Block 2: 최악의 시나리오** (사용자 상황 기반 개인화)
+- **Block 3: Action Item** (무료 체험 중: 전체 공개, 만료 후: 블러)
+- **Block 4: 뉴스 제목 카드**
+- **출처 및 원문 링크**
 
-**P6. 경제 순환기 지도 (`/cycle`) - v2**
+**P6. 경제 순환기 지도 (`/cycle`)** ✅ 구현 완료 (v2)
 
-- 좌측: 순환기 특징 표 (회복기, 확장기, 둔화기, 침체기)
-- 우측: 근거 지표 시각화
+- **좌측: 순환기 특징 표** (회복기, 확장기, 둔화기, 침체기)
+- **우측: 근거 지표 시각화**
   - 신호등 색상 표시 (Red/Yellow/Green)
+  - 레이더 차트 애니메이션
+  - 계기판 디자인
   - 현재 상황 요약 (AI 작성)
   - 역사적 패턴/팩트 (AI 작성)
   - 근거 지표 숫자 (장단기 금리차, 실업률, 원/달러 환율)
 
-**P7. 프로필 설정 (`/settings`)**
+**P7. 프로필 설정** ✅ Boarding Pass Modal에서 구현됨
 
-- 관심사/상황 수정
-- AI 레벨 변경 (Lv.1/2/3)
-- 구독 관리
+- Boarding Pass의 "환경설정" 버튼으로 온보딩 플로우 재진입
+- 관심사/상황/AI 레벨 재설정 가능
+- 구독 정보 표시 (무료 체험 남은 기간)
 
 **P8. Paywall (`/paywall`)**
 
@@ -358,9 +382,9 @@ Response:
 
 ```
 
-### 4.3 뉴스 API
+### 4.3 뉴스 API ✅ 구현 완료
 
-**GET `/api/news`**
+**GET `/api/news`** ✅
 
 ```json
 Query Params:
@@ -383,7 +407,7 @@ Response:
 
 ```
 
-**GET `/api/news/[id]`**
+**GET `/api/news/[id]`** ✅
 
 ```json
 Query Params:
@@ -413,15 +437,19 @@ Response:
 
 ```
 
-### 4.4 구독 API
+### 4.4 구독 API 🔄 v3: Post-Launch로 연기
 
-**GET `/api/subscription/status`**
+**GET `/api/subscription/status`** ✅ 기본 로직 완료
 
-- **POST `/api/subscription/register-card`** (이름 변경 추천)
-- Request: user_id
-- Response: { "success": true, "billing_key": "..." } (서버 내부 처리 후 응답)
+- 현재 구독 상태 조회 (무료 체험 남은 기간)
+- Clerk 메타데이터에서 구독 정보 조회
 
-**POST `/api/webhooks/toss`**
+**POST `/api/subscription/register-card`** 🔄 v3로 이동
+
+- 토스페이먼츠 카드 등록 API
+- 빌링키(Billing Key) 발급 및 저장
+
+**POST `/api/webhooks/toss`** 🔄 v3로 이동
 
 - 토스페이먼츠 Webhook 처리 (결제 성공/실패)
 - 결제 성공 → subscriptions 업데이트
@@ -454,9 +482,9 @@ Response:
 
 ```
 
-### 4.6 경제 순환기 API (v2)
+### 4.6 경제 순환기 API (v2) ✅ 구현 완료
 
-**GET `/api/cycle/current`**
+**GET `/api/cycle/current`** ✅
 
 ```json
 Response:
@@ -490,6 +518,13 @@ Response:
 }
 
 ```
+
+**구현 상태:**
+
+- n8n 워크플로우로 매일 자동 업데이트
+- FRED API 연동 완료
+- 신호등 색상 규칙 기반 자동 계산
+- Claude AI로 요약 및 역사적 패턴 자동 생성
 
 ---
 
@@ -1015,55 +1050,59 @@ users → user_profiles (level 저장) → user_interests → user_contexts → 
 
 **총 개발 기간: 33일 (2025.12.11 ~ 2026.01.13)**
 
-### Week 1 (Day 1-7: 12/11 ~ 12/17)
+### Week 1 (Day 1-7: 12/11 ~ 12/17) ✅ 100% 완료
 
-- Day 1-2: 프로젝트 셋업 (Next.js, Supabase, Clerk)
-- Day 3-5: AI 파이프라인 (Claude Sonnet 4.5 API 연동, 뉴스 수집)
-- Day 6-7: 인증 + 온보딩 UI (관심사/상황/AI 레벨 선택)
+- ✅ Day 1-2: 프로젝트 셋업 (Next.js, Supabase, Clerk)
+- ✅ Day 3-5: AI 파이프라인 (Gemini 2.5 Flash API 연동, n8n 뉴스 수집)
+- ✅ Day 6-7: 인증 + 온보딩 UI (관심사/상황/AI 레벨 선택)
 
-### Week 2 (Day 8-14: 12/18 ~ 12/24)
+### Week 2 (Day 8-14: 12/18 ~ 12/24) ✅ 100% 완료
 
-- Day 8-10: 메인 대시보드
-- Day 11-13: 뉴스 상세
-- Day 14: v1 중간 테스트
+- ✅ Day 8-10: 메인 대시보드 (3D 지구 기반 In Flight Map 컨셉)
+- ✅ Day 11-13: 뉴스 상세 페이지
+- ✅ Day 14: v1 중간 테스트
 
-### Week 3 (Day 15-21: 12/25 ~ 12/31)
+### Week 3 (Day 15-21: 12/25 ~ 12/31) ✅ 100% 완료
 
-- Day 15-16: v1 통합 테스트 및 버그 수정
-- Day 17-19: 경제 순환기 지도 (v2)
-  - FRED API 연동
-  - 신호등 색상 로직 구현
-  - AI 요약 생성
-  - cycle_explanations 테이블 구축
-- Day 20-21: 개인화 알고리즘
+- ✅ Day 15-16: v1 통합 테스트 및 버그 수정
+- ✅ Day 17-19: 경제 순환기 지도 (v2)
+  - ✅ FRED API 연동
+  - ✅ 신호등 색상 로직 구현
+  - ✅ AI 요약 생성 (Claude 3.5 Sonnet)
+  - ✅ cycle_explanations 테이블 구축
+- ✅ Day 20-21: n8n 워크플로우 완성
 
-### Week 4 (Day 22-28: 2026.01/01 ~ 01/07)
+### Week 4 (Day 22-28: 2026.01/01 ~ 01/07) 🔄 진행 중 (현재 Day 27)
 
-- Day 22-23: 토스페이먼츠 결제 시스템
-- Day 24-25: 프로필 설정 페이지 (관심사/상황/레벨 수정)
-- Day 26-27: 전체 QA 1차
-- Day 28: 성능 최적화
+- 🔄 Day 22-23: 토스페이먼츠 결제 시스템 → **v3: Post-Launch로 연기**
+- ✅ Day 24-25: 프로필 설정 → **Boarding Pass Modal에서 구현됨**
+- 🔄 Day 26-27: 전체 QA 1차 및 보안 강화 (RLS 정책)
+- 🔄 Day 28: 성능 최적화 (Lighthouse 점검)
 
-### Week 5 (Day 29-33: 01/08 ~ 01/13)
+### Week 5 (Day 29-33: 01/08 ~ 01/13) 📋 예정
 
-- Day 29-30: 전체 QA 2차 (크로스 브라우저, 모바일)
-- Day 31: 법적 문서 작성 (개인정보 처리방침, 이용약관)
-- Day 32: 최종 버그 수정 및 배포 준비
-- Day 33: 프로덕션 배포 및 런칭 🚀
+- 📋 Day 29-30: 전체 QA 2차 (크로스 브라우저, 모바일)
+- 📋 Day 31: 법적 문서 작성 (개인정보 처리방침, 이용약관)
+- 📋 Day 32: 최종 버그 수정 및 배포 준비
+- 📋 Day 33: 프로덕션 배포 및 런칭 🚀
 
-**버퍼 시간:** 5일 (Day 15-16, Day 29-32에 분산 배치)
+**개발 진행률:**
+
+- Week 1-3: ✅ **100% 완료**
+- Week 4: 🔄 **70% 진행 중** (QA 및 최적화)
+- Week 5: 📋 **예정** (최종 준비 및 런칭)
 
 ---
 
 ## 9. 기술 스택
 
-**Frontend:** Next.js 14 (Web), shadcn/ui, Tailwind CSS, Zustand
+**Frontend:** Next.js 15.5.7 (Web), shadcn/ui, Tailwind CSS v4, Three.js (3D 지구)
 **Backend:** Next.js API Routes, Supabase (PostgreSQL)
-**Auth:** Clerk (소셜 로그인, 이메일 인증)
-**Payment:** 토스페이먼츠 (Toss Payments)
-**AI:** Claude Sonnet 4.5 (Anthropic API)
+**Auth:** Clerk (소셜 로그인, 이메일 인증) - 한국어 로컬라이제이션
+**Payment:** 토스페이먼츠 (Toss Payments) - v3: Post-Launch로 연기
+**AI:** Google Gemini 2.5 Flash (뉴스 분석) + Claude 3.5 Sonnet (경제 순환기 분석)
 **Data Sources:** FRED API (경제 지표)
-**Automation:** n8n (FRED API 수집, AI 분석 트리거)
+**Automation:** n8n (뉴스 수집, FRED API 수집, AI 분석 트리거, DB 저장)
 **Hosting:** Vercel (Frontend + API), Supabase Cloud (Database)
 **Analytics:** Vercel Analytics, PostHog
 **Web 최적화:**
@@ -1075,13 +1114,25 @@ users → user_profiles (level 저장) → user_interests → user_contexts → 
 **필수 환경 변수:**
 
 ```
-ANTHROPIC_API_KEY=sk-ant-...
-TOSS_PAYMENTS_CLIENT_KEY=test_ck_... (클라이언트용)
-TOSS_PAYMENTS_SECRET_KEY=test_sk_... (서버용)
+# AI APIs
+GEMINI_API_KEY=AIza... (Google Gemini 2.5 Flash - 뉴스 분석용)
+ANTHROPIC_API_KEY=sk-ant-... (Claude 3.5 Sonnet - 경제 순환기 분석용)
+
+# Auth
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
 CLERK_SECRET_KEY=sk_test_...
-SUPABASE_URL=https://xxx.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=eyJhbG... (필수! RLS 미사용으로 모든 권한 필요)
-FRED_API_KEY=xxx... (v2에서 추가)
+
+# Database
+NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbG...
+SUPABASE_SERVICE_ROLE_KEY=eyJhbG... (필수! 서버 사이드 전용)
+
+# Data Sources
+FRED_API_KEY=xxx... (경제 지표 수집용)
+
+# Payment (v3: Post-Launch로 연기)
+# TOSS_PAYMENTS_CLIENT_KEY=test_ck_... (클라이언트용)
+# TOSS_PAYMENTS_SECRET_KEY=test_sk_... (서버용)
 
 ```
 
@@ -1123,43 +1174,74 @@ FRED_API_KEY=xxx... (v2에서 추가)
 - [ ] 모든 API 엔드포인트 테스트 완료
 - [ ] **모든 API에 인증 미들웨어 적용 확인** (Clerk 인증 체크)
 - [ ] API별 user_id 검증 (본인 데이터만 접근)
-- [ ] Paywall 로직 동작 확인 (31일차 차단)
-- [ ] 토스페이먼츠 Webhook 테스트
-- [ ] 토스페이먼츠 상점 관리자 확인
-- [ ] 모바일 반응형 100% (스마트폰 브라우저 최적화)
+- [x] Paywall 로직 동작 확인 (31일차 차단) ✅
+- [ ] ~~토스페이먼츠 Webhook 테스트~~ → **v3: Post-Launch로 연기**
+- [ ] ~~토스페이먼츠 상점 관리자 확인~~ → **v3: Post-Launch로 연기**
+- [x] 모바일 반응형 100% (스마트폰 브라우저 최적화) ✅
 - [ ] 크로스 브라우저 테스트 (Chrome, Safari, Firefox, Edge)
 - [ ] Lighthouse 점수 80+
 - [ ] 개인정보 처리방침 작성
 - [ ] 이용약관 작성
 - [ ] DB 백업 설정
-- [ ] 환경 변수 보안 확인 (Service Role Key 서버 전용)
-- [ ] `.env` 파일 GitHub 업로드 안 됨 확인
+- [x] 환경 변수 보안 확인 (Service Role Key 서버 전용) ✅
+- [x] `.env` 파일 GitHub 업로드 안 됨 확인 ✅
 
 **보안 체크리스트 (추가):**
 
-- [ ] `SUPABASE_SERVICE_ROLE_KEY`가 클라이언트 코드에 노출되지 않음
-- [ ] 모든 API 라우트에서 `getAuth()` 호출하여 사용자 인증 확인
-- [ ] 사용자가 본인 데이터만 조회/수정 가능 (user_id 필터링)
-- [ ] Public API 없음 (모든 엔드포인트 인증 필수)
+- [ ] **RLS(Row Level Security) 정책 적용** (최우선)
+- [x] `SUPABASE_SERVICE_ROLE_KEY`가 클라이언트 코드에 노출되지 않음 ✅
+- [x] 모든 API 라우트에서 Clerk 인증 확인 ✅
+- [x] 사용자가 본인 데이터만 조회/수정 가능 (user_id 필터링) ✅
+- [ ] RLS 정책 테스트 (Anon vs Authenticated vs Service Role)
 
-**v2 기능 체크리스트 (경제 순환기):**
+**v2 기능 체크리스트 (경제 순환기):** ✅ 완료
 
-- [ ] FRED API 연동 테스트 (3개 지표 수집)
-- [ ] 신호등 색상 로직 검증 (determineStatusColor 함수)
-- [ ] n8n 워크플로우 설정 (매일 09:00 자동 실행)
-- [ ] Claude API로 summary_text, historical_pattern 생성 테스트
-- [ ] cycle_explanations 테이블 데이터 저장 확인
-- [ ] is_latest 플래그 업데이트 로직 검증
-- [ ] GET /api/cycle/current API 응답 확인
+- [x] FRED API 연동 테스트 (3개 지표 수집) ✅
+- [x] 신호등 색상 로직 검증 (determineStatusColor 함수) ✅
+- [x] n8n 워크플로우 설정 (매일 자동 실행) ✅
+- [x] Claude API로 summary_text, historical_pattern 생성 테스트 ✅
+- [x] cycle_explanations 테이블 데이터 저장 확인 ✅
+- [x] is_latest 플래그 업데이트 로직 검증 ✅
+- [x] GET /api/cycle/current API 응답 확인 ✅
+
+**AI 뉴스 파이프라인 체크리스트:** ✅ 완료
+
+- [x] n8n 뉴스 수집 워크플로우 완성 ✅
+- [x] Google Gemini 2.5 Flash API 연동 ✅
+- [x] 뉴스 데이터 DB 저장 정상 작동 확인 ✅
+- [x] 웹사이트 뉴스 표시 정상화 ✅
+- [x] 관심분야별 카테고리 필터링 작동 ✅
 
 **런칭 후 모니터링:**
 
 - [ ] Sentry 에러 트래킹
 - [ ] PostHog 이벤트 수집 확인
-- [ ] 토스페이먼츠 상점 관리자(개발자센터) 결제 내역 확인
+- [ ] ~~토스페이먼츠 상점 관리자 결제 내역 확인~~ → **v3: Post-Launch로 연기**
 - [ ] 사용자 피드백 수집 (Typeform 또는 웹 내 피드백 폼)
-- [ ] FRED API 호출 성공률 모니터링 (v2)
-- [ ] 경제 순환기 데이터 업데이트 로그 확인 (v2)
+- [x] FRED API 호출 성공률 모니터링 ✅
+- [x] 경제순환기 데이터 업데이트 로그 확인 ✅
+- [x] n8n 뉴스 워크플로우 실행 로그 확인 ✅
+
+---
+
+## 📝 문서 변경 이력
+
+**2026.01.07 (Day 27) - 최신 업데이트:**
+
+- ✅ Week 1-3 완료 상태 반영 (100%)
+- ✅ AI 뉴스 파이프라인 완료 (Google Gemini 2.5 Flash + n8n)
+- ✅ 경제 순환기 지도 완료 (FRED API + Claude 3.5 Sonnet)
+- ✅ 3D 지구 기반 In Flight Map 대시보드 완료
+- ✅ Boarding Pass Modal 구현 완료
+- 🔄 토스페이먼츠 결제 시스템 → v3: Post-Launch로 연기
+- 🔄 Week 4: QA 및 최적화 진행 중
+
+**다음 단계:**
+
+- RLS(Row Level Security) 정책 적용
+- Lighthouse 성능 최적화
+- 법적 문서 작성
+- 프로덕션 배포 준비
 
 ---
 

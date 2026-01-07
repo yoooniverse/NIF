@@ -57,7 +57,7 @@ export default function LoginPage() {
             News In Flight
           </h1>
           <p className="text-gray-600">
-            경제 뉴스는 정보가 아니라 생존입니다
+            경제뉴스가 어렵나요? <span className="text-red-600 font-bold">가난은 더 어렵습니다</span>
           </p>
         </div>
 
@@ -117,7 +117,7 @@ export default function LoginPage() {
         {/* 푸터 */}
         <div className="text-center mt-6">
           <p className="text-sm text-gray-500">
-            로그인하여 30일 무료 체험을 시작하세요
+            지금 바로 News In Flight를 시작하세요
           </p>
         </div>
       </div>

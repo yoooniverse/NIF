@@ -25,7 +25,7 @@ const spaceMono = Space_Mono({
 
 export const metadata: Metadata = {
   title: "News In Flight - 경제 뉴스 AI 해석 서비스",
-  description: "경제 뉴스는 정보가 아니라 생존입니다. AI가 당신의 눈높이에 맞춰 경제 뉴스를 해석해드립니다.",
+  description: "경제뉴스가 어렵나요? 가난은 더 어렵습니다. 경제 문맹 탈출, News In Flight면 하루 5분으로 끝납니다",
 };
 
 export default function RootLayout({
