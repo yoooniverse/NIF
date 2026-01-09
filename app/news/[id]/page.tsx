@@ -44,6 +44,12 @@ export default function NewsDetailPage() {
 
 
   useEffect(() => {
+    if (user) {
+      console.log('[DEBUG] Subscription Status:', getSubscriptionStatus(user), 'CreatedAt:', user.createdAt);
+    }
+  }, [user]);
+
+  useEffect(() => {
     if (!id) return;
 
     const fetchNews = async () => {
@@ -248,7 +254,7 @@ export default function NewsDetailPage() {
       <BoardingPassModal
         isOpen={isBoardingPassOpen}
         onClose={() => setIsBoardingPassOpen(false)}
-        newsTitle={news.analysis.title}
+        newsTitle="News Insight" 
         economicIndex="NIF-001"
         passengerName={
           user ? (
@@ -259,7 +265,7 @@ export default function NewsDetailPage() {
             'PREMIUM MEMBER'
           ) : 'PREMIUM MEMBER'
         }
-        subscriptionStatus={getSubscriptionStatus(user)}
+        subscriptionStatus='first_class'
       />
     </div>
   );
