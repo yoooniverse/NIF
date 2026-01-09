@@ -8,7 +8,7 @@
 
 **개발 기간:** 33일 (2025.12.11 ~ 2026.01.13)
 
-**Next.js 버전:** 15.5.7
+**Next.js 버전:** 15.5.9
 
 **언어:** 한국어 단일 지원
 
@@ -21,7 +21,7 @@
 ```
 [사용자 브라우저]
        ↓
-[Vercel - Next.js 15.5.7]
+[Vercel - Next.js 15.5.9]
   ├─ Frontend (React 19)
   ├─ API Routes (/api/*)
   └─ Server Actions
@@ -29,7 +29,7 @@
 [외부 서비스]
   ├─ Clerk (인증)
   ├─ Supabase (PostgreSQL)
-  ├─ Anthropic (Claude API)
+  ├─ Google Gemini (AI 뉴스 분석 및 해설)
   ├─ Stripe (결제)
   ├─ FRED API (경제 지표)
   └─ n8n (자동화 워크플로우)
@@ -115,7 +115,7 @@ news-in-flight/
 │   ├── supabase.ts             ← 데이터베이스 연결
 │   ├── clerk.ts                ← 로그인 연결
 │   ├── stripe.ts               ← 결제 연결
-│   ├── anthropic.ts            ← AI(Claude) 연결
+│   ├── gemini.ts               ← AI(Google Gemini) 연결
 │   └── fred.ts                 ← FRED API 연결 (경제 지표)
 │
 ├── hooks/                      ← 자주 쓰는 기능 모음
@@ -131,7 +131,7 @@ news-in-flight/
 
 ### 2.1 Frontend
 
-**Next.js 15.5.7**
+**Next.js 15.5.9**
 
 - App Router (Pages Router 미사용)
 - React Server Components 활용
@@ -410,32 +410,30 @@ export async function POST(request: Request) {
 // 사용자가 카드 입력 → Stripe가 결제 처리 → Stripe가 이 코드 호출 → DB 자동 업데이트
 ```
 
-### 2.5 AI (Claude Sonnet 4.5)
+### 2.5 AI (Google Gemini 2.5 Flash)
 
 **💡 쉽게 설명:**
-Claude = 뉴스를 쉽게 설명해주는 AI
+Google Gemini = 뉴스를 쉽게 설명해주는 AI
 "어려운 경제 뉴스 → 중학생도 이해 가능한 설명"으로 바꿔줌
 
 **설치**
 
 ```bash
-pnpm add @anthropic-ai/sdk
+pnpm add @google/generative-ai
 
 ```
 
 **뉴스 분석 함수**
 
 **💡 쉽게 설명:**
-뉴스 원문을 Claude에게 보내면 → 쉬운 해설을 받아오는 코드
+뉴스 원문을 Google Gemini에게 보내면 → 쉬운 해설을 받아오는 코드
 
-```tsx
-// lib/anthropic.ts
-import Anthropic from "@anthropic-ai/sdk";
+````tsx
+// lib/gemini.ts
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Claude API 연결
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY!,
-});
+// Google Gemini API 연결
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 // 뉴스 분석 함수
 export async function analyzeNews(
@@ -443,7 +441,7 @@ export async function analyzeNews(
   level: 1 | 2 | 3, // AI 레벨 (1=초보자, 2=일반, 3=전문가)
   userContexts: string[], // 사용자 상황 (예: ['대출보유', '직장인'])
 ) {
-  // Claude에게 보낼 요청 만들기
+  // Google Gemini에게 보낼 요청 만들기
   const prompt = `
 당신은 경제 뉴스 해설자입니다.
 다음 뉴스를 ${
@@ -464,16 +462,17 @@ ${newsContent}
 }
   `;
 
-  // Claude API 호출
-  const message = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514", // Claude Sonnet 4.5
-    max_tokens: 2000, // 최대 응답 길이
-    messages: [{ role: "user", content: prompt }],
-  });
+  // Google Gemini API 호출
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+  const result = await model.generateContent(prompt);
+  const response = result.response.text();
 
-  // Claude 응답을 JSON으로 변환
-  const response = message.content[0].text;
-  return JSON.parse(response);
+  // JSON 응답 추출 (마크다운 코드 블록 제거)
+  const jsonMatch =
+    response.match(/```json\n([\s\S]*?)\n```/) || response.match(/\{[\s\S]*\}/);
+  const jsonText = jsonMatch ? jsonMatch[1] || jsonMatch[0] : response;
+
+  return JSON.parse(jsonText);
 }
 
 // 📌 사용 예시:
@@ -483,7 +482,7 @@ ${newsContent}
 //   ['대출보유', '직장인']
 // )
 // 결과: { easy_title: "금리 그대로", summary: "...", ... }
-```
+````
 
 ### 2.6 FRED API (경제 지표 수집) - v2
 
@@ -602,8 +601,8 @@ export function determineStatusColor(
 
 **경제 순환기 AI 분석 함수**
 
-```tsx
-// lib/anthropic.ts (추가)
+````tsx
+// lib/gemini.ts (추가)
 
 // 경제 순환기 요약 생성
 export async function generateCycleSummary(
@@ -639,26 +638,30 @@ export async function generateCycleSummary(
 }
   `;
 
-  const message = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 1500,
-    messages: [{ role: "user", content: prompt }],
-  });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+  const result = await model.generateContent(prompt);
+  const response = result.response.text();
 
-  const response = message.content[0].text;
-  return JSON.parse(response);
+  // JSON 응답 추출
+  const jsonMatch =
+    response.match(/```json\n([\s\S]*?)\n```/) || response.match(/\{[\s\S]*\}/);
+  const jsonText = jsonMatch ? jsonMatch[1] || jsonMatch[0] : response;
+
+  return JSON.parse(jsonText);
 }
 
 // 📌 사용 예시:
 // const analysis = await generateCycleSummary('Yellow', indicators)
 // 결과: { summary_text: "...", historical_pattern: "..." }
-```
+````
 
 ---
 
 ## 3. 데이터베이스 설계
 
 ### 3.1 Supabase 초기 설정
+
+**데이터베이스 설계 도구:** ERD Cloud를 사용하여 데이터베이스 스키마 설계 및 SQL 추출
 
 **1단계: 프로젝트 생성**
 
@@ -1137,7 +1140,7 @@ export async function POST(request: Request) {
 
 **💡 쉽게 설명:**
 n8n = 코드 없이 자동화를 만들 수 있는 도구
-매일 아침 9시에 자동으로 FRED API에서 데이터 수집 → 신호등 색상 계산 → Claude에게 요약 요청 → DB 저장
+매일 아침 9시에 자동으로 FRED API에서 데이터 수집 → 신호등 색상 계산 → Google Gemini에게 요약 요청 → DB 저장
 
 ```
 [n8n 워크플로우 - 매일 09:00 자동 실행]
@@ -1150,7 +1153,7 @@ n8n = 코드 없이 자동화를 만들 수 있는 도구
 3. Function Node (신호등 색상 계산)
    - determineStatusColor() 로직 실행
    ↓
-4. HTTP Request (Claude API)
+4. HTTP Request (Google Gemini API)
    - Input: status_color + indicators
    - Output: summary_text + historical_pattern
    ↓
@@ -1241,23 +1244,23 @@ export const GET = withAuth(async (request, userId) => {
 
 ```bash
 # Production
-ANTHROPIC_API_KEY=sk-ant-api03-...
+GEMINI_API_KEY=AIza... (Google Gemini 2.5 Flash - 뉴스 분석 및 해설용)
 STRIPE_SECRET_KEY=sk_live_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 CLERK_SECRET_KEY=sk_live_...
 SUPABASE_URL=https://xxx.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=eyJhbG...
-FRED_API_KEY=xxx... (v2에서 추가)
+FRED_API_KEY=xxx... (경제 지표 수집용)
 NEXT_PUBLIC_URL=https://newsin.flight
 
 # Development
-ANTHROPIC_API_KEY=sk-ant-api03-...
+GEMINI_API_KEY=AIza... (Google Gemini 2.5 Flash - 뉴스 분석 및 해설용)
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 CLERK_SECRET_KEY=sk_test_...
 SUPABASE_URL=https://xxx.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=eyJhbG...
-FRED_API_KEY=xxx... (v2에서 추가)
+FRED_API_KEY=xxx... (경제 지표 수집용)
 NEXT_PUBLIC_URL=http://localhost:3000
 
 ```
@@ -1266,13 +1269,13 @@ NEXT_PUBLIC_URL=http://localhost:3000
 
 ```bash
 # ⚠️ 절대 GitHub에 업로드 금지!
-ANTHROPIC_API_KEY=sk-ant-...
+GEMINI_API_KEY=AIza... (Google Gemini 2.5 Flash - 뉴스 분석 및 해설용)
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 CLERK_SECRET_KEY=sk_test_...
 SUPABASE_URL=https://xxx.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=eyJhbG...
-FRED_API_KEY=xxx... (v2에서 추가)
+FRED_API_KEY=xxx... (경제 지표 수집용)
 NEXT_PUBLIC_URL=http://localhost:3000
 
 ```
@@ -1731,7 +1734,7 @@ Error: Webhook signature verification failed
 - Stripe Dashboard에서 Webhook 엔드포인트 URL 확인
 - 로컬 테스트 시 `stripe listen --forward-to localhost:3000/api/webhooks/stripe` 사용
 
-**4. Claude API 할당량 초과**
+**4. Google Gemini API 할당량 초과**
 
 ```
 Error: Rate limit exceeded
@@ -1740,7 +1743,7 @@ Error: Rate limit exceeded
 
 **해결:**
 
-- Anthropic Dashboard에서 사용량 확인
+- Google Cloud Console에서 사용량 확인
 - 뉴스 분석을 배치로 처리 (한 번에 15개)
 - 캐싱으로 중복 호출 방지
 
@@ -1768,7 +1771,7 @@ Error: Workflow execution failed
 **해결:**
 
 - n8n 로그 확인
-- FRED API, Claude API 키 확인
+- FRED API, Google Gemini API 키 확인
 - Supabase 연결 확인
 - 수동 실행으로 각 노드 개별 테스트
 
@@ -1783,7 +1786,7 @@ Error: Workflow execution failed
 
 **높은 API 비용**
 
-- Claude API 호출 최소화 (캐싱)
+- Google Gemini API 호출 최소화 (캐싱)
 - Stripe API는 webhook 이벤트만 처리
 - Supabase 쿼리 최적화 (필요한 컬럼만 select)
 
@@ -1845,9 +1848,10 @@ npx n8n
 - Clerk: https://clerk.com/docs
 - Supabase: https://supabase.com/docs
 - Stripe: https://stripe.com/docs/api
-- Anthropic: https://docs.anthropic.com
-- FRED API: https://fred.stlouisfed.org/docs/api/fred/ (v2)
-- n8n: https://docs.n8n.io (v2)
+- Google Gemini: https://ai.google.dev/docs
+- FRED API: https://fred.stlouisfed.org/docs/api/fred/
+- n8n: https://docs.n8n.io
+- ERD Cloud: https://www.erdcloud.com
 
 **커뮤니티:**
 
@@ -1860,10 +1864,11 @@ npx n8n
 
 **Week 1 (12/11~12/17):**
 
-- [ ] Next.js 15.5.7 프로젝트 생성
+- [ ] Next.js 15.5.9 프로젝트 생성
 - [ ] Clerk 인증 연동
+- [ ] ERD Cloud로 데이터베이스 스키마 설계 및 SQL 추출
 - [ ] Supabase 테이블 생성
-- [ ] Claude API 테스트 코드 작성
+- [ ] Google Gemini API 테스트 코드 작성
 - [ ] 온보딩 UI 기본 구조
 
 **Week 2 (12/18~12/24):**
@@ -1879,7 +1884,7 @@ npx n8n
   - [ ] FRED API 연동 (장단기 금리차, 실업률, 환율)
   - [ ] 신호등 색상 로직 구현 (determineStatusColor)
   - [ ] n8n 워크플로우 설정 (매일 09:00 자동 실행)
-  - [ ] Claude API로 요약 생성
+  - [ ] Google Gemini API로 요약 생성
   - [ ] cycle_explanations 테이블 구축
   - [ ] GET /api/cycle/current API 구현
 - [ ] 개인화 알고리즘

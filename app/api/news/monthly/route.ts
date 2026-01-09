@@ -188,16 +188,8 @@ export async function GET(req: NextRequest) {
       // 태그 Allowlist 적용
       const displayableTags = originalTags.filter(tag => allowedTagNames.includes(tag));
 
-      // 대표 카테고리 설정
-      const requestedCategoryName = categoryParam ? (SLUG_TO_KOREAN[categoryParam] || categoryParam) : null;
-      let primaryCategory = '';
-
-      if (requestedCategoryName && displayableTags.includes(requestedCategoryName)) {
-        primaryCategory = requestedCategoryName;
-      } else {
-        primaryCategory = displayableTags[0] || '일반';
-      }
-
+      // 대표 카테고리 설정 (항상 첫 번째 태그가 주요 카테고리)
+      const primaryCategory = displayableTags[0] || '일반';
       const finalTags = displayableTags.length > 0 ? displayableTags : [primaryCategory];
 
       return {
@@ -219,15 +211,41 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    // JS 레벨 필터링
+    // JS 레벨 필터링: 대표 카테고리(primaryCategory)가 요청한 카테고리와 일치하는 것만
     let filteredNews = allProcessedNews;
+    
+    console.log("[API][NEWS_MONTHLY] Before filtering:");
+    console.log("  Total:", allProcessedNews.length);
+    console.log("  Should filter:", shouldFilter);
+    console.log("  Filter values:", JSON.stringify(filterValues));
+    console.log("  Sample news (first 5):");
+    allProcessedNews.slice(0, 5).forEach((n, i) => {
+      console.log(`    [${i}] "${n.title?.substring(0, 50)}"`);
+      console.log(`        PRIMARY category: ${n.category}`);
+      console.log(`        all tags: ${JSON.stringify(n.tags)}`);
+    });
+    
     if (shouldFilter && filterValues.length > 0) {
+      // 대표 카테고리가 요청한 카테고리와 정확히 일치하는 것만 필터링
       filteredNews = allProcessedNews.filter((item: any) => {
-        return item.originalTags.some((tag: string) => filterValues.includes(tag));
+        return filterValues.includes(item.category);
       });
+      console.log("[API][NEWS_MONTHLY] After filtering:", {
+        beforeCount: allProcessedNews.length,
+        afterCount: filteredNews.length,
+        filterValues
+      });
+    } else {
+      console.log("[API][NEWS_MONTHLY] Skipping filter - returning all news");
     }
 
     const news = filteredNews.slice(0, limit);
+
+    console.log("[API][NEWS_MONTHLY] Final response:", {
+      filteredCount: filteredNews.length,
+      returnedCount: news.length,
+      limit
+    });
 
     return NextResponse.json({
       month: monthKey,

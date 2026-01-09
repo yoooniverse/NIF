@@ -530,6 +530,8 @@ Response:
 
 ## 5. 데이터 스키마
 
+**디자인 도구:** ERD Cloud를 사용하여 데이터베이스 스키마 설계 및 SQL 추출
+
 **보안 전략:**
 
 - **RLS(Row Level Security) 미사용**
@@ -1096,18 +1098,18 @@ users → user_profiles (level 저장) → user_interests → user_contexts → 
 
 ## 9. 기술 스택
 
-**Frontend:** Next.js 15.5.7 (Web), shadcn/ui, Tailwind CSS v4, Three.js (3D 지구)
+**Frontend:** Next.js 15.5.9 (Web), shadcn/ui, Tailwind CSS v4, Three.js (3D 지구)
 **Backend:** Next.js API Routes, Supabase (PostgreSQL)
 **Auth:** Clerk (소셜 로그인, 이메일 인증) - 한국어 로컬라이제이션
 **Payment:** 토스페이먼츠 (Toss Payments) - v3: Post-Launch로 연기
-**AI:** Google Gemini 2.5 Flash (뉴스 분석) + Claude 3.5 Sonnet (경제 순환기 분석)
+**AI:** Google Gemini 2.5 Flash (뉴스 분석 및 해설)
 **Data Sources:** FRED API (경제 지표)
 **Automation:** n8n (뉴스 수집, FRED API 수집, AI 분석 트리거, DB 저장)
 **Hosting:** Vercel (Frontend + API), Supabase Cloud (Database)
 **Analytics:** Vercel Analytics, PostHog
 **Web 최적화:**
 
-- 반응형 디자인 (모바일 웹 최우선)
+- 반응형 디자인 (PC 위주)
 - PWA Ready (v3에서 구현 시 홈 화면 추가 가능)
 - 크로스 브라우저 지원 (Chrome, Safari, Firefox, Edge)
 
@@ -1115,8 +1117,7 @@ users → user_profiles (level 저장) → user_interests → user_contexts → 
 
 ```
 # AI APIs
-GEMINI_API_KEY=AIza... (Google Gemini 2.5 Flash - 뉴스 분석용)
-ANTHROPIC_API_KEY=sk-ant-... (Claude 3.5 Sonnet - 경제 순환기 분석용)
+GEMINI_API_KEY=AIza... (Google Gemini 2.5 Flash - 뉴스 분석 및 해설용)
 
 # Auth
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...

@@ -79,6 +79,33 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     // 무료 체험 기간 확인 (가입 후 30일 이내)
     const isTrialPeriod = (now.getTime() - onboardedAt.getTime()) < (30 * 24 * 60 * 60 * 1000);
 
+    // 2. 구독 정보 조회 (subscriptions 테이블)
+    console.group("[API][NEWS_DETAIL] 📋 구독 상태 확인");
+    const { data: subscriptionData, error: subscriptionError } = await supabase
+      .from('subscriptions')
+      .select('plan, active, ends_at')
+      .eq('clerk_id', userId)
+      .order('started_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    console.log("[API][NEWS_DETAIL] Subscription data:", subscriptionData);
+    console.log("[API][NEWS_DETAIL] Subscription error:", subscriptionError);
+
+    // 유료 구독자 확인 (plan='premium' AND active=true AND ends_at > now)
+    const isPremiumSubscriber = subscriptionData && 
+      subscriptionData.plan === 'premium' && 
+      subscriptionData.active === true &&
+      new Date(subscriptionData.ends_at) > now;
+
+    console.log("[API][NEWS_DETAIL] 📊 블러 판단 로직:");
+    console.log("[API][NEWS_DETAIL]   - 무료체험 중:", isTrialPeriod);
+    console.log("[API][NEWS_DETAIL]   - 유료 구독자:", isPremiumSubscriber);
+    console.log("[API][NEWS_DETAIL]   - 구독 플랜:", subscriptionData?.plan);
+    console.log("[API][NEWS_DETAIL]   - 구독 활성:", subscriptionData?.active);
+    console.log("[API][NEWS_DETAIL]   - 구독 만료:", subscriptionData?.ends_at);
+    console.groupEnd();
+
     // 2. 레벨별 컬럼 선택
     const levelPrefix = userLevel === 1 ? 'easy' : userLevel === 2 ? 'normal' : 'hard';
     const cols = {
@@ -205,8 +232,20 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     console.log("[API][NEWS_DETAIL] First worst scenario:", worstScenarios[0]?.substring(0, 100));
     console.log("[API][NEWS_DETAIL] First action tip:", actionTips[0]?.substring(0, 100));
 
-    // 무료 체험 기간이면 블러 처리 해제, 아니면 데이터베이스 설정값 사용
-    const shouldBlur = isTrialPeriod ? false : (analysis?.action_blurred !== false);
+    // 🔒 블러 처리 로직
+    // ✅ 액션팁 볼 수 있는 사람: 무료체험 중 OR 유료 구독자
+    // ❌ 액션팁 블러되는 사람: 무료체험 종료 AND 무료 플랜
+    const canViewActionTips = isTrialPeriod || isPremiumSubscriber;
+    const shouldBlur = canViewActionTips ? false : (analysis?.action_blurred !== false);
+
+    console.log("[API][NEWS_DETAIL] 🔒 블러 처리 결과:");
+    console.log("[API][NEWS_DETAIL]   - 액션팁 볼 수 있음:", canViewActionTips);
+    console.log("[API][NEWS_DETAIL]   - 블러 적용:", shouldBlur);
+    console.log("[API][NEWS_DETAIL]   - 이유:", 
+      canViewActionTips 
+        ? (isTrialPeriod ? "무료체험 중" : "유료 구독자") 
+        : "무료체험 종료 + 무료 플랜"
+    );
 
     // interest 필드 추출 (배열로 반환)
     const interests = analysis?.interest || [];

@@ -166,14 +166,55 @@ function MonthlyNewsContent() {
       if (!isLoaded || !user) return;
 
       try {
-        console.info('[MONTHLY_NEWS] loading news data...');
+        console.info('[MONTHLY_NEWS] loading news data...', { selectedCategory });
         setLoading(true);
         setError(null);
 
-        const newsData = await fetchMonthlyNews(30); // 이달의 뉴스는 최대 30개
-        setNews(newsData);
+        // 카테고리 파라미터 포함하여 API 호출
+        const categoryParam = selectedCategory !== 'all' ? `&category=${selectedCategory}` : '';
+        const apiUrl = `/api/news/monthly?limit=30${categoryParam}`;
+        
+        console.info('[MONTHLY_NEWS] API URL:', apiUrl);
 
-        console.info('[MONTHLY_NEWS] news data loaded successfully, count:', newsData.length);
+        const response = await fetch(apiUrl, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch news');
+        
+        const data = await response.json();
+        
+        // API 응답을 News 타입으로 변환
+        const transformedNews = (data.news || []).map((item: any) => ({
+          id: item.id,
+          source_id: item.source || '',
+          title: item.analysis?.easy_title || item.title,
+          url: item.url || '',
+          content: item.analysis?.summary || '',
+          published_at: item.published_at,
+          ingested_at: item.published_at,
+          metadata: {
+            tags: item.tags || [item.category],
+            targets: [],
+            level1: {
+              title: item.analysis?.easy_title || '',
+              content: item.analysis?.summary || '',
+              worst: item.analysis?.worst_scenarios?.[0] || '',
+              action: '',
+            } as any,
+            level2: {} as any,
+            level3: {} as any,
+          },
+        }));
+
+        setNews(transformedNews);
+
+        console.info('[MONTHLY_NEWS] news data loaded successfully, count:', transformedNews.length);
       } catch (err) {
         console.error('[MONTHLY_NEWS] failed to load news:', err);
         setError('뉴스를 불러오는 중 오류가 발생했습니다.');
@@ -183,7 +224,7 @@ function MonthlyNewsContent() {
     }
 
     loadNews();
-  }, [isLoaded, user]);
+  }, [isLoaded, user, selectedCategory]);
 
   // 인증 체크
   useEffect(() => {
@@ -212,7 +253,13 @@ function MonthlyNewsContent() {
     router.push('/dashboard');
   };
 
-  const filteredNews = filterNewsByCategory(news, selectedCategory);
+  // API에서 이미 필터링된 데이터를 받으므로 클라이언트 측 필터링 불필요
+  const filteredNews = news;
+  
+  console.info('[MONTHLY_NEWS] news display:', {
+    selectedCategory,
+    newsCount: filteredNews.length
+  });
 
   // 카테고리별 배경 설정 - 카테고리 버튼의 배경을 전체 버튼에서도 동일하게 사용
   const earthSize = selectedCategory === 'all' ? 2.5 : 2.5; // 모두 동일한 크기로 통일

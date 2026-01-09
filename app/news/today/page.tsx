@@ -142,13 +142,20 @@ function TodayNewsContent() {
       try {
         console.info('[TODAY_NEWS] loading news data...', { 
           isLoaded, 
-          hasUser: !!user 
+          hasUser: !!user,
+          selectedCategory 
         });
         setLoading(true);
         setError(null);
 
+        // 카테고리 파라미터 포함하여 API 호출
+        const categoryParam = selectedCategory !== 'all' ? `&category=${selectedCategory}` : '';
+        const apiUrl = `/api/news?limit=20${categoryParam}`;
+        
+        console.info('[TODAY_NEWS] API URL:', apiUrl);
+
         // cache: 'no-store' 옵션으로 브라우저 캐싱 비활성화
-        const response = await fetch('/api/news?limit=20', {
+        const response = await fetch(apiUrl, {
           cache: 'no-store',
           headers: {
             'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -207,7 +214,7 @@ function TodayNewsContent() {
     }
 
     loadNews();
-  }, [isLoaded, user]); // user가 변경되면 다시 로드 (로그인/로그아웃 시)
+  }, [isLoaded, user, selectedCategory]); // 카테고리 변경 시에도 다시 로드
 
   // 인증 체크 (제거 - 뉴스 페이지는 공개 페이지)
   // useEffect(() => {
@@ -236,24 +243,12 @@ function TodayNewsContent() {
     router.push('/dashboard');
   };
 
-  // 필터링된 뉴스 (API에서 이미 필터링되어 오지만, 전체탭에서 특정 카테고리 선택시 client filtering)
-  const filteredNews = selectedCategory === 'all'
-    ? news
-    : news.filter(item => {
-      const catName = CATEGORY_SLUG_TO_NAME[selectedCategory];
-      const hasCategory = item.metadata?.tags?.includes(catName);
-      console.info('[TODAY_NEWS] filtering:', {
-        category: catName,
-        itemTags: item.metadata?.tags,
-        hasCategory
-      });
-      return hasCategory;
-    });
+  // API에서 이미 필터링된 데이터를 받으므로 클라이언트 측 필터링 불필요
+  const filteredNews = news;
 
-  console.info('[TODAY_NEWS] filter result:', {
+  console.info('[TODAY_NEWS] news display:', {
     selectedCategory,
-    totalNews: news.length,
-    filteredCount: filteredNews.length,
+    newsCount: filteredNews.length,
     isLoaded,
     hasUser: !!user
   });

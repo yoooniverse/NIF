@@ -1,6 +1,5 @@
 @import "tailwindcss";
 
-
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -101,7 +100,8 @@
 
 /* 플로팅 애니메이션 (부유하는 느낌) */
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0px);
   }
   50% {
@@ -115,12 +115,12 @@
     transform: scale(0.95);
     box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
   }
-  
+
   70% {
     transform: scale(1);
     box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
   }
-  
+
   100% {
     transform: scale(0.95);
     box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
@@ -143,7 +143,8 @@
 
 /* 별 반짝임 애니메이션 */
 @keyframes twinkle {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.3;
     transform: scale(1);
   }
@@ -172,7 +173,8 @@ html {
 .apple-design {
   background: white !important;
   color: #1d1d1f !important;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+    "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
 }
 
 /* Apple 디자인 섹션들 */
@@ -196,16 +198,22 @@ html {
 }
 
 /* Apple 스타일 텍스트 */
-.apple-design h1, .apple-design h2, .apple-design h3, .apple-design h4 {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+.apple-design h1,
+.apple-design h2,
+.apple-design h3,
+.apple-design h4 {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+    "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
   font-weight: 600 !important;
   color: #1d1d1f !important;
   letter-spacing: -0.01em !important;
   line-height: 1.1 !important;
 }
 
-.apple-design p, .apple-design span {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+.apple-design p,
+.apple-design span {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Helvetica Neue", Helvetica, Arial, sans-serif !important;
   color: #424245 !important;
   line-height: 1.6 !important;
   font-weight: 400 !important;
@@ -244,7 +252,8 @@ html {
 .apple-design .text-6xl {
   color: #1d1d1f !important;
   font-weight: 700 !important;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+    "Helvetica Neue", Helvetica, Arial, sans-serif !important;
 }
 
 /* Apple 스타일 텍스트 색상 오버라이드 */
@@ -270,7 +279,8 @@ html {
 }
 
 .apple-design .font-mono {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Helvetica Neue", Helvetica, Arial, sans-serif !important;
   letter-spacing: normal !important;
   font-weight: 400 !important;
 }
@@ -428,7 +438,11 @@ html {
 
 /* In-Flight 스타일 추가 (히어로 섹션용) */
 .flight-card {
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.9) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(15, 23, 42, 0.9) 0%,
+    rgba(30, 41, 59, 0.9) 100%
+  );
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -440,7 +454,7 @@ html {
 
 /* 계기판 스타일 */
 .gauge-display {
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Courier New', monospace;
+  font-family: "SF Mono", "Monaco", "Inconsolata", "Courier New", monospace;
   letter-spacing: 0.05em;
 }
 
@@ -474,7 +488,11 @@ html {
 @media (prefers-color-scheme: dark) {
   /* 다크모드에서 In-Flight 스타일 강화 */
   .flight-card {
-    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%);
+    background: linear-gradient(
+      135deg,
+      rgba(15, 23, 42, 0.95) 0%,
+      rgba(30, 41, 59, 0.95) 100%
+    );
   }
 }
 
@@ -521,7 +539,8 @@ html {
 
 /* 별 반짝임 애니메이션 최적화 */
 @keyframes twinkle {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.3;
     transform: scale(1);
   }
