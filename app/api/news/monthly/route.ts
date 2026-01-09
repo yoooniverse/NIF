@@ -28,9 +28,13 @@ const SLUG_TO_KOREAN: Record<string, string> = {
 };
 
 function parseMonthOrNow(monthParam: string | null): { startIso: string; endIso: string; monthKey: string } {
-  const now = new Date();
-  const fallbackYear = now.getUTCFullYear();
-  const fallbackMonth = now.getUTCMonth() + 1;
+  // 한국 시간 기준으로 현재 월을 구함
+  const nowUTC = new Date();
+  const koreaOffset = 9 * 60 * 60 * 1000; // 9시간을 밀리초로
+  const nowKorea = new Date(nowUTC.getTime() + koreaOffset);
+  
+  const fallbackYear = nowKorea.getUTCFullYear();
+  const fallbackMonth = nowKorea.getUTCMonth() + 1;
 
   let year = fallbackYear;
   let month = fallbackMonth;
@@ -48,11 +52,16 @@ function parseMonthOrNow(monthParam: string | null): { startIso: string; endIso:
     month = fallbackMonth;
   }
 
-  const start = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0));
-  const end = new Date(Date.UTC(year, month, 1, 0, 0, 0));
+  // 한국 시간 기준 해당 월의 1일 00:00:00 KST를 UTC로 변환
+  const startKorea = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0));
+  const startUTC = new Date(startKorea.getTime() - koreaOffset);
+  
+  // 한국 시간 기준 다음 달 1일 00:00:00 KST를 UTC로 변환 (해당 월의 마지막 순간)
+  const endKorea = new Date(Date.UTC(year, month, 1, 0, 0, 0));
+  const endUTC = new Date(endKorea.getTime() - koreaOffset);
 
   const monthKey = `${year}-${String(month).padStart(2, "0")}`;
-  return { startIso: start.toISOString(), endIso: end.toISOString(), monthKey };
+  return { startIso: startUTC.toISOString(), endIso: endUTC.toISOString(), monthKey };
 }
 
 export async function GET(req: NextRequest) {
@@ -76,7 +85,9 @@ export async function GET(req: NextRequest) {
       userId,
       month: monthKey,
       category: categoryParam || 'all',
-      limit
+      limit,
+      dateRange: `${monthKey}-01 00:00:00 KST ~ ${monthKey}-31 23:59:59 KST (approx)`,
+      utcDateRange: `${startIso} ~ ${endIso}`
     });
 
     // 1. 사용자 정보 조회
@@ -214,14 +225,19 @@ export async function GET(req: NextRequest) {
     // JS 레벨 필터링: 대표 카테고리(primaryCategory)가 요청한 카테고리와 일치하는 것만
     let filteredNews = allProcessedNews;
     
+    const koreaOffset = 9 * 60 * 60 * 1000; // 9시간을 밀리초로
+    
     console.log("[API][NEWS_MONTHLY] Before filtering:");
     console.log("  Total:", allProcessedNews.length);
     console.log("  Should filter:", shouldFilter);
     console.log("  Filter values:", JSON.stringify(filterValues));
     console.log("  Sample news (first 5):");
     allProcessedNews.slice(0, 5).forEach((n, i) => {
+      const publishedKorea = new Date(new Date(n.published_at).getTime() + koreaOffset);
+      const publishedKoreaStr = `${publishedKorea.getUTCFullYear()}-${String(publishedKorea.getUTCMonth() + 1).padStart(2, '0')}-${String(publishedKorea.getUTCDate()).padStart(2, '0')} ${String(publishedKorea.getUTCHours()).padStart(2, '0')}:${String(publishedKorea.getUTCMinutes()).padStart(2, '0')}`;
       console.log(`    [${i}] "${n.title?.substring(0, 50)}"`);
       console.log(`        PRIMARY category: ${n.category}`);
+      console.log(`        published_at (KST): ${publishedKoreaStr}`);
       console.log(`        all tags: ${JSON.stringify(n.tags)}`);
     });
     
@@ -244,12 +260,14 @@ export async function GET(req: NextRequest) {
     console.log("[API][NEWS_MONTHLY] Final response:", {
       filteredCount: filteredNews.length,
       returnedCount: news.length,
-      limit
+      limit,
+      userInterests: userInterestNames
     });
 
     return NextResponse.json({
       month: monthKey,
-      news
+      news,
+      user_interests: userInterestNames
     });
 
   } catch (error: any) {

@@ -47,18 +47,32 @@ export async function GET(req: NextRequest) {
     const limitParam = url.searchParams.get("limit");
     const limit = Math.min(parseInt(limitParam || "20"), 50);
 
-    // 최근 3일 날짜 범위 (한국 시간과 UTC 차이 고려)
-    const today = new Date();
-    const threeDaysAgo = new Date(today);
-    threeDaysAgo.setDate(today.getDate() - 3);
-    const startOfDay = new Date(threeDaysAgo.getFullYear(), threeDaysAgo.getMonth(), threeDaysAgo.getDate(), 0, 0, 0);
-    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+    // 오늘 하루의 날짜 범위 (한국 시간 기준: UTC+9)
+    // 한국 시간으로 현재 날짜 구하기
+    const nowUTC = new Date();
+    const koreaOffset = 9 * 60 * 60 * 1000; // 9시간을 밀리초로
+    const nowKorea = new Date(nowUTC.getTime() + koreaOffset);
+    
+    // 한국 시간 기준 오늘의 시작: YYYY-MM-DD 00:00:00 KST
+    const year = nowKorea.getUTCFullYear();
+    const month = nowKorea.getUTCMonth();
+    const date = nowKorea.getUTCDate();
+    
+    // 한국 시간 00:00:00을 UTC로 변환
+    const startOfDayKorea = new Date(Date.UTC(year, month, date, 0, 0, 0));
+    const startOfDayUTC = new Date(startOfDayKorea.getTime() - koreaOffset);
+    
+    // 한국 시간 23:59:59를 UTC로 변환
+    const endOfDayKorea = new Date(Date.UTC(year, month, date, 23, 59, 59, 999));
+    const endOfDayUTC = new Date(endOfDayKorea.getTime() - koreaOffset);
 
     console.log("[API][NEWS_TODAY] Query params:", {
       userId,
       category: categoryParam || 'all',
       limit,
-      dateRange: `${startOfDay.toISOString()} ~ ${endOfDay.toISOString()}`
+      koreaDate: `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`,
+      koreaDateTimeRange: `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')} 00:00:00 KST ~ 23:59:59 KST`,
+      utcDateTimeRange: `${startOfDayUTC.toISOString()} ~ ${endOfDayUTC.toISOString()}`
     });
 
     // 1. 사용자 정보 조회 (로그인한 경우에만)
@@ -154,8 +168,8 @@ export async function GET(req: NextRequest) {
           action_blurred
         )
       `)
-      .gte('published_at', startOfDay.toISOString())
-      .lte('published_at', endOfDay.toISOString())
+      .gte('published_at', startOfDayUTC.toISOString())
+      .lte('published_at', endOfDayUTC.toISOString())
       .order('published_at', { ascending: false })
       .limit(dbLimit) as any);
 
@@ -208,8 +222,11 @@ export async function GET(req: NextRequest) {
     console.log("  Filter values:", JSON.stringify(filterValues));
     console.log("  Sample news (first 5):");
     allProcessedNews.slice(0, 5).forEach((n, i) => {
+      const publishedKorea = new Date(new Date(n.published_at).getTime() + koreaOffset);
+      const publishedKoreaStr = `${publishedKorea.getUTCFullYear()}-${String(publishedKorea.getUTCMonth() + 1).padStart(2, '0')}-${String(publishedKorea.getUTCDate()).padStart(2, '0')} ${String(publishedKorea.getUTCHours()).padStart(2, '0')}:${String(publishedKorea.getUTCMinutes()).padStart(2, '0')}`;
       console.log(`    [${i}] "${n.title?.substring(0, 50)}"`);
       console.log(`        PRIMARY category: ${n.category}`);
+      console.log(`        published_at (KST): ${publishedKoreaStr}`);
       console.log(`        all tags: ${JSON.stringify(n.tags)}`);
     });
     

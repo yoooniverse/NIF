@@ -28,6 +28,15 @@ const CATEGORY_SLUG_TO_NAME: { [key: string]: string } = {
   'exchange-rate': '환율',
 };
 
+// 카테고리 한글명 → slug 매핑 (역방향)
+const CATEGORY_NAME_TO_SLUG: { [key: string]: string } = {
+  '주식': 'stock',
+  '가상화폐': 'crypto',
+  '부동산': 'real-estate',
+  'ETF': 'etf',
+  '환율': 'exchange-rate',
+};
+
 // Mock 월간 뉴스 데이터 (더 많은 데이터)
 const MOCK_MONTHLY_NEWS = [
   {
@@ -148,6 +157,7 @@ function MonthlyNewsContent() {
 
   // 뉴스 데이터 상태
   const [news, setNews] = useState<News[]>([]);
+  const [userInterests, setUserInterests] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -189,6 +199,11 @@ function MonthlyNewsContent() {
         
         const data = await response.json();
         
+        console.info('[MONTHLY_NEWS] raw API response:', {
+          newsCount: data.news?.length || 0,
+          userInterests: data.user_interests
+        });
+        
         // API 응답을 News 타입으로 변환
         const transformedNews = (data.news || []).map((item: any) => ({
           id: item.id,
@@ -213,6 +228,7 @@ function MonthlyNewsContent() {
         }));
 
         setNews(transformedNews);
+        setUserInterests(data.user_interests || []);
 
         console.info('[MONTHLY_NEWS] news data loaded successfully, count:', transformedNews.length);
       } catch (err) {
@@ -263,6 +279,16 @@ function MonthlyNewsContent() {
 
   // 카테고리별 배경 설정 - 카테고리 버튼의 배경을 전체 버튼에서도 동일하게 사용
   const earthSize = selectedCategory === 'all' ? 2.5 : 2.5; // 모두 동일한 크기로 통일
+
+  // 동적 카테고리 목록 생성 (사용자가 선택한 관심사만 표시)
+  const categories = [
+    { id: 'all', name: '전체', slug: 'all' },
+    ...userInterests.map(name => ({
+      id: CATEGORY_SLUG_TO_NAME[name] || name,
+      name,
+      slug: CATEGORY_SLUG_TO_NAME[name] || name
+    }))
+  ];
 
   if (!isLoaded || !user) {
     return (
@@ -317,14 +343,14 @@ function MonthlyNewsContent() {
               <span className="text-sm font-medium text-white/80">관심분야</span>
             </div>
             <div className="flex flex-wrap gap-2">
-              {INTEREST_CATEGORIES.map((category) => (
+              {categories.map((category) => (
                 <button
                   key={category.id}
                   onClick={() => handleCategoryChange(category.slug)}
                   className={`px-5 py-3 rounded-full text-base font-semibold transition ${
                     selectedCategory === category.slug
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-[#050814] text-white hover:bg-[#0a0f29] border border-white/20'
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40'
+                      : 'bg-white/5 text-white/80 hover:bg-white/10 border border-white/10 backdrop-blur'
                   }`}
                 >
                   {category.name}
