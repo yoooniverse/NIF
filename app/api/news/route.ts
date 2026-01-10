@@ -77,6 +77,7 @@ export async function GET(req: NextRequest) {
 
     // 1. 사용자 정보 조회 (로그인한 경우에만)
     let userLevel = 1; // 기본 레벨 (비로그인 사용자)
+    let isPremiumSubscriber = false; // 유료 구독 여부
     let isTrialPeriod = true; // 비로그인 사용자는 무료 체험 중으로 간주
     let userInterestIds: string[] = [];
 
@@ -91,9 +92,39 @@ export async function GET(req: NextRequest) {
         userLevel = userData.level || 1;
         const onboardedAt = new Date(userData.onboarded_at);
         const now = new Date();
-        
-        // 무료 체험 기간 확인 (가입 후 30일 이내)
-        isTrialPeriod = (now.getTime() - onboardedAt.getTime()) < (30 * 24 * 60 * 60 * 1000);
+
+        // 구독 정보 조회
+        const { data: subscriptionData, error: subscriptionError } = await supabase
+          .from('subscriptions')
+          .select('plan, active, ends_at')
+          .eq('clerk_id', userId)
+          .order('started_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        console.log("[API][NEWS_TODAY] Subscription check:", {
+          userId,
+          subscriptionData,
+          subscriptionError: subscriptionError?.code
+        });
+
+        // ✅ 유료 구독자 확인
+        isPremiumSubscriber = subscriptionData && 
+          subscriptionData.plan === 'premium' && 
+          subscriptionData.active === true &&
+          new Date(subscriptionData.ends_at) > now;
+
+        // ⚠️ 무료 체험 기간 확인 (subscriptions 테이블에 레코드가 없으면서 가입 후 30일 이내)
+        const hasNoSubscriptionRecord = !subscriptionData || subscriptionError?.code === 'PGRST116';
+        const daysSinceOnboarding = (now.getTime() - onboardedAt.getTime()) / (1000 * 60 * 60 * 24);
+        isTrialPeriod = hasNoSubscriptionRecord && daysSinceOnboarding < 30;
+
+        console.log("[API][NEWS_TODAY] User subscription status:", {
+          isPremiumSubscriber,
+          isTrialPeriod,
+          daysSinceOnboarding: daysSinceOnboarding.toFixed(1),
+          hasNoSubscriptionRecord
+        });
       } else {
         console.log("[API][NEWS_TODAY] User not found in DB, using defaults");
       }
@@ -207,7 +238,7 @@ export async function GET(req: NextRequest) {
           easy_title: analysis?.[cols.title] || '',
           summary: analysis?.[cols.content] || '',
           worst_scenarios: [],
-          should_blur: isTrialPeriod ? false : (analysis?.action_blurred !== false)
+          should_blur: (isTrialPeriod || isPremiumSubscriber) ? false : (analysis?.action_blurred !== false)
         },
         originalTags // 필터링용
       };

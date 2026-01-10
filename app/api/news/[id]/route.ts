@@ -76,9 +76,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const now = new Date();
 
-    // 무료 체험 기간 확인 (가입 후 30일 이내)
-    const isTrialPeriod = (now.getTime() - onboardedAt.getTime()) < (30 * 24 * 60 * 60 * 1000);
-
     // 2. 구독 정보 조회 (subscriptions 테이블)
     console.group("[API][NEWS_DETAIL] 📋 구독 상태 확인");
     const { data: subscriptionData, error: subscriptionError } = await supabase
@@ -91,19 +88,29 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     console.log("[API][NEWS_DETAIL] Subscription data:", subscriptionData);
     console.log("[API][NEWS_DETAIL] Subscription error:", subscriptionError);
+    console.log("[API][NEWS_DETAIL] User onboarded at:", onboardedAt);
+    console.log("[API][NEWS_DETAIL] Current time:", now);
 
-    // 유료 구독자 확인 (plan='premium' AND active=true AND ends_at > now)
+    // ✅ 유료 구독자 확인 (plan='premium' AND active=true AND ends_at > now)
     const isPremiumSubscriber = subscriptionData && 
       subscriptionData.plan === 'premium' && 
       subscriptionData.active === true &&
       new Date(subscriptionData.ends_at) > now;
 
+    // ⚠️ 무료 체험 기간 확인 (subscriptions 테이블에 레코드가 없으면서 가입 후 30일 이내)
+    // subscriptions 테이블에 레코드가 있다면 무료체험이 아니라 구독 상태를 따라감
+    const hasNoSubscriptionRecord = !subscriptionData || subscriptionError?.code === 'PGRST116'; // PGRST116 = no rows returned
+    const daysSinceOnboarding = (now.getTime() - onboardedAt.getTime()) / (1000 * 60 * 60 * 24);
+    const isTrialPeriod = hasNoSubscriptionRecord && daysSinceOnboarding < 30;
+
     console.log("[API][NEWS_DETAIL] 📊 블러 판단 로직:");
+    console.log("[API][NEWS_DETAIL]   - 구독 레코드 없음:", hasNoSubscriptionRecord);
+    console.log("[API][NEWS_DETAIL]   - 가입 후 경과일:", daysSinceOnboarding.toFixed(1), "일");
     console.log("[API][NEWS_DETAIL]   - 무료체험 중:", isTrialPeriod);
     console.log("[API][NEWS_DETAIL]   - 유료 구독자:", isPremiumSubscriber);
-    console.log("[API][NEWS_DETAIL]   - 구독 플랜:", subscriptionData?.plan);
-    console.log("[API][NEWS_DETAIL]   - 구독 활성:", subscriptionData?.active);
-    console.log("[API][NEWS_DETAIL]   - 구독 만료:", subscriptionData?.ends_at);
+    console.log("[API][NEWS_DETAIL]   - 구독 플랜:", subscriptionData?.plan || 'N/A');
+    console.log("[API][NEWS_DETAIL]   - 구독 활성:", subscriptionData?.active || false);
+    console.log("[API][NEWS_DETAIL]   - 구독 만료:", subscriptionData?.ends_at || 'N/A');
     console.groupEnd();
 
     // 2. 레벨별 컬럼 선택
