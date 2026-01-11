@@ -13,7 +13,7 @@ interface BoardingPassModalProps {
   newsTitle?: string;
   economicIndex?: string;
   passengerName?: string;
-  subscriptionStatus?: 'first_class' | 'economy';
+  subscriptionStatus?: 'first_class' | 'economy' | 'loading';
 }
 
 export default function BoardingPassModal({

@@ -251,22 +251,24 @@ export default function NewsDetailPage() {
       </div>
 
       {/* Boarding Pass Modal */}
-      <BoardingPassModal
-        isOpen={isBoardingPassOpen}
-        onClose={() => setIsBoardingPassOpen(false)}
-        newsTitle="News Insight" 
-        economicIndex="NIF-001"
-        passengerName={
-          user ? (
-            user.fullName ||
-            `${user.firstName || ''} ${user.lastName || ''}`.trim() ||
-            user.username ||
-            user.emailAddresses?.[0]?.emailAddress?.split('@')[0] ||
-            'PREMIUM MEMBER'
-          ) : 'PREMIUM MEMBER'
-        }
-        subscriptionStatus={subscriptionLoading ? 'economy' : subscriptionStatus}
-      />
+      {!subscriptionLoading && (
+        <BoardingPassModal
+          isOpen={isBoardingPassOpen}
+          onClose={() => setIsBoardingPassOpen(false)}
+          newsTitle="News Insight" 
+          economicIndex="NIF-001"
+          passengerName={
+            user ? (
+              user.fullName ||
+              `${user.firstName || ''} ${user.lastName || ''}`.trim() ||
+              user.username ||
+              user.emailAddresses?.[0]?.emailAddress?.split('@')[0] ||
+              'PREMIUM MEMBER'
+            ) : 'PREMIUM MEMBER'
+          }
+          subscriptionStatus={subscriptionStatus}
+        />
+      )}
     </div>
   );
 }
