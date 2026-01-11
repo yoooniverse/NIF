@@ -26,6 +26,7 @@
     "clsx": "^2.1.1",
     "critters": "^0.0.25",
     "framer-motion": "^12.23.26",
+    "mermaid": "^11.12.2",
     "next": "15.5.9",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

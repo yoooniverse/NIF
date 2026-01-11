@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import GlobeCanvas from '@/components/dashboard/GlobeCanvas';
 import BoardingPassModal from '@/components/news/BoardingPassModal';
-import { getSubscriptionStatus } from '@/lib/subscription';
+import { useSubscriptionStatus } from '@/lib/subscription';
 
 type PanelKey = 'today' | 'monthly' | 'cycle';
 
@@ -59,6 +59,7 @@ const MOCK_DATA = {
 export default function DashboardV2Page() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
+  const { status: subscriptionStatus, loading: subscriptionLoading } = useSubscriptionStatus();
 
   const [activePanel, setActivePanel] = useState<PanelKey | null>(null);
   const [isBoardingPassOpen, setIsBoardingPassOpen] = useState(false);
@@ -207,8 +208,6 @@ export default function DashboardV2Page() {
                     user.emailAddresses?.[0]?.emailAddress?.split('@')[0] ||
                     'PREMIUM MEMBER'
                   ) : 'PREMIUM MEMBER';
-
-                  const subscriptionStatus = getSubscriptionStatus(user);
 
                   console.info('[DASHBOARD] click: boarding pass', {
                     passengerName,
@@ -397,7 +396,7 @@ export default function DashboardV2Page() {
               'PREMIUM MEMBER'
             ) : 'PREMIUM MEMBER'
           }
-          subscriptionStatus='first_class'
+          subscriptionStatus={subscriptionLoading ? 'economy' : subscriptionStatus}
         />
       </div>
     </div>

@@ -10,7 +10,7 @@ import ActionItem from "../../../components/news/action-item";
 import NewsFooter from "../../../components/news/news-footer";
 import BoardingPassModal from "../../../components/news/BoardingPassModal";
 import { FlightViewBackground } from '@/components/landing/FlightViewBackground';
-import { getSubscriptionStatus } from '@/lib/subscription';
+import { useSubscriptionStatus } from '@/lib/subscription';
 
 interface NewsDetail {
   id: string;
@@ -34,6 +34,7 @@ export default function NewsDetailPage() {
   const params = useParams<{ id: string }>();
   const searchParams = useSearchParams();
   const id = params?.id;
+  const { status: subscriptionStatus, loading: subscriptionLoading } = useSubscriptionStatus();
   const [isBoardingPassOpen, setIsBoardingPassOpen] = useState(false);
   const [news, setNews] = useState<NewsDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -45,9 +46,9 @@ export default function NewsDetailPage() {
 
   useEffect(() => {
     if (user) {
-      console.log('[DEBUG] Subscription Status:', getSubscriptionStatus(user), 'CreatedAt:', user.createdAt);
+      console.log('[DEBUG] Subscription Status:', subscriptionStatus, 'CreatedAt:', user.createdAt);
     }
-  }, [user]);
+  }, [user, subscriptionStatus]);
 
   useEffect(() => {
     if (!id) return;
@@ -202,8 +203,7 @@ export default function NewsDetailPage() {
           <button
             type="button"
             onClick={() => {
-              const status = getSubscriptionStatus(user);
-              console.log("[NEWS_DETAIL] Click Boarding Pass. User:", user?.id, "Status:", status);
+              console.log("[NEWS_DETAIL] Click Boarding Pass. User:", user?.id, "Status:", subscriptionStatus);
               setIsBoardingPassOpen(true);
             }}
             className="
@@ -265,7 +265,7 @@ export default function NewsDetailPage() {
             'PREMIUM MEMBER'
           ) : 'PREMIUM MEMBER'
         }
-        subscriptionStatus='first_class'
+        subscriptionStatus={subscriptionLoading ? 'economy' : subscriptionStatus}
       />
     </div>
   );
