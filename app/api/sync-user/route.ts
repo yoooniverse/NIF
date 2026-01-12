@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
         ? `${clerkUser.first_name} ${clerkUser.last_name}`.trim()
         : clerkUser.first_name || clerkUser.last_name || clerkUser.username || '',
       email: clerkUser.email_addresses?.[0]?.email_address || '',
-      level: 1, // 기본 레벨 설정
+      level: clerkUser.public_metadata?.userProfiles?.level || clerkUser.unsafe_metadata?.level || 1, // Clerk 메타데이터의 레벨 반영
       // onboarded_at은 자동으로 현재 시간으로 설정됨 (옵셔널 필드)
     };
 

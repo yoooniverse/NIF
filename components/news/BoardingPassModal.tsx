@@ -60,7 +60,7 @@ export default function BoardingPassModal({
   });
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 pointer-events-auto">
       <div className="relative w-full max-w-4xl bg-white rounded-3xl drop-shadow-xl overflow-hidden">
         {/* Close Button */}
         <button
@@ -167,7 +167,7 @@ export default function BoardingPassModal({
 
             {/* Bon Voyage Stamp */}
             <div className="relative z-0 mt-2 select-none pointer-events-none">
-              <div 
+              <div
                 className="relative w-32 h-32 transform -rotate-12 opacity-90 mix-blend-multiply rounded-full overflow-hidden"
               >
                 <div className="absolute inset-0 bg-red-600"></div>
@@ -228,10 +228,11 @@ export default function BoardingPassModal({
         </div>
       </div>
 
+
       {/* Passport Modal (Nested) */}
-      <PassportModal 
-        isOpen={isPassportOpen} 
-        onClose={() => setIsPassportOpen(false)} 
+      <PassportModal
+        isOpen={isPassportOpen}
+        onClose={() => setIsPassportOpen(false)}
       />
     </div>
   );

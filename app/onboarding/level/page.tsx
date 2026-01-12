@@ -2,10 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { useUser } from "@clerk/nextjs";
 import { motion } from "framer-motion";
 
 export default function OnboardingLevelPage() {
   const router = useRouter();
+  const { user, isLoaded: identityLoaded } = useUser();
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -60,8 +62,8 @@ export default function OnboardingLevelPage() {
   };
 
   const handleComplete = async () => {
-    if (!selectedLevel) {
-      console.log("[ONBOARDING_LEVEL] 선택된 레벨이 없음");
+    if (!selectedLevel || !user) {
+      console.log("[ONBOARDING_LEVEL] 선택된 레벨이 없거나 유저 정보 로드 안됨");
       return;
     }
 
@@ -95,7 +97,20 @@ export default function OnboardingLevelPage() {
         contexts,
       });
 
-      // API를 통해 Clerk 메타데이터 업데이트 (Clerk v5 대응)
+      // 1. 클라이언트 측에서 먼저 업데이트 (즉각적인 UI 반영을 위해)
+      // unsafeMetadata는 클라이언트에서 직접 수정 가능하며 즉시 반영됨
+      console.log("[ONBOARDING_LEVEL] 클라이언트 메타데이터 즉시 업데이트");
+      await user.update({
+        unsafeMetadata: {
+          ...user.unsafeMetadata,
+          onboardingCompleted: true,
+          level: selectedLevel,
+          interests,
+          contexts,
+        }
+      });
+
+      // 2. 서버 측 업데이트 (정적 정보 저장 및 Supabase 동기화)
       try {
         const response = await fetch('/api/onboarding/complete', {
           method: 'POST',
@@ -113,6 +128,8 @@ export default function OnboardingLevelPage() {
 
         if (response.ok) {
           console.log("[ONBOARDING_LEVEL] 온보딩 완료 처리 성공:", result);
+          // 서버 데이터 동기화 후 최신 정보 다시 가져오기
+          await user.reload();
         } else {
           console.error("[ONBOARDING_LEVEL] API 오류 발생:", result);
           throw new Error('온보딩 완료 처리 실패');
@@ -123,21 +140,9 @@ export default function OnboardingLevelPage() {
       }
 
       // 세션 스토리지 클리어 (온보딩 완료 후 정리)
-      console.log("[ONBOARDING_LEVEL] 세션 스토리지 클리어 전:", {
-        interests: sessionStorage.getItem('onboarding_interests'),
-        contexts: sessionStorage.getItem('onboarding_contexts'),
-        level: sessionStorage.getItem('onboarding_level'),
-      });
-
       sessionStorage.removeItem('onboarding_interests');
       sessionStorage.removeItem('onboarding_contexts');
       sessionStorage.removeItem('onboarding_level');
-
-      console.log("[ONBOARDING_LEVEL] 세션 스토리지 클리어 후:", {
-        interests: sessionStorage.getItem('onboarding_interests'),
-        contexts: sessionStorage.getItem('onboarding_contexts'),
-        level: sessionStorage.getItem('onboarding_level'),
-      });
 
       console.log("[ONBOARDING_LEVEL] 대시보드로 이동");
       router.push('/dashboard');
@@ -160,9 +165,8 @@ export default function OnboardingLevelPage() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.1 }}
-            className={`grid grid-cols-12 gap-4 px-8 py-4 border-b border-[#FFB800]/20 hover:bg-[#FFB800]/5 transition-colors duration-200 cursor-pointer ${
-              isSelected ? 'bg-[#FFB800]/10' : ''
-            }`}
+            className={`grid grid-cols-12 gap-4 px-8 py-4 border-b border-[#FFB800]/20 hover:bg-[#FFB800]/5 transition-colors duration-200 cursor-pointer ${isSelected ? 'bg-[#FFB800]/10' : ''
+              }`}
             onClick={() => setSelectedLevel(levelOption.level)}
           >
             {/* STEP (03/03) */}
@@ -201,9 +205,8 @@ export default function OnboardingLevelPage() {
                 transition={{ duration: 0.3 }}
                 className="text-center"
               >
-                <div className={`text-xl font-mono font-bold ${
-                  isSelected ? 'text-[#FFB800]' : 'text-white/40'
-                }`}>
+                <div className={`text-xl font-mono font-bold ${isSelected ? 'text-[#FFB800]' : 'text-white/40'
+                  }`}>
                   {isSelected ? '✓' : '-'}
                 </div>
               </motion.div>
@@ -216,9 +219,8 @@ export default function OnboardingLevelPage() {
                 transition={{ duration: 0.3 }}
                 className="px-3 py-1 rounded bg-[#FFB800]/20"
               >
-                <span className={`font-mono text-sm font-bold ${
-                  isSelected ? 'text-[#FFB800]' : 'text-white/60'
-                }`}>
+                <span className={`font-mono text-sm font-bold ${isSelected ? 'text-[#FFB800]' : 'text-white/60'
+                  }`}>
                   {isSelected ? 'SELECTED' : 'WAITING'}
                 </span>
               </motion.div>
@@ -283,11 +285,10 @@ export default function OnboardingLevelPage() {
             whileTap={{ scale: 0.95 }}
             onClick={handleComplete}
             disabled={!selectedLevel || isSubmitting}
-            className={`px-6 py-2 font-mono font-bold text-sm rounded transition-all duration-200 border-2 ${
-              selectedLevel && !isSubmitting
+            className={`px-6 py-2 font-mono font-bold text-sm rounded transition-all duration-200 border-2 ${selectedLevel && !isSubmitting
                 ? 'bg-[#FFB800] border-[#FFB800] text-black hover:bg-[#FFB800]/90'
                 : 'bg-gray-600 border-gray-500 text-gray-400 cursor-not-allowed'
-            }`}
+              }`}
           >
             {isSubmitting ? '처리 중...' : '출발하기 ▶'}
           </motion.button>

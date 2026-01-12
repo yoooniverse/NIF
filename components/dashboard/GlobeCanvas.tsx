@@ -151,7 +151,7 @@ export default function GlobeCanvas({ className = '' }: GlobeCanvasProps) {
 
     const canvas = document.createElement('canvas');
     const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-    
+
     if (!gl) {
       console.error('[GLOBE_CANVAS] WebGL not supported');
       setGlobeError('WebGL을 지원하지 않는 브라우저입니다');
@@ -181,32 +181,33 @@ export default function GlobeCanvas({ className = '' }: GlobeCanvasProps) {
     const globe = globeRef.current;
     if (!globe) return;
 
-    // 1) Controls: cinematic auto-rotate
+    // 1) Controls: cinematic auto-rotate + user interaction
     try {
       const controls = globe.controls?.();
       if (controls) {
         controls.autoRotate = true;
-        controls.autoRotateSpeed = 0.35;
+        controls.autoRotateSpeed = 0.5; // 속도 약간 상향
         controls.enableDamping = true;
-        controls.dampingFactor = 0.08;
+        controls.dampingFactor = 0.05;
+        controls.enablePan = false; // 위치 이동 방지
+        controls.enableZoom = true; // 줌 활성화
+        controls.enableRotate = true; // 회전 활성화
 
-        // Tilted Bird's-Eye View (In-Flight System)
-        // - Polar angle is measured from +Y axis (0 = straight down, PI/2 = horizon-ish).
-        // - 지구의 반원(semicircle) 모양이 보이도록 45도 위로 올린 각도로 제한
-        controls.minPolarAngle = Math.PI / 3 + Math.PI / 4; // ~1.832rad (약 105도) - 최소 기울기 제한
-        controls.maxPolarAngle = Math.PI / 1.5 + Math.PI / 4; // ~2.879rad (약 165도) - 최대 기울기 제한, 반원 모양
+        // 사용자 조작 범위를 넓게 허용 (기존의 반원 제약 완화)
+        // 0(북극) ~ PI(남극). 극단적인 수직 반전 방지를 위해 약간 남겨둠.
+        controls.minPolarAngle = Math.PI / 6;   // 약 30도 (위에서 내려다보기 가능)
+        controls.maxPolarAngle = Math.PI - Math.PI / 6; // 약 150도 (밑에서 올려다보기 가능)
 
-        console.info('[GLOBE_CANVAS] camera controls configured', {
-          minPolarAngle: `${(controls.minPolarAngle * 180 / Math.PI).toFixed(1)}°`,
-          maxPolarAngle: `${(controls.maxPolarAngle * 180 / Math.PI).toFixed(1)}°`,
-          autoRotate: controls.autoRotate,
-          autoRotateSpeed: controls.autoRotateSpeed
+        // 줌 범위 설정 (Distance)
+        controls.minDistance = 150; // 최대 확대
+        controls.maxDistance = 500; // 최대 축소
+
+        console.info('[GLOBE_CANVAS] interactive camera controls configured', {
+          rotate: controls.enableRotate,
+          zoom: controls.enableZoom,
+          minPolar: '30°',
+          maxPolar: '150°'
         });
-
-        // In-flight map: 지구 원형이 화면에 가득 차도록 가까이 접근 가능하게 조정
-        // (react-globe.gl 내부 camera distance 기반)
-        controls.minDistance = 150; // 더 가까이 접근할 수 있도록 낮춤
-        controls.maxDistance = 600; // 최대 거리도 적절히 조정
       }
 
       // In-Flight Map: 지구 원형이 화면에 가득 차도록 가까이 접근
@@ -217,7 +218,7 @@ export default function GlobeCanvas({ className = '' }: GlobeCanvasProps) {
         altitude: 1.8,
         description: 'In-Flight Map view - Earth filling the screen'
       });
-        console.info('[GLOBE_CANVAS] In-Flight Map controls ready (autoRotate ON)');
+      console.info('[GLOBE_CANVAS] In-Flight Map controls ready (autoRotate ON)');
     } catch (e) {
       console.warn('[GLOBE_CANVAS] controls setup failed', e);
     }
@@ -313,68 +314,68 @@ export default function GlobeCanvas({ className = '' }: GlobeCanvasProps) {
         </div>
       ) : (
         <>
-        {console.info('[GLOBE_CANVAS] Rendering Globe component')}
-        <Globe
-          ref={globeRef}
-          // Globe look & feel
-          backgroundColor="rgba(0,0,0,0)"
-          backgroundImageUrl={EARTH_TEXTURES.stars}
-          globeImageUrl={EARTH_TEXTURES.day}
-          bumpImageUrl={EARTH_TEXTURES.bump}
-          showAtmosphere
-          atmosphereColor="rgba(56,189,248,0.35)"
-          atmosphereAltitude={0.12}
-          // Arcs: flight paths - 지구가 가까워져 크기 키움
-          arcsData={arcsData}
-          arcStartLat={(d: ArcDatum) => d.startLat}
-          arcStartLng={(d: ArcDatum) => d.startLng}
-          arcEndLat={(d: ArcDatum) => d.endLat}
-          arcEndLng={(d: ArcDatum) => d.endLng}
-          arcColor={(d: ArcDatum) => d.color}
-          arcAltitude={0.15} // 가까워진 시점에 맞게 높이 조정
-          arcStroke={0.6}
-          arcDashLength={0.35}
-          arcDashGap={0.7}
-          arcDashAnimateTime={2400}
-          // Points: hubs - 가까워진 시점에 맞게 크기 키움
-          pointsData={hubs}
-          pointLat={(d: HubDatum) => d.lat}
-          pointLng={(d: HubDatum) => d.lng}
-          pointColor={(d: HubDatum) => d.color}
-          pointAltitude={0.01} // 높게
-          pointRadius={0.07} // 크게
-          // Rings: pulsating markers - 가까워진 시점에 맞게 크기 키움
-          ringsData={ringsData}
-          ringLat={(d: any) => d.lat}
-          ringLng={(d: any) => d.lng}
-          ringColor={(d: any) => d.color}
-          ringMaxRadius={1.3} // 크게
-          ringPropagationSpeed={2.0}
-          ringRepeatPeriod={1600}
-          onGlobeReady={() => {
-            console.info('[GLOBE_CANVAS] ✅ globe ready - initializing controls and materials');
-            setGlobeLoading(false);
-            
-            // Delay setup to ensure globe is fully initialized
-            setTimeout(() => {
-              console.info('[GLOBE_CANVAS] Setting up controls and materials...');
-              setupControlsAndMaterial();
-            }, 100);
-          }}
-          onGlobeClick={() => console.info('[GLOBE_CANVAS] globe click')}
-          onPointClick={(d: HubDatum) =>
-            console.info('[GLOBE_CANVAS] hub click:', { name: d.name, lat: d.lat, lng: d.lng })
-          }
-          onArcClick={(d: ArcDatum) => console.info('[GLOBE_CANVAS] arc click:', d.label)}
-        />
-        {globeLoading && (
-          <div className="pointer-events-none absolute inset-0 flex h-full items-center justify-center">
-            <div className="text-center">
-              <div className="mx-auto h-16 w-16 animate-spin rounded-full border-4 border-sky-200 border-t-transparent" />
-              <div className="mt-4 text-sm text-white/60">3D 지구 로딩 중...</div>
+          {console.info('[GLOBE_CANVAS] Rendering Globe component')}
+          <Globe
+            ref={globeRef}
+            // Globe look & feel
+            backgroundColor="rgba(0,0,0,0)"
+            backgroundImageUrl={EARTH_TEXTURES.stars}
+            globeImageUrl={EARTH_TEXTURES.day}
+            bumpImageUrl={EARTH_TEXTURES.bump}
+            showAtmosphere
+            atmosphereColor="rgba(56,189,248,0.35)"
+            atmosphereAltitude={0.12}
+            // Arcs: flight paths - 지구가 가까워져 크기 키움
+            arcsData={arcsData}
+            arcStartLat={(d: ArcDatum) => d.startLat}
+            arcStartLng={(d: ArcDatum) => d.startLng}
+            arcEndLat={(d: ArcDatum) => d.endLat}
+            arcEndLng={(d: ArcDatum) => d.endLng}
+            arcColor={(d: ArcDatum) => d.color}
+            arcAltitude={0.15} // 가까워진 시점에 맞게 높이 조정
+            arcStroke={0.6}
+            arcDashLength={0.35}
+            arcDashGap={0.7}
+            arcDashAnimateTime={2400}
+            // Points: hubs - 가까워진 시점에 맞게 크기 키움
+            pointsData={hubs}
+            pointLat={(d: HubDatum) => d.lat}
+            pointLng={(d: HubDatum) => d.lng}
+            pointColor={(d: HubDatum) => d.color}
+            pointAltitude={0.01} // 높게
+            pointRadius={0.07} // 크게
+            // Rings: pulsating markers - 가까워진 시점에 맞게 크기 키움
+            ringsData={ringsData}
+            ringLat={(d: any) => d.lat}
+            ringLng={(d: any) => d.lng}
+            ringColor={(d: any) => d.color}
+            ringMaxRadius={1.3} // 크게
+            ringPropagationSpeed={2.0}
+            ringRepeatPeriod={1600}
+            onGlobeReady={() => {
+              console.info('[GLOBE_CANVAS] ✅ globe ready - initializing controls and materials');
+              setGlobeLoading(false);
+
+              // Delay setup to ensure globe is fully initialized
+              setTimeout(() => {
+                console.info('[GLOBE_CANVAS] Setting up controls and materials...');
+                setupControlsAndMaterial();
+              }, 100);
+            }}
+            onGlobeClick={() => console.info('[GLOBE_CANVAS] globe click')}
+            onPointClick={(d: HubDatum) =>
+              console.info('[GLOBE_CANVAS] hub click:', { name: d.name, lat: d.lat, lng: d.lng })
+            }
+            onArcClick={(d: ArcDatum) => console.info('[GLOBE_CANVAS] arc click:', d.label)}
+          />
+          {globeLoading && (
+            <div className="pointer-events-none absolute inset-0 flex h-full items-center justify-center">
+              <div className="text-center">
+                <div className="mx-auto h-16 w-16 animate-spin rounded-full border-4 border-sky-200 border-t-transparent" />
+                <div className="mt-4 text-sm text-white/60">3D 지구 로딩 중...</div>
+              </div>
             </div>
-          </div>
-        )}
+          )}
         </>
       )}
 

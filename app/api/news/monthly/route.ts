@@ -32,7 +32,7 @@ function parseMonthOrNow(monthParam: string | null): { startIso: string; endIso:
   const nowUTC = new Date();
   const koreaOffset = 9 * 60 * 60 * 1000; // 9시간을 밀리초로
   const nowKorea = new Date(nowUTC.getTime() + koreaOffset);
-  
+
   const fallbackYear = nowKorea.getUTCFullYear();
   const fallbackMonth = nowKorea.getUTCMonth() + 1;
 
@@ -53,12 +53,14 @@ function parseMonthOrNow(monthParam: string | null): { startIso: string; endIso:
   }
 
   // 한국 시간 기준 해당 월의 1일 00:00:00 KST를 UTC로 변환
-  const startKorea = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0));
-  const startUTC = new Date(startKorea.getTime() - koreaOffset);
-  
+  // KST = UTC + 9시간이므로, UTC = KST - 9시간
+  // 예: 2026-01-01 00:00 KST -> 2025-12-31 15:00 UTC
+  const startKorea = new Date(year, month - 1, 1, 0, 0, 0); // 로컬 시간으로 생성
+  const startUTC = new Date(startKorea.getTime() - koreaOffset); // UTC로 변환
+
   // 한국 시간 기준 다음 달 1일 00:00:00 KST를 UTC로 변환 (해당 월의 마지막 순간)
-  const endKorea = new Date(Date.UTC(year, month, 1, 0, 0, 0));
-  const endUTC = new Date(endKorea.getTime() - koreaOffset);
+  const endKorea = new Date(year, month, 1, 0, 0, 0); // 로컬 시간으로 생성
+  const endUTC = new Date(endKorea.getTime() - koreaOffset); // UTC로 변환
 
   const monthKey = `${year}-${String(month).padStart(2, "0")}`;
   return { startIso: startUTC.toISOString(), endIso: endUTC.toISOString(), monthKey };
@@ -123,8 +125,8 @@ export async function GET(req: NextRequest) {
     });
 
     // ✅ 유료 구독자 확인
-    const isPremiumSubscriber = subscriptionData && 
-      subscriptionData.plan === 'premium' && 
+    const isPremiumSubscriber = subscriptionData &&
+      subscriptionData.plan === 'premium' &&
       subscriptionData.active === true &&
       new Date(subscriptionData.ends_at) > now;
 
@@ -254,9 +256,9 @@ export async function GET(req: NextRequest) {
 
     // JS 레벨 필터링: 대표 카테고리(primaryCategory)가 요청한 카테고리와 일치하는 것만
     let filteredNews = allProcessedNews;
-    
+
     const koreaOffset = 9 * 60 * 60 * 1000; // 9시간을 밀리초로
-    
+
     console.log("[API][NEWS_MONTHLY] Before filtering:");
     console.log("  Total:", allProcessedNews.length);
     console.log("  Should filter:", shouldFilter);
@@ -270,7 +272,7 @@ export async function GET(req: NextRequest) {
       console.log(`        published_at (KST): ${publishedKoreaStr}`);
       console.log(`        all tags: ${JSON.stringify(n.tags)}`);
     });
-    
+
     if (shouldFilter && filterValues.length > 0) {
       // 대표 카테고리가 요청한 카테고리와 정확히 일치하는 것만 필터링
       filteredNews = allProcessedNews.filter((item: any) => {

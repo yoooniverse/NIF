@@ -29,50 +29,50 @@ const SLUG_TO_KOREAN: Record<string, string> = {
 
 export async function GET(req: NextRequest) {
   try {
-    console.log("[API][NEWS_TODAY] Request started");
+    console.log("[API][NEWS_MONTHLY] Request started");
     const { userId } = await auth();
 
     // 개발 환경이 아니면 로그인 필수 (프로덕션 보안)
     const isDevelopment = process.env.NODE_ENV === 'development';
     
     if (!isDevelopment && !userId) {
-      console.log("[API][NEWS_TODAY] Production mode - login required");
+      console.log("[API][NEWS_MONTHLY] Production mode - login required");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    console.log("[API][NEWS_TODAY] User ID:", userId || 'anonymous (dev mode)');
+    console.log("[API][NEWS_MONTHLY] User ID:", userId || 'anonymous (dev mode)');
 
     const url = new URL(req.url);
     const categoryParam = url.searchParams.get("category");
     const limitParam = url.searchParams.get("limit");
     const limit = Math.min(parseInt(limitParam || "20"), 50);
 
-    // 오늘 하루의 날짜 범위 (한국 시간 기준: UTC+9)
+    // 이달의 뉴스 전체 범위 (한국 시간 기준: UTC+9)
     // 한국 시간으로 현재 날짜 구하기
     const nowUTC = new Date();
     const koreaOffset = 9 * 60 * 60 * 1000; // 9시간을 밀리초로
     const nowKorea = new Date(nowUTC.getTime() + koreaOffset);
-    
-    // 한국 시간 기준 오늘의 시작: YYYY-MM-DD 00:00:00 KST
+
+    // 한국 시간 기준 이번 달의 시작: YYYY-MM-01 00:00:00 KST
     const year = nowKorea.getUTCFullYear();
     const month = nowKorea.getUTCMonth();
-    const date = nowKorea.getUTCDate();
-    
-    // 한국 시간 00:00:00을 UTC로 변환
-    const startOfDayKorea = new Date(Date.UTC(year, month, date, 0, 0, 0));
-    const startOfDayUTC = new Date(startOfDayKorea.getTime() - koreaOffset);
-    
-    // 한국 시간 23:59:59를 UTC로 변환
-    const endOfDayKorea = new Date(Date.UTC(year, month, date, 23, 59, 59, 999));
-    const endOfDayUTC = new Date(endOfDayKorea.getTime() - koreaOffset);
 
-    console.log("[API][NEWS_TODAY] Query params:", {
+    // 한국 시간 이번 달 1일 00:00:00을 UTC로 변환
+    const startOfMonthKorea = new Date(Date.UTC(year, month, 1, 0, 0, 0));
+    const startOfMonthUTC = new Date(startOfMonthKorea.getTime() - koreaOffset);
+
+    // 한국 시간 오늘 23:59:59를 UTC로 변환 (이달 말까지가 아니라 오늘까지)
+    const date = nowKorea.getUTCDate();
+    const endOfDayKorea = new Date(Date.UTC(year, month, date, 23, 59, 59, 999));
+    const endOfMonthUTC = new Date(endOfDayKorea.getTime() - koreaOffset);
+
+    console.log("[API][NEWS_MONTHLY] Query params:", {
       userId,
       category: categoryParam || 'all',
       limit,
-      koreaDate: `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`,
-      koreaDateTimeRange: `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')} 00:00:00 KST ~ 23:59:59 KST`,
-      utcDateTimeRange: `${startOfDayUTC.toISOString()} ~ ${endOfDayUTC.toISOString()}`
+      koreaDate: `${year}-${String(month + 1).padStart(2, '0')}`,
+      koreaDateTimeRange: `${year}-${String(month + 1).padStart(2, '0')}-01 00:00:00 KST ~ ${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')} 23:59:59 KST`,
+      utcDateTimeRange: `${startOfMonthUTC.toISOString()} ~ ${endOfMonthUTC.toISOString()}`
     });
 
     // 1. 사용자 정보 조회 (로그인한 경우에만)
@@ -102,7 +102,7 @@ export async function GET(req: NextRequest) {
           .limit(1)
           .single();
 
-        console.log("[API][NEWS_TODAY] Subscription check:", {
+        console.log("[API][NEWS_MONTHLY] Subscription check:", {
           userId,
           subscriptionData,
           subscriptionError: subscriptionError?.code
@@ -119,14 +119,14 @@ export async function GET(req: NextRequest) {
         const daysSinceOnboarding = (now.getTime() - onboardedAt.getTime()) / (1000 * 60 * 60 * 24);
         isTrialPeriod = hasNoSubscriptionRecord && daysSinceOnboarding < 30;
 
-        console.log("[API][NEWS_TODAY] User subscription status:", {
+        console.log("[API][NEWS_MONTHLY] User subscription status:", {
           isPremiumSubscriber,
           isTrialPeriod,
           daysSinceOnboarding: daysSinceOnboarding.toFixed(1),
           hasNoSubscriptionRecord
         });
       } else {
-        console.log("[API][NEWS_TODAY] User not found in DB, using defaults");
+        console.log("[API][NEWS_MONTHLY] User not found in DB, using defaults");
       }
     }
 
@@ -151,8 +151,8 @@ export async function GET(req: NextRequest) {
 
     const userInterestNames = (userInterestNamesResult.data || []).map(i => i.name);
 
-    console.log("[API][NEWS_TODAY] User selected interests:", userInterestNames);
-    console.log("[API][NEWS_TODAY] Allowed display tags:", allowedTagNames);
+    console.log("[API][NEWS_MONTHLY] User selected interests:", userInterestNames);
+    console.log("[API][NEWS_MONTHLY] Allowed display tags:", allowedTagNames);
 
     // 필터링 기준: 오직 'Interests'만 사용 (Contexts 제외)
     let filterValues = userInterestNames;
@@ -166,11 +166,11 @@ export async function GET(req: NextRequest) {
       filterValues = userInterestNames;
       if (filterValues.length === 0) {
         shouldFilter = false;
-        console.log("[API][NEWS_TODAY] No user interests found, showing unfiltered news");
+        console.log("[API][NEWS_MONTHLY] No user interests found, showing unfiltered news");
       }
     }
 
-    console.log("[API][NEWS_TODAY] Final filter criteria:", filterValues);
+    console.log("[API][NEWS_MONTHLY] Final filter criteria:", filterValues);
 
     // 3. 레벨별 컬럼 선택
     const levelColumns = {
@@ -199,17 +199,17 @@ export async function GET(req: NextRequest) {
           action_blurred
         )
       `)
-      .gte('published_at', startOfDayUTC.toISOString())
-      .lte('published_at', endOfDayUTC.toISOString())
+      .gte('published_at', startOfMonthUTC.toISOString())
+      .lte('published_at', endOfMonthUTC.toISOString())
       .order('published_at', { ascending: false })
       .limit(dbLimit) as any);
 
     if (newsError) {
-      console.error("[API][NEWS_TODAY] Query error detailed:", newsError);
+      console.error("[API][NEWS_MONTHLY] Query error detailed:", newsError);
       return NextResponse.json({ error: "Failed to fetch news", message: newsError.message }, { status: 500 });
     }
 
-    console.log("[API][NEWS_TODAY] News fetched from DB:", newsData?.length || 0);
+    console.log("[API][NEWS_MONTHLY] News fetched from DB:", newsData?.length || 0);
 
     // 5. 응답 데이터 구성 및 JS 필터링
     const allProcessedNews = (newsData || []).map((item: any) => {
@@ -247,7 +247,7 @@ export async function GET(req: NextRequest) {
     // JS 레벨 필터링: 대표 카테고리(primaryCategory)가 요청한 카테고리와 일치하는 것만
     let filteredNews = allProcessedNews;
     
-    console.log("[API][NEWS_TODAY] Before filtering:");
+    console.log("[API][NEWS_MONTHLY] Before filtering:");
     console.log("  Total:", allProcessedNews.length);
     console.log("  Should filter:", shouldFilter);
     console.log("  Filter values:", JSON.stringify(filterValues));
@@ -266,19 +266,19 @@ export async function GET(req: NextRequest) {
       filteredNews = allProcessedNews.filter((item: any) => {
         return filterValues.includes(item.category);
       });
-      console.log("[API][NEWS_TODAY] After filtering:", {
+      console.log("[API][NEWS_MONTHLY] After filtering:", {
         beforeCount: allProcessedNews.length,
         afterCount: filteredNews.length,
         filterValues
       });
     } else {
-      console.log("[API][NEWS_TODAY] Skipping filter - returning all news");
+      console.log("[API][NEWS_MONTHLY] Skipping filter - returning all news");
     }
 
     // 최종적으로 사용자가 요청한 limit만큼만 반환
     const finalNews = filteredNews.slice(0, limit);
 
-    console.log("[API][NEWS_TODAY] Final response:", {
+    console.log("[API][NEWS_MONTHLY] Final response:", {
       filteredCount: filteredNews.length,
       returnedCount: finalNews.length,
       limit
@@ -291,7 +291,7 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error("[API][NEWS_TODAY] Unexpected error detailed:", {
+    console.error("[API][NEWS_MONTHLY] Unexpected error detailed:", {
       name: error.name,
       message: error.message,
       stack: error.stack

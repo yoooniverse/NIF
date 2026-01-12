@@ -1,6 +1,6 @@
 'use client';
 
-import { useUser, UserButton } from '@clerk/nextjs';
+import { useUser, UserButton, useClerk } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -10,6 +10,7 @@ import {
   Newspaper,
   X,
   Ticket,
+  LogOut,
 } from 'lucide-react';
 import GlobeCanvas from '@/components/dashboard/GlobeCanvas';
 import BoardingPassModal from '@/components/news/BoardingPassModal';
@@ -58,6 +59,7 @@ const MOCK_DATA = {
  */
 export default function DashboardV2Page() {
   const { user, isLoaded } = useUser();
+  const { signOut } = useClerk();
   const router = useRouter();
   const { status: subscriptionStatus, loading: subscriptionLoading } = useSubscriptionStatus();
 
@@ -190,9 +192,24 @@ export default function DashboardV2Page() {
       <GlobeCanvas />
 
       {/* UI Overlay Layer */}
-      <div className="absolute inset-0 z-10">
+      <div className="absolute inset-0 z-10 pointer-events-none">
+        {/* Top Left Logout Button */}
+        <div className="absolute left-6 top-6 z-20 pointer-events-auto">
+          <button
+            type="button"
+            onClick={() => {
+              console.info('[DASHBOARD] user signing out');
+              signOut({ redirectUrl: '/' });
+            }}
+            className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-sm font-medium text-white/80 backdrop-blur-md hover:bg-black/60 hover:text-white transition-all shadow-lg active:scale-95 group"
+          >
+            <LogOut className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+            <span>로그아웃</span>
+          </button>
+        </div>
+
         {/* Left Sidebar (Glassmorphism) */}
-        <aside className="absolute right-4 top-4 bottom-4 w-[92vw] md:w-[min(40vw,560px)] rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_30px_100px_-70px_rgba(0,0,0,0.9)]">
+        <aside className="absolute right-4 top-4 bottom-4 w-[92vw] md:w-[min(40vw,560px)] rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_30px_100px_-70px_rgba(0,0,0,0.9)] pointer-events-auto">
           <div className="flex h-full flex-col">
             {/* 상단바(헤더) 제거: 상단 공간 확보 */}
             <div className="pt-5" />
@@ -380,27 +397,27 @@ export default function DashboardV2Page() {
             </div>
           </div>
         )}
-
-        {/* Boarding Pass Modal */}
-        {!subscriptionLoading && (
-          <BoardingPassModal
-            isOpen={isBoardingPassOpen}
-            onClose={() => setIsBoardingPassOpen(false)}
-            newsTitle="News Insight"
-            economicIndex="NIF-001"
-            passengerName={
-              user ? (
-                user.fullName ||
-                `${user.firstName || ''} ${user.lastName || ''}`.trim() ||
-                user.username ||
-                user.emailAddresses?.[0]?.emailAddress?.split('@')[0] ||
-                'PREMIUM MEMBER'
-              ) : 'PREMIUM MEMBER'
-            }
-            subscriptionStatus={subscriptionStatus}
-          />
-        )}
       </div>
+
+      {/* Boarding Pass Modal - Move outside Overlay Layer for better click handling */}
+      {!subscriptionLoading && (
+        <BoardingPassModal
+          isOpen={isBoardingPassOpen}
+          onClose={() => setIsBoardingPassOpen(false)}
+          newsTitle="News Insight"
+          economicIndex="NIF-001"
+          passengerName={
+            user ? (
+              user.fullName ||
+              `${user.firstName || ''} ${user.lastName || ''}`.trim() ||
+              user.username ||
+              user.emailAddresses?.[0]?.emailAddress?.split('@')[0] ||
+              'PREMIUM MEMBER'
+            ) : 'PREMIUM MEMBER'
+          }
+          subscriptionStatus={subscriptionStatus}
+        />
+      )}
     </div>
   );
 }
