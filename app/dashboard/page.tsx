@@ -301,7 +301,7 @@ export default function DashboardV2Page() {
                     <div className="flex items-center gap-4">
                       <LineChart className="h-5 w-5 text-emerald-200 group-hover:text-emerald-100" />
                       <div>
-                        <div className="text-lg md:text-xl font-semibold">경제 순환기 지도</div>
+                        <div className="text-lg md:text-xl font-semibold">경제순환기 레이더</div>
                         <div className="mt-1 text-sm md:text-base text-white/60">지표로 보는 국면</div>
                       </div>
                     </div>
@@ -332,7 +332,7 @@ export default function DashboardV2Page() {
                 <div className="leading-tight">
                   <div className="text-xs text-white/60">In-flight briefing</div>
                   <div className="mt-1 text-xl font-semibold tracking-tight">
-                    경제 순환기 지도
+                    경제순환기 레이더
                   </div>
                 </div>
                 <button
