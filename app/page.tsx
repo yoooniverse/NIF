@@ -25,7 +25,8 @@ const LazyEarth = dynamic(
 export default function LandingPage() {
   console.log("🌍 랜딩 페이지 로드됨 - Hero Section Only");
 
-  const { isSignedIn, user } = useUser();
+  const { isSignedIn, user, isLoaded } = useUser();
+  console.log("🔐 인증 상태 확인:", { isSignedIn, isLoaded, userId: user?.id });
 
   return (
     <div className="h-screen overflow-hidden">
@@ -110,31 +111,40 @@ export default function LandingPage() {
 
             {/* CTA 버튼 */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4 px-4">
-              {isSignedIn ? (
+              {!isLoaded ? (
+                // 로딩 중
+                <div className="animate-pulse bg-gray-700 rounded-lg h-12 w-32"></div>
+              ) : isSignedIn ? (
                 // 로그인된 경우: 대시보드 버튼
-                <Link href="/dashboard">
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="w-full sm:w-auto text-base md:text-lg px-6 md:px-8 py-5 md:py-6 bg-black/80 backdrop-blur-md border-white/20 text-white hover:bg-black hover:border-white/40 transition-all duration-300 shadow-2xl hover:shadow-blue-500/50 group"
-                    onClick={() => console.log("🏠 히어로 섹션에서 대시보드로 이동")}
-                  >
-                    <ArrowRight className="w-5 h-5 mr-2" />
-                    대시보드
-                  </Button>
-                </Link>
+                <>
+                  {console.log("✅ 로그인된 사용자: 대시보드 버튼 표시")}
+                  <Link href="/dashboard">
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="w-full sm:w-auto text-base md:text-lg px-6 md:px-8 py-5 md:py-6 bg-black/80 backdrop-blur-md border-white/20 text-white hover:bg-black hover:border-white/40 transition-all duration-300 shadow-2xl hover:shadow-blue-500/50 group"
+                      onClick={() => console.log("🏠 히어로 섹션에서 대시보드로 이동")}
+                    >
+                      <ArrowRight className="w-5 h-5 mr-2" />
+                      대시보드
+                    </Button>
+                  </Link>
+                </>
               ) : (
                 // 로그인되지 않은 경우: 회원가입 버튼
-                <Link href="/signup">
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="w-full sm:w-auto text-base md:text-lg px-6 md:px-8 py-5 md:py-6 bg-black/80 backdrop-blur-md border-white/20 text-white hover:bg-black hover:border-white/40 transition-all duration-300 shadow-2xl hover:shadow-blue-500/50 group"
-                    onClick={() => console.log("📝 히어로 섹션 회원가입 버튼 클릭됨")}
-                  >
-                    회원가입
-                  </Button>
-                </Link>
+                <>
+                  {console.log("❌ 로그인되지 않은 사용자: 회원가입 버튼 표시")}
+                  <Link href="/signup">
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="w-full sm:w-auto text-base md:text-lg px-6 md:px-8 py-5 md:py-6 bg-black/80 backdrop-blur-md border-white/20 text-white hover:bg-black hover:border-white/40 transition-all duration-300 shadow-2xl hover:shadow-blue-500/50 group"
+                      onClick={() => console.log("📝 히어로 섹션 회원가입 버튼 클릭됨")}
+                    >
+                      회원가입
+                    </Button>
+                  </Link>
+                </>
               )}
               <Link href="/about">
                 <Button
