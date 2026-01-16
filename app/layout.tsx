@@ -48,7 +48,6 @@ export default function RootLayout({
       <html lang="ko">
         <head>
           <link rel="preconnect" href="https://powerful-pika-33.clerk.accounts.dev" />
-          <link rel="preconnect" href="https://powerful-pika-33.clerk.accounts.dev" />
         </head>
         <body
           className={`${geistSans.variable} ${geistMono.variable} ${spaceMono.variable} antialiased`}

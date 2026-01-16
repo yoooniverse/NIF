@@ -10,7 +10,7 @@ export default function NewsFooter({
   url: string;
 }) {
   console.info('[NEWS_FOOTER] rendering with source:', source, 'url:', url);
-  
+
   return (
     <footer className="rounded-3xl border border-gray-200 bg-white px-7 py-6 shadow-lg">
       <div className="flex items-center justify-center">

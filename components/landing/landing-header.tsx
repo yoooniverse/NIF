@@ -38,18 +38,7 @@ export function LandingHeader() {
                         </Button>
                     </SignOutButton>
                 </div>
-            ) : (
-                <SignInButton mode="modal" forceRedirectUrl="/dashboard">
-                    <Button
-                        variant="outline"
-                        size="default"
-                        className="bg-black/20 backdrop-blur-md border-white/20 text-white hover:bg-black/40 hover:border-white/40 transition-all duration-300 px-4 py-2 text-sm font-medium"
-                    >
-                        <LogIn className="w-5 h-5 mr-2" />
-                        로그인
-                    </Button>
-                </SignInButton>
-            )}
+            ) : null}
         </div>
     );
 }

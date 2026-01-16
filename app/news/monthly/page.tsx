@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, useCallback, Suspense } from 'react';
 import { ArrowLeft, Filter } from 'lucide-react';
 import NewsCard from '@/components/dashboard/NewsCard';
-import { FlightViewBackground } from '@/components/landing/FlightViewBackground';
+
 import { fetchMonthlyNews, filterNewsByCategory, transformNewsForCard } from '@/lib/news';
 import { News } from '@/types/news';
 
@@ -277,8 +277,7 @@ function MonthlyNewsContent() {
     newsCount: filteredNews.length
   });
 
-  // 카테고리별 배경 설정 - 카테고리 버튼의 배경을 전체 버튼에서도 동일하게 사용
-  const earthSize = selectedCategory === 'all' ? 2.5 : 2.5; // 모두 동일한 크기로 통일
+
 
   // 동적 카테고리 목록 생성 (사용자가 선택한 관심사만 표시)
   const categories = [
@@ -302,15 +301,11 @@ function MonthlyNewsContent() {
   }
 
   return (
-    <div className="relative min-h-screen bg-[#050814] text-white overflow-hidden">
-      {/* 우주 배경 (비행기 뷰) */}
-      <FlightViewBackground earthSize={earthSize} />
-
-      <div className="relative z-10 mx-auto w-full max-w-[1100px] px-6 pt-8 pb-16">
-        <div className="flex items-start gap-4">
-          <button
-            onClick={handleBack}
-            className="
+    <div className="mx-auto w-full max-w-[1100px] px-6 pt-8 pb-16">
+      <div className="flex items-start gap-4">
+        <button
+          onClick={handleBack}
+          className="
               h-12 w-12
               rounded-2xl
               border border-white/20
@@ -320,81 +315,80 @@ function MonthlyNewsContent() {
               hover:bg-white/20
               transition
             "
-            aria-label="뒤로가기"
-          >
-            <ArrowLeft className="h-5 w-5 text-white" />
-          </button>
+          aria-label="뒤로가기"
+        >
+          <ArrowLeft className="h-5 w-5 text-white" />
+        </button>
 
-          <div className="pt-1 flex-1">
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
-              이달의 뉴스
-            </h1>
-            <p className="mt-1 text-white text-base sm:text-lg">
-              이달의 뉴스를 모아보세요
-            </p>
+        <div className="pt-1 flex-1">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
+            이달의 뉴스
+          </h1>
+          <p className="mt-1 text-white text-base sm:text-lg">
+            이달의 뉴스를 모아보세요
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-10 space-y-6">
+        {/* 관심분야 카테고리 필터 */}
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <Filter className="h-4 w-4 text-white/70" />
+            <span className="text-sm font-medium text-white/80">관심분야</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {categories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => handleCategoryChange(category.slug)}
+                className={`px-5 py-3 rounded-full text-base font-semibold transition ${selectedCategory === category.slug
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40'
+                  : 'bg-white/5 text-white/80 hover:bg-white/10 border border-white/10 backdrop-blur'
+                  }`}
+              >
+                {category.name}
+              </button>
+            ))}
           </div>
         </div>
 
-        <div className="mt-10 space-y-6">
-          {/* 관심분야 카테고리 필터 */}
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <Filter className="h-4 w-4 text-white/70" />
-              <span className="text-sm font-medium text-white/80">관심분야</span>
+        {/* 뉴스 목록 */}
+        <div className="space-y-4">
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent" />
+              <p className="text-white/70">뉴스를 불러오는 중...</p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {categories.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => handleCategoryChange(category.slug)}
-                  className={`px-5 py-3 rounded-full text-base font-semibold transition ${selectedCategory === category.slug
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40'
-                      : 'bg-white/5 text-white/80 hover:bg-white/10 border border-white/10 backdrop-blur'
-                    }`}
-                >
-                  {category.name}
-                </button>
-              ))}
+          ) : error ? (
+            <div className="text-center py-12">
+              <div className="text-white/50 text-lg mb-2">오류 발생</div>
+              <div className="text-white/40 text-sm">{error}</div>
             </div>
-          </div>
-
-          {/* 뉴스 목록 */}
-          <div className="space-y-4">
-            {loading ? (
-              <div className="text-center py-12">
-                <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent" />
-                <p className="text-white/70">뉴스를 불러오는 중...</p>
-              </div>
-            ) : error ? (
-              <div className="text-center py-12">
-                <div className="text-white/50 text-lg mb-2">오류 발생</div>
-                <div className="text-white/40 text-sm">{error}</div>
-              </div>
-            ) : filteredNews.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="text-white/50 text-lg mb-2">뉴스가 없습니다</div>
-                <div className="text-white/40 text-sm">해당 카테고리의 뉴스가 아직 준비되지 않았습니다.</div>
-              </div>
-            ) : (
-              filteredNews.map((newsItem) => {
-                const cardData = transformNewsForCard(newsItem);
-                return (
-                  <NewsCard
-                    key={newsItem.id}
-                    id={newsItem.id}
-                    title={cardData.title}
-                    category={cardData.category}
-                    categorySlug={selectedCategory !== 'all' ? selectedCategory : undefined}
-                    publishedAt={cardData.publishedAt}
-                    tags={cardData.tags}
-                    targets={cardData.targets}
-                    isWhite={true}
-                    fromPage="monthly"
-                  />
-                );
-              })
-            )}
-          </div>
+          ) : filteredNews.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-white/50 text-lg mb-2">뉴스가 없습니다</div>
+              <div className="text-white/40 text-sm">해당 카테고리의 뉴스가 아직 준비되지 않았습니다.</div>
+            </div>
+          ) : (
+            filteredNews.map((newsItem) => {
+              const cardData = transformNewsForCard(newsItem);
+              return (
+                <NewsCard
+                  key={newsItem.id}
+                  id={newsItem.id}
+                  title={cardData.title}
+                  category={cardData.category}
+                  categorySlug={selectedCategory !== 'all' ? selectedCategory : undefined}
+                  publishedAt={cardData.publishedAt}
+                  tags={cardData.tags}
+                  targets={cardData.targets}
+                  isWhite={true}
+                  fromPage="monthly"
+                />
+              );
+            })
+          )}
         </div>
       </div>
     </div>

@@ -9,7 +9,7 @@ import WorstScenario from "../../../components/news/worst-scenario";
 import ActionItem from "../../../components/news/action-item";
 import NewsFooter from "../../../components/news/news-footer";
 import BoardingPassModal from "../../../components/news/BoardingPassModal";
-import { FlightViewBackground } from '@/components/landing/FlightViewBackground';
+
 import { useSubscriptionStatus } from '@/lib/subscription';
 
 interface NewsDetail {
@@ -88,7 +88,7 @@ export default function NewsDetailPage() {
         console.log("📊 레벨:", data.analysis?.level);
         console.log("🔒 블러:", data.analysis?.should_blur);
         console.groupEnd();
-        
+
         // 데이터 검증
         if (!data.analysis?.content) {
           console.error("[NEWS_DETAIL] ❌ 뉴스 내용이 없습니다!");
@@ -102,7 +102,7 @@ export default function NewsDetailPage() {
           console.error("[NEWS_DETAIL] ❌ 액션팁이 없습니다!");
           console.error("[NEWS_DETAIL] 받은 action_tips:", data.analysis?.action_tips);
         }
-        
+
         setNews(data);
       } catch (error) {
         console.error("[NEWS_DETAIL] fetch error", error);
@@ -164,19 +164,15 @@ export default function NewsDetailPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-[#050814] text-white overflow-hidden">
-      {/* 우주 배경 (비행기 뷰) */}
-      <FlightViewBackground />
-
-      <div className="relative z-10 mx-auto w-full max-w-[1100px] px-6 pt-8 pb-16">
-        <div className="flex items-start gap-4">
-          <button
-            type="button"
-            onClick={() => {
-              console.info("[NEWS_DETAIL] click: back");
-              router.back();
-            }}
-            className="
+    <div className="mx-auto w-full max-w-[1100px] px-6 pt-8 pb-16">
+      <div className="flex items-start gap-4">
+        <button
+          type="button"
+          onClick={() => {
+            console.info("[NEWS_DETAIL] click: back");
+            router.back();
+          }}
+          className="
               h-12 w-12
               rounded-2xl
               border border-white/20
@@ -186,27 +182,27 @@ export default function NewsDetailPage() {
               hover:bg-white/20
               transition
             "
-            aria-label="뒤로가기"
-          >
-            <ArrowLeft className="h-5 w-5 text-white" />
-          </button>
+          aria-label="뒤로가기"
+        >
+          <ArrowLeft className="h-5 w-5 text-white" />
+        </button>
 
-          <div className="pt-1 flex-1">
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
-              {getPageTitle()}
-            </h1>
-            <p className="mt-1 text-white text-base sm:text-lg">
-              {getPageSubtitle()}
-            </p>
-          </div>
+        <div className="pt-1 flex-1">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
+            {getPageTitle()}
+          </h1>
+          <p className="mt-1 text-white text-base sm:text-lg">
+            {getPageSubtitle()}
+          </p>
+        </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              console.log("[NEWS_DETAIL] Click Boarding Pass. User:", user?.id, "Status:", subscriptionStatus);
-              setIsBoardingPassOpen(true);
-            }}
-            className="
+        <button
+          type="button"
+          onClick={() => {
+            console.log("[NEWS_DETAIL] Click Boarding Pass. User:", user?.id, "Status:", subscriptionStatus);
+            setIsBoardingPassOpen(true);
+          }}
+          className="
               h-12 px-4
               rounded-2xl
               border border-white/20
@@ -217,37 +213,36 @@ export default function NewsDetailPage() {
               transition
               text-white
             "
-          >
-            <Ticket className="h-5 w-5" />
-            <span className="text-sm font-medium">Boarding Pass</span>
-          </button>
-        </div>
+        >
+          <Ticket className="h-5 w-5" />
+          <span className="text-sm font-medium">Boarding Pass</span>
+        </button>
+      </div>
 
-        <div className="mt-10 space-y-6">
-          {/* 뉴스 제목 카드 */}
-          <div className="rounded-3xl border border-gray-200 bg-white px-7 py-6 shadow-lg">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="inline-block px-3 py-1 text-xs font-semibold text-blue-700 bg-blue-100 rounded-full">
-                {news.category}
-              </span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-black leading-tight">
-              {news.analysis.title || news.title || "미 연준, 금리 동결 시사 — 시장은 '인하 시점' 주목"}
-            </h2>
+      <div className="mt-10 space-y-6">
+        {/* 뉴스 제목 카드 */}
+        <div className="rounded-3xl border border-gray-200 bg-white px-7 py-6 shadow-lg">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="inline-block px-3 py-1 text-xs font-semibold text-blue-700 bg-blue-100 rounded-full">
+              {news.category}
+            </span>
           </div>
-
-          {/* 뉴스 내용 (3문장) */}
-          <NewsSummary summary={news.analysis.content} />
-          
-          {/* 최악의 시나리오 */}
-          <WorstScenario scenarios={news.analysis.worst_scenarios} />
-          
-          {/* 사용자 액션팁 */}
-          <ActionItem tips={news.analysis.action_tips} shouldBlur={news.analysis.should_blur} />
-          
-          {/* 원문 링크 */}
-          <NewsFooter source={news.source} url={news.url} />
+          <h2 className="text-2xl sm:text-3xl font-bold text-black leading-tight">
+            {news.analysis.title || news.title || "미 연준, 금리 동결 시사 — 시장은 '인하 시점' 주목"}
+          </h2>
         </div>
+
+        {/* 뉴스 내용 (3문장) */}
+        <NewsSummary summary={news.analysis.content} />
+
+        {/* 최악의 시나리오 */}
+        <WorstScenario scenarios={news.analysis.worst_scenarios} />
+
+        {/* 사용자 액션팁 */}
+        <ActionItem tips={news.analysis.action_tips} shouldBlur={news.analysis.should_blur} />
+
+        {/* 원문 링크 */}
+        <NewsFooter source={news.source} url={news.url} />
       </div>
 
       {/* Boarding Pass Modal */}
@@ -255,7 +250,7 @@ export default function NewsDetailPage() {
         <BoardingPassModal
           isOpen={isBoardingPassOpen}
           onClose={() => setIsBoardingPassOpen(false)}
-          newsTitle="News Insight" 
+          newsTitle="News Insight"
           economicIndex="NIF-001"
           passengerName={
             user ? (

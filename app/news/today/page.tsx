@@ -9,14 +9,7 @@ import NewsCard from '@/components/dashboard/NewsCard';
 import { fetchTodayNews, filterNewsByCategory, transformNewsForCard } from '@/lib/news';
 import { News } from '@/types/news';
 
-// FlightViewBackground를 dynamic import로 변경 (SSR 비활성화)
-const FlightViewBackground = dynamic(
-  () => import('@/components/landing/FlightViewBackground').then(mod => ({ default: mod.FlightViewBackground })),
-  {
-    ssr: false,
-    loading: () => <div className="absolute inset-0 z-0 h-full w-full bg-[#030308]" />
-  }
-);
+
 
 // 관심분야 카테고리
 const INTEREST_CATEGORIES = [
@@ -288,32 +281,14 @@ function TodayNewsContent() {
   // Clerk 로딩이 완료되지 않았더라도 기본 레이아웃은 렌더링하도록 변경
   // (LCP 및 FCP 개선을 위해 로딩 화면을 제거하고 컨텐츠 영역만 로더 처리)
 
-  // LCP/TBT 최적화: 3D 배경은 텍스트(LCP) 로드 후 지연 렌더링
-  const [showBackground, setShowBackground] = useState(false);
 
-  useEffect(() => {
-    // 메인 스레드 아이들 상태일 때 로드하거나 최소 1초 지연
-    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-      (window as any).requestIdleCallback(() => setShowBackground(true));
-    } else {
-      setTimeout(() => setShowBackground(true), 1000);
-    }
-  }, []);
 
   return (
-    <div className="relative min-h-screen bg-[#050814] text-white overflow-hidden">
-      {/* 우주 배경 (비행기 뷰) - LCP 최적화를 위해 지연 로딩 */}
-      {showBackground ? (
-        <FlightViewBackground earthSize={2.5} />
-      ) : (
-        <div className="absolute inset-0 z-0 h-full w-full bg-[#030308]" />
-      )}
-
-      <div className="relative z-10 mx-auto w-full max-w-[1100px] px-6 pt-8 pb-16">
-        <div className="flex items-start gap-4">
-          <button
-            onClick={handleBack}
-            className="
+    <div className="mx-auto w-full max-w-[1100px] px-6 pt-8 pb-16">
+      <div className="flex items-start gap-4">
+        <button
+          onClick={handleBack}
+          className="
               h-12 w-12
               rounded-2xl
               border border-white/20
@@ -323,83 +298,82 @@ function TodayNewsContent() {
               hover:bg-white/20
               transition
             "
-            aria-label="뒤로가기"
-          >
-            <ArrowLeft className="h-5 w-5 text-white" />
-          </button>
+          aria-label="뒤로가기"
+        >
+          <ArrowLeft className="h-5 w-5 text-white" />
+        </button>
 
-          <div className="pt-1 flex-1">
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
-              오늘의 뉴스
-            </h1>
-            <p className="mt-1 text-white text-base sm:text-lg">
-              당신의 관심분야의 최신 뉴스를 확인하세요
-            </p>
+        <div className="pt-1 flex-1">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
+            오늘의 뉴스
+          </h1>
+          <p className="mt-1 text-white text-base sm:text-lg">
+            당신의 관심분야의 최신 뉴스를 확인하세요
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-10 space-y-6">
+        {/* 관심분야 카테고리 필터 */}
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <Filter className="h-4 w-4 text-white/70" />
+            <h2 className="text-sm font-medium text-white/80">관심분야</h2>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {categories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => handleCategoryChange(category.slug)}
+                className={`px-5 py-3 rounded-full text-base font-semibold transition ${selectedCategory === category.slug
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40'
+                  : 'bg-white/5 text-white/80 hover:bg-white/10 border border-white/10 backdrop-blur'
+                  }`}
+              >
+                {category.name}
+              </button>
+            ))}
           </div>
         </div>
 
-        <div className="mt-10 space-y-6">
-          {/* 관심분야 카테고리 필터 */}
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <Filter className="h-4 w-4 text-white/70" />
-              <h2 className="text-sm font-medium text-white/80">관심분야</h2>
+        {/* 뉴스 목록 */}
+        <div className="space-y-4">
+          <h2 className="sr-only">뉴스 목록</h2>
+          {(!isLoaded || loading) ? (
+            <>
+              <NewsCardSkeleton />
+              <NewsCardSkeleton />
+              <NewsCardSkeleton />
+            </>
+          ) : error ? (
+            <div className="text-center py-12">
+              <div className="text-white/50 text-lg mb-2">오류 발생</div>
+              <div className="text-white/40 text-sm">{error}</div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {categories.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => handleCategoryChange(category.slug)}
-                  className={`px-5 py-3 rounded-full text-base font-semibold transition ${selectedCategory === category.slug
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40'
-                    : 'bg-white/5 text-white/80 hover:bg-white/10 border border-white/10 backdrop-blur'
-                    }`}
-                >
-                  {category.name}
-                </button>
-              ))}
+          ) : filteredNews.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-white/50 text-lg mb-2">뉴스가 없습니다</div>
+              <div className="text-white/40 text-sm">해당 카테고리의 뉴스가 아직 준비되지 않았습니다.</div>
             </div>
-          </div>
-
-          {/* 뉴스 목록 */}
-          <div className="space-y-4">
-            <h2 className="sr-only">뉴스 목록</h2>
-            {(!isLoaded || loading) ? (
-              <>
-                <NewsCardSkeleton />
-                <NewsCardSkeleton />
-                <NewsCardSkeleton />
-              </>
-            ) : error ? (
-              <div className="text-center py-12">
-                <div className="text-white/50 text-lg mb-2">오류 발생</div>
-                <div className="text-white/40 text-sm">{error}</div>
-              </div>
-            ) : filteredNews.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="text-white/50 text-lg mb-2">뉴스가 없습니다</div>
-                <div className="text-white/40 text-sm">해당 카테고리의 뉴스가 아직 준비되지 않았습니다.</div>
-              </div>
-            ) : (
-              filteredNews.map((newsItem) => {
-                const cardData = transformNewsForCard(newsItem);
-                return (
-                  <NewsCard
-                    key={newsItem.id}
-                    id={newsItem.id}
-                    title={cardData.title}
-                    category={cardData.category}
-                    categorySlug={selectedCategory !== 'all' ? selectedCategory : undefined}
-                    publishedAt={cardData.publishedAt}
-                    tags={cardData.tags}
-                    targets={cardData.targets}
-                    isWhite={true}
-                    fromPage="today"
-                  />
-                );
-              })
-            )}
-          </div>
+          ) : (
+            filteredNews.map((newsItem) => {
+              const cardData = transformNewsForCard(newsItem);
+              return (
+                <NewsCard
+                  key={newsItem.id}
+                  id={newsItem.id}
+                  title={cardData.title}
+                  category={cardData.category}
+                  categorySlug={selectedCategory !== 'all' ? selectedCategory : undefined}
+                  publishedAt={cardData.publishedAt}
+                  tags={cardData.tags}
+                  targets={cardData.targets}
+                  isWhite={true}
+                  fromPage="today"
+                />
+              );
+            })
+          )}
         </div>
       </div>
     </div>

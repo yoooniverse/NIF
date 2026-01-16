@@ -8,7 +8,7 @@ export default function NewsSummary({
   summary: string;
 }) {
   console.info('[NEWS_SUMMARY] ✅ Rendering with summary:', summary?.substring(0, 100));
-  
+
   if (!summary) {
     console.error('[NEWS_SUMMARY] ❌ 요약 데이터가 없습니다! summary:', summary);
     return (

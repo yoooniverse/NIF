@@ -12,7 +12,7 @@ export default function ActionItem({
 }) {
   console.info('[ACTION_ITEM] ✅ Rendering with tips:', tips);
   console.info('[ACTION_ITEM] Tips count:', tips?.length, 'shouldBlur:', shouldBlur);
-  
+
   if (!tips || tips.length === 0) {
     console.error('[ACTION_ITEM] ❌ 액션팁 데이터가 없습니다!', tips);
     return (

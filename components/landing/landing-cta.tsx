@@ -29,13 +29,13 @@ export function LandingCTA() {
                     </Button>
                 </Link>
             ) : (
-                <Link href="/signup">
+                <Link href="/login">
                     <Button
                         size="lg"
                         variant="outline"
                         className="w-full sm:w-auto text-base md:text-lg px-6 md:px-8 py-5 md:py-6 bg-black/80 backdrop-blur-md border-white/20 text-white hover:bg-black hover:border-white/40 transition-all duration-300 shadow-2xl hover:shadow-blue-500/50 group"
                     >
-                        회원가입
+                        로그인
                     </Button>
                 </Link>
             )}

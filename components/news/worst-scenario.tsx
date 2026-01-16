@@ -5,7 +5,7 @@ import { AlertTriangle } from 'lucide-react';
 export default function WorstScenario({ scenarios }: { scenarios: string[] }) {
   console.info('[WORST_SCENARIO] ✅ Rendering with scenarios:', scenarios);
   console.info('[WORST_SCENARIO] Scenarios count:', scenarios?.length);
-  
+
   if (!scenarios || scenarios.length === 0) {
     console.error('[WORST_SCENARIO] ❌ 최악의 시나리오 데이터가 없습니다!', scenarios);
     return (

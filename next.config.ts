@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [{ hostname: "img.clerk.com" }],
   },
   experimental: {
-    optimizeCss: true, // CSS 최적화
+    optimizeCss: false, // CSS 최적화
     scrollRestoration: true, // 스크롤 복원
   },
   compiler: {
@@ -15,26 +15,26 @@ const nextConfig: NextConfig = {
   webpack: (config, { isServer }) => {
     if (!isServer) {
       // 클라이언트 번들 최적화
-      config.optimization.splitChunks = {
-        ...config.optimization.splitChunks,
-        cacheGroups: {
-          ...config.optimization.splitChunks.cacheGroups,
-          // Clerk 라이브러리 분리
-          clerk: {
-            test: /[\\/]node_modules[\\/]@clerk[\\/]/,
-            name: 'clerk',
-            chunks: 'all',
-            priority: 10,
-          },
-          // 3D 라이브러리 분리
-          three: {
-            test: /[\\/]node_modules[\\/](three|@react-three)/,
-            name: 'three',
-            chunks: 'all',
-            priority: 10,
-          },
-        },
-      };
+      // config.optimization.splitChunks = {
+      //   ...config.optimization.splitChunks,
+      //   cacheGroups: {
+      //     ...config.optimization.splitChunks.cacheGroups,
+      //     // Clerk 라이브러리 분리
+      //     clerk: {
+      //       test: /[\\/]node_modules[\\/]@clerk[\\/]/,
+      //       name: 'clerk',
+      //       chunks: 'all',
+      //       priority: 10,
+      //     },
+      //     // 3D 라이브러리 분리
+      //     three: {
+      //       test: /[\\/]node_modules[\\/](three|@react-three)/,
+      //       name: 'three',
+      //       chunks: 'all',
+      //       priority: 10,
+      //     },
+      //   },
+      // };
     }
     return config;
   },
