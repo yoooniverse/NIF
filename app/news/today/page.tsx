@@ -12,7 +12,7 @@ import { News } from '@/types/news';
 // FlightViewBackground를 dynamic import로 변경 (SSR 비활성화)
 const FlightViewBackground = dynamic(
   () => import('@/components/landing/FlightViewBackground').then(mod => ({ default: mod.FlightViewBackground })),
-  { 
+  {
     ssr: false,
     loading: () => <div className="absolute inset-0 z-0 h-full w-full bg-[#030308]" />
   }
@@ -92,13 +92,35 @@ export default function TodayNewsPage() {
   );
 }
 
+// 뉴스 카드 스켈레톤 로더
+function NewsCardSkeleton() {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/5 px-6 py-5 animate-pulse">
+      <div className="flex items-start gap-3">
+        <div className="h-6 w-6 rounded-full bg-white/10 mt-0.5" />
+        <div className="flex-1 space-y-3">
+          <div className="h-4 w-20 bg-white/10 rounded" />
+          <div className="h-6 w-3/4 bg-white/20 rounded" />
+          <div className="flex gap-2">
+            <div className="h-4 w-12 bg-white/10 rounded-full" />
+            <div className="h-4 w-12 bg-white/10 rounded-full" />
+          </div>
+          <div className="h-4 w-32 bg-white/10 rounded" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // 로딩 컴포넌트
 function TodayNewsLoading() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#050814]">
-      <div className="text-center">
-        <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-white border-t-transparent" />
-        <p className="text-white/70">로딩 중...</p>
+    <div className="min-h-screen bg-[#050814] px-6 pt-8">
+      <div className="mx-auto w-full max-w-[1100px] space-y-8">
+        <div className="h-12 w-48 bg-white/10 rounded-lg animate-pulse" />
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => <NewsCardSkeleton key={i} />)}
+        </div>
       </div>
     </div>
   );
@@ -140,10 +162,10 @@ function TodayNewsContent() {
       if (!isLoaded) return;
 
       try {
-        console.info('[TODAY_NEWS] loading news data...', { 
-          isLoaded, 
+        console.info('[TODAY_NEWS] loading news data...', {
+          isLoaded,
           hasUser: !!user,
-          selectedCategory 
+          selectedCategory
         });
         setLoading(true);
         setError(null);
@@ -151,7 +173,7 @@ function TodayNewsContent() {
         // 카테고리 파라미터 포함하여 API 호출
         const categoryParam = selectedCategory !== 'all' ? `&category=${selectedCategory}` : '';
         const apiUrl = `/api/news?limit=20${categoryParam}`;
-        
+
         console.info('[TODAY_NEWS] API URL:', apiUrl);
 
         // cache: 'no-store' 옵션으로 브라우저 캐싱 비활성화
@@ -166,7 +188,7 @@ function TodayNewsContent() {
         if (!response.ok) throw new Error('Failed to fetch news');
 
         const data = await response.json();
-        
+
         console.info('[TODAY_NEWS] raw API response:', {
           newsCount: data.news?.length || 0,
           firstNews: data.news?.[0],
@@ -182,8 +204,8 @@ function TodayNewsContent() {
           content: item.analysis?.summary || '',
           published_at: item.published_at,
           ingested_at: item.published_at,
-          metadata: { 
-            tags: item.tags || [], 
+          metadata: {
+            tags: item.tags || [],
             targets: [],
             level1: {
               title: item.title,
@@ -195,12 +217,12 @@ function TodayNewsContent() {
             level3: {}
           }
         }));
-        
+
         console.info('[TODAY_NEWS] transformed news:', {
           count: transformedNews.length,
           firstItem: transformedNews[0]
         });
-        
+
         setNews(transformedNews);
         setUserInterests(data.user_interests || []);
 
@@ -263,24 +285,29 @@ function TodayNewsContent() {
     }))
   ];
 
-  // Clerk 로딩이 완료될 때까지만 대기
-  // 개발 환경: 로그인 여부와 무관하게 페이지 렌더링
-  // 프로덕션 환경: 미들웨어가 비로그인 사용자를 홈으로 리다이렉트
-  if (!isLoaded) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#050814]">
-        <div className="text-center">
-          <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-white border-t-transparent" />
-          <p className="text-white">로딩 중...</p>
-        </div>
-      </div>
-    );
-  }
+  // Clerk 로딩이 완료되지 않았더라도 기본 레이아웃은 렌더링하도록 변경
+  // (LCP 및 FCP 개선을 위해 로딩 화면을 제거하고 컨텐츠 영역만 로더 처리)
+
+  // LCP/TBT 최적화: 3D 배경은 텍스트(LCP) 로드 후 지연 렌더링
+  const [showBackground, setShowBackground] = useState(false);
+
+  useEffect(() => {
+    // 메인 스레드 아이들 상태일 때 로드하거나 최소 1초 지연
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(() => setShowBackground(true));
+    } else {
+      setTimeout(() => setShowBackground(true), 1000);
+    }
+  }, []);
 
   return (
     <div className="relative min-h-screen bg-[#050814] text-white overflow-hidden">
-      {/* 우주 배경 (비행기 뷰) */}
-      <FlightViewBackground earthSize={2.5} />
+      {/* 우주 배경 (비행기 뷰) - LCP 최적화를 위해 지연 로딩 */}
+      {showBackground ? (
+        <FlightViewBackground earthSize={2.5} />
+      ) : (
+        <div className="absolute inset-0 z-0 h-full w-full bg-[#030308]" />
+      )}
 
       <div className="relative z-10 mx-auto w-full max-w-[1100px] px-6 pt-8 pb-16">
         <div className="flex items-start gap-4">
@@ -316,7 +343,7 @@ function TodayNewsContent() {
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-3">
               <Filter className="h-4 w-4 text-white/70" />
-              <span className="text-sm font-medium text-white/80">관심분야</span>
+              <h2 className="text-sm font-medium text-white/80">관심분야</h2>
             </div>
             <div className="flex flex-wrap gap-2">
               {categories.map((category) => (
@@ -324,8 +351,8 @@ function TodayNewsContent() {
                   key={category.id}
                   onClick={() => handleCategoryChange(category.slug)}
                   className={`px-5 py-3 rounded-full text-base font-semibold transition ${selectedCategory === category.slug
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40'
-                      : 'bg-white/5 text-white/80 hover:bg-white/10 border border-white/10 backdrop-blur'
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40'
+                    : 'bg-white/5 text-white/80 hover:bg-white/10 border border-white/10 backdrop-blur'
                     }`}
                 >
                   {category.name}
@@ -336,11 +363,13 @@ function TodayNewsContent() {
 
           {/* 뉴스 목록 */}
           <div className="space-y-4">
-            {loading ? (
-              <div className="text-center py-12">
-                <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent" />
-                <p className="text-white/70">뉴스를 불러오는 중...</p>
-              </div>
+            <h2 className="sr-only">뉴스 목록</h2>
+            {(!isLoaded || loading) ? (
+              <>
+                <NewsCardSkeleton />
+                <NewsCardSkeleton />
+                <NewsCardSkeleton />
+              </>
             ) : error ? (
               <div className="text-center py-12">
                 <div className="text-white/50 text-lg mb-2">오류 발생</div>

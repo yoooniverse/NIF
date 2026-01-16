@@ -39,9 +39,9 @@ export function LazyEarth({ className }: LazyEarthProps) {
           };
 
           if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-            (window as any).requestIdleCallback(() => setTimeout(loadComponent, 1500));
+            (window as any).requestIdleCallback(() => loadComponent());
           } else {
-            setTimeout(loadComponent, 2000);
+            setTimeout(loadComponent, 500);
           }
 
           // 관찰 중지

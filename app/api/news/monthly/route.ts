@@ -1,14 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClerkSupabaseClient } from "@/lib/supabase/server";
 
 // 캐싱 비활성화: 항상 최신 데이터를 가져옵니다
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Supabase interests 테이블의 UUID → slug 매핑
 const INTEREST_UUID_TO_SLUG: Record<string, string> = {
@@ -52,24 +48,29 @@ function parseMonthOrNow(monthParam: string | null): { startIso: string; endIso:
     month = fallbackMonth;
   }
 
-  // 한국 시간 기준 해당 월의 1일 00:00:00 KST를 UTC로 변환
-  // KST = UTC + 9시간이므로, UTC = KST - 9시간
-  // 예: 2026-01-01 00:00 KST -> 2025-12-31 15:00 UTC
-  const startKorea = new Date(year, month - 1, 1, 0, 0, 0); // 로컬 시간으로 생성
-  const startUTC = new Date(startKorea.getTime() - koreaOffset); // UTC로 변환
+  // 한국 시간 기준 해당 월의 시작일과 종료일 (ISO 8601 with Offset)
+  const monthStr = String(month).padStart(2, "0");
+  const startIso = `${year}-${monthStr}-01T00:00:00+09:00`;
 
-  // 한국 시간 기준 다음 달 1일 00:00:00 KST를 UTC로 변환 (해당 월의 마지막 순간)
-  const endKorea = new Date(year, month, 1, 0, 0, 0); // 로컬 시간으로 생성
-  const endUTC = new Date(endKorea.getTime() - koreaOffset); // UTC로 변환
+  let nextYear = year;
+  let nextMonth = month + 1;
+  if (nextMonth > 12) {
+    nextMonth = 1;
+    nextYear++;
+  }
+  const endIso = `${nextYear}-${String(nextMonth).padStart(2, "0")}-01T00:00:00+09:00`;
 
-  const monthKey = `${year}-${String(month).padStart(2, "0")}`;
-  return { startIso: startUTC.toISOString(), endIso: endUTC.toISOString(), monthKey };
+  const monthKey = `${year}-${monthStr}`;
+  return { startIso, endIso, monthKey };
 }
 
 export async function GET(req: NextRequest) {
   try {
     console.log("[API][NEWS_MONTHLY] Request started");
     const { userId } = await auth();
+
+    // RLS 지원을 위해 각 요청마다 새 클라이언트 생성
+    const supabase = createClerkSupabaseClient();
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -81,7 +82,7 @@ export async function GET(req: NextRequest) {
     const limitParam = url.searchParams.get("limit");
 
     const { startIso, endIso, monthKey } = parseMonthOrNow(monthParam);
-    const limit = Math.min(parseInt(limitParam || "30"), 200);
+    const limit = Math.min(parseInt(limitParam || "100"), 1000);
 
     console.log("[API][NEWS_MONTHLY] Query params:", {
       userId,
@@ -190,8 +191,8 @@ export async function GET(req: NextRequest) {
     };
 
     // 4. 뉴스 조회
-    // 복잡한 DB 레벨 필터링 대신 안정적인 JS 레벨 필터링을 사용합니다.
-    const dbLimit = shouldFilter ? 200 : limit;
+    // 월별 뉴스인 경우 데이터가 많을 수 있으므로 충분한 양을 가져옵니다.
+    const dbLimit = shouldFilter ? 1000 : Math.max(limit, 500);
 
     const { data: newsData, error: newsError } = await (supabase
       .from('news')

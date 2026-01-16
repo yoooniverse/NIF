@@ -81,8 +81,8 @@ export default function NewsCard({
                 <span
                   key={`target-${index}`}
                   className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${isWhite
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-green-900/50 text-green-200 border border-green-700/50'
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-green-900/50 text-green-200 border border-green-700/50'
                     }`}
                 >
                   {target}

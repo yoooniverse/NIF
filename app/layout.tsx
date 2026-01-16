@@ -12,24 +12,25 @@ import "./globals.css";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const spaceMono = Space_Mono({
   variable: "--font-space-mono",
   subsets: ["latin"],
   weight: ["400", "700"],
+  display: "swap",
 });
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
 };
 
 export const metadata: Metadata = {
@@ -45,6 +46,10 @@ export default function RootLayout({
   return (
     <ClerkProvider localization={koKR}>
       <html lang="ko">
+        <head>
+          <link rel="preconnect" href="https://powerful-pika-33.clerk.accounts.dev" />
+          <link rel="preconnect" href="https://powerful-pika-33.clerk.accounts.dev" />
+        </head>
         <body
           className={`${geistSans.variable} ${geistMono.variable} ${spaceMono.variable} antialiased`}
           suppressHydrationWarning
