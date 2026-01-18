@@ -36,7 +36,7 @@
 - **문제점:** 경제 뉴스가 어렵고, 개인의 삶과의 연결고리를 파악하기 어려움
 - **해결책:** AI가 사용자의 상황(대출 보유, 주식 투자 등)에 맞춰 뉴스를 쉽게 해석
 - **차별점:**
-  - 카테고리별 Top 5만 엄선
+  - 경제 뉴스와 사용자의 일상을 연결
   - 개인화된 위험 시나리오 제공
   - 경제 순환기 시각화
   - 3D 지구 기반 In Flight Map 컨셉의 독특한 UX
@@ -438,7 +438,7 @@ export function determineStatusColor(
 
 ```yaml
 Workflow: "경제 순환기 데이터 수집 및 분석"
-Trigger: Schedule (매일 09:00 KST)
+Trigger: Schedule (매주 월요일 09:00 KST)
 
 Nodes:
   1. HTTP Request (FRED API - 장단기 금리차)

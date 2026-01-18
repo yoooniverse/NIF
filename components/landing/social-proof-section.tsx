@@ -97,7 +97,7 @@ export function SocialProofSection() {
               >
                 {/* 글로우 효과 */}
                 <div className={`absolute -inset-1 bg-gradient-to-br ${stat.gradient} rounded-2xl blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-500`}></div>
-                
+
                 <div className="relative p-8 rounded-2xl border border-gray-200 bg-white text-center hover:shadow-lg transition-all duration-300">
                   {/* 상단 인디케이터 */}
                   <div className="flex items-center justify-between mb-6">
@@ -151,7 +151,7 @@ export function SocialProofSection() {
             {testimonials.map((testimonial, index) => (
               <div
                 key={index}
-                className="relative group"
+                className="relative group h-full"
                 style={{
                   animation: `fade-in-up 0.6s ease-out ${(index + 3) * 0.1}s both`,
                 }}
@@ -159,29 +159,31 @@ export function SocialProofSection() {
                 {/* 글로우 효과 */}
                 <div className={`absolute -inset-1 bg-gradient-to-br ${testimonial.gradient} rounded-xl blur-lg opacity-0 group-hover:opacity-30 transition-opacity duration-500`}></div>
 
-                <div className="relative p-6 rounded-xl border border-gray-200 bg-white hover:shadow-md transition-all duration-300">
-                  {/* 상단 - 사용자 정보 */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center">
-                      <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-900 font-bold text-lg">
-                        {testimonial.avatar}
+                <div className="relative h-full flex flex-col p-6 rounded-xl border border-gray-200 bg-white hover:shadow-md transition-all duration-300">
+                  <div className="flex-1">
+                    {/* 상단 - 사용자 정보 */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center">
+                        <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-900 font-bold text-lg">
+                          {testimonial.avatar}
+                        </div>
+                        <div className="ml-3">
+                          <div className="font-semibold text-gray-900">{testimonial.name}</div>
+                          <div className="text-xs text-gray-500">{testimonial.role}</div>
+                        </div>
                       </div>
-                      <div className="ml-3">
-                        <div className="font-semibold text-gray-900">{testimonial.name}</div>
-                        <div className="text-xs text-gray-500">{testimonial.role}</div>
+                      <div className="flex gap-1">
+                        {[...Array(testimonial.rating)].map((_, i) => (
+                          <div key={i} className="w-4 h-4 rounded-full bg-yellow-400"></div>
+                        ))}
                       </div>
                     </div>
-                    <div className="flex gap-1">
-                      {[...Array(testimonial.rating)].map((_, i) => (
-                        <div key={i} className="w-4 h-4 rounded-full bg-yellow-400"></div>
-                      ))}
-                    </div>
-                  </div>
 
-                  {/* 후기 내용 */}
-                  <p className="text-gray-700 leading-relaxed text-sm">
-                    『{testimonial.quote}』
-                  </p>
+                    {/* 후기 내용 */}
+                    <p className="text-gray-700 leading-relaxed text-sm">
+                      『{testimonial.quote}』
+                    </p>
+                  </div>
 
                   {/* 하단 라인 */}
                   <div className="mt-4 pt-4 border-t border-gray-100">

@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 // Hydration 미스매치 방지를 위해 dynamic import (client-side only)
 const EconomicCyclePreview = dynamic(
   () => import("./economic-cycle-preview").then((mod) => mod.EconomicCyclePreview),
-  { 
+  {
     ssr: false,
     loading: () => (
       <div className="w-full aspect-video rounded-xl bg-[#020617] border border-green-400/20 flex items-center justify-center">
@@ -28,8 +28,8 @@ export function FeaturesSection() {
     },
     {
       icon: Target,
-      title: "카테고리별 Top 5만 엄선",
-      description: "하루 15개의 핵심 뉴스만 선별하여 정보 과부하 없이 핵심만 전달합니다.",
+      title: "경제 뉴스와 사용자의 일상을 연결해줍니다",
+      description: "어려운 경제뉴스가 사용자에게 어떤 연관이 있는지를 쉽게 설명해줍니다",
       gradient: "from-purple-500 to-pink-500",
     },
     {
@@ -96,15 +96,15 @@ export function FeaturesSection() {
             return (
               <div
                 key={index}
-                className="relative group"
+                className="relative group h-full"
                 style={{
                   animation: `fade-in-up 0.6s ease-out ${index * 0.1}s both`,
                 }}
               >
                 {/* 기내 모니터 프레임 */}
                 <div className="absolute -inset-1 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                
-                <div className="relative p-8 rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300">
+
+                <div className="relative h-full flex flex-col p-8 rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300">
                   {/* 상단 인디케이터 */}
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-2">
@@ -114,16 +114,19 @@ export function FeaturesSection() {
                     <div className="text-xs font-mono text-muted-foreground">0{index + 1}</div>
                   </div>
 
-                  {/* 아이콘 */}
-                  <div className={`inline-flex p-4 rounded-xl bg-gradient-to-br ${feature.gradient} mb-6 shadow-lg`}>
-                    <Icon className="w-7 h-7 text-white" />
-                  </div>
+                  {/* 아이콘 및 콘텐츠 영역 - flex-1로 높이 확장 */}
+                  <div className="flex-1">
+                    {/* 아이콘 */}
+                    <div className={`inline-flex p-4 rounded-xl bg-gradient-to-br ${feature.gradient} mb-6 shadow-lg`}>
+                      <Icon className="w-7 h-7 text-white" />
+                    </div>
 
-                  {/* 콘텐츠 */}
-                  <h3 className="text-2xl font-bold mb-3 text-white">{feature.title}</h3>
-                  <p className="text-slate-300 leading-relaxed">
-                    {feature.description}
-                  </p>
+                    {/* 콘텐츠 */}
+                    <h3 className="text-2xl font-bold mb-3 text-white">{feature.title}</h3>
+                    <p className="text-slate-300 leading-relaxed">
+                      {feature.description}
+                    </p>
+                  </div>
 
                   {/* 하단 라인 */}
                   <div className="mt-6 pt-4 border-t border-white/10">
@@ -173,7 +176,7 @@ export function FeaturesSection() {
 
                 {/* 진행 바 */}
                 <div className="mt-4 h-1 bg-white/10 rounded-full overflow-hidden">
-                  <div 
+                  <div
                     className={`h-full ${level.color} transition-all duration-1000 group-hover:w-full`}
                     style={{ width: `${33 * (index + 1)}%` }}
                   ></div>
@@ -190,9 +193,9 @@ export function FeaturesSection() {
               <Map className="w-4 h-4 text-purple-400" />
               <span className="text-sm font-mono text-purple-400">GLOBAL ECONOMIC MAP</span>
             </div>
-          <h3 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">
-            경제 순환기 지도로 큰 그림을 보세요
-          </h3>
+            <h3 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">
+              경제 순환기 지도로 큰 그림을 보세요
+            </h3>
             <p className="text-lg text-muted-foreground mb-8">
               현재 경제가 어디쯤 와있는지, 다음은 무엇이 올지 한눈에 파악하세요
             </p>
@@ -266,7 +269,7 @@ export function FeaturesSection() {
                     </div>
                     <div>
                       <div className="text-xs text-green-500/50 mb-1 font-mono">UPDATE</div>
-                      <div className="text-lg font-bold text-purple-400 font-mono">DAILY</div>
+                      <div className="text-lg font-bold text-purple-400 font-mono">WEEKLY</div>
                     </div>
                   </div>
                 </div>
